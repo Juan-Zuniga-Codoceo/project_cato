@@ -17,6 +17,7 @@ class StorageService {
   static const String taskBoxName = 'tasks';
   static const String habitBoxName = 'habits';
   static const String userStatsBoxName = 'user_stats';
+  static const String settingsBoxName = 'settings';
 
   Future<void> init() async {
     await Hive.initFlutter();
@@ -37,6 +38,7 @@ class StorageService {
     await Hive.openBox<TaskModel>(taskBoxName);
     await Hive.openBox<HabitModel>(habitBoxName);
     await Hive.openBox<UserStatsModel>(userStatsBoxName);
+    await Hive.openBox(settingsBoxName);
   }
 
   Box<Vehicle> get vehicleBox => Hive.box<Vehicle>(vehicleBoxName);
@@ -50,4 +52,16 @@ class StorageService {
   Box<HabitModel> get habitBox => Hive.box<HabitModel>(habitBoxName);
   Box<UserStatsModel> get userStatsBox =>
       Hive.box<UserStatsModel>(userStatsBoxName);
+  Box get settingsBox => Hive.box(settingsBoxName);
+
+  Future<void> clearAllData() async {
+    await vehicleBox.clear();
+    await maintenanceBox.clear();
+    await transactionBox.clear();
+    await categoryBox.clear();
+    await taskBox.clear();
+    await habitBox.clear();
+    await userStatsBox.clear();
+    await settingsBox.clear();
+  }
 }

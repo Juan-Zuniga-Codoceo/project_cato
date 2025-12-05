@@ -4,6 +4,7 @@ import '../../../tools/presentation/screens/tools_screen.dart';
 import '../../../tasks/presentation/screens/tasks_screen.dart';
 import '../../../habits/presentation/screens/habits_screen.dart';
 import '../../../garage/presentation/screens/garage_screen.dart';
+import '../../../settings/presentation/screens/settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -24,9 +25,32 @@ class _HomeScreenState extends State<HomeScreen> {
     const ToolsScreen(),
   ];
 
+  final List<String> _screenTitles = [
+    'Finanzas',
+    'Tareas',
+    'Hábitos',
+    'Garaje',
+    'Herramientas',
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text(_screenTitles[_currentIndex]),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
+            },
+          ),
+        ],
+      ),
       body: _screens[_currentIndex],
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,

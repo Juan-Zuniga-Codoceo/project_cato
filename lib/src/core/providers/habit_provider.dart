@@ -186,6 +186,9 @@ class HabitProvider extends ChangeNotifier {
       // Save stats
       stats.save();
 
+      // Update avatar based on dominant archetype
+      _updateArchetype();
+
       // Recalculate streaks
       final newStreak = _calculateStreak(newCompletedDates);
       final newBestStreak = newStreak > habit.bestStreak
@@ -259,5 +262,37 @@ class HabitProvider extends ChangeNotifier {
     stats.avatarPath = newPath;
     stats.save();
     notifyListeners();
+  }
+
+  /// Automatically update avatar based on dominant attribute
+  void _updateArchetype() {
+    final stats = userStats;
+
+    // Determine the dominant attribute based on XP
+    // Priority on ties: Fuerza > Disciplina > Intelecto > Vitalidad
+    int maxXp = stats.strengthXp;
+    String newAvatar = 'assets/avatars/hero_1.jpg'; // Fuerza (Guerrero)
+
+    if (stats.disciplineXp > maxXp) {
+      maxXp = stats.disciplineXp;
+      newAvatar = 'assets/avatars/hero_2.jpg'; // Disciplina (Magnate/Rey)
+    }
+
+    if (stats.intellectXp > maxXp) {
+      maxXp = stats.intellectXp;
+      newAvatar = 'assets/avatars/hero_3.jpg'; // Intelecto (Hacker/Futurista)
+    }
+
+    if (stats.vitalityXp > maxXp) {
+      maxXp = stats.vitalityXp;
+      newAvatar = 'assets/avatars/hero_5.jpg'; // Vitalidad (Monje)
+    }
+
+    // Only update if the avatar has changed
+    if (stats.avatarPath != newAvatar) {
+      stats.avatarPath = newAvatar;
+      stats.save();
+      // No need to call notifyListeners() here as it will be called by updateHabit
+    }
   }
 }

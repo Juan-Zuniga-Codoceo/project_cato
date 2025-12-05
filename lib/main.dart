@@ -8,6 +8,7 @@ import 'src/core/providers/habit_provider.dart';
 import 'src/core/services/storage_service.dart';
 import 'src/core/services/notification_service.dart';
 import 'src/features/home/presentation/screens/home_screen.dart';
+import 'src/core/providers/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,16 +48,45 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => HabitProvider(storageService, notificationService),
         ),
+        ChangeNotifierProvider(create: (_) => ThemeProvider(storageService)),
       ],
-      child: MaterialApp(
-        title: 'Men\'s Lifestyle App',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
-          useMaterial3: true,
-          fontFamily: 'Roboto',
-        ),
-        home: HomeScreen(),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MaterialApp(
+            title: 'Men\'s Lifestyle App',
+            debugShowCheckedModeBanner: false,
+            themeMode: themeProvider.isDarkMode
+                ? ThemeMode.dark
+                : ThemeMode.light,
+            theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: Colors.indigo,
+                brightness: Brightness.light,
+              ),
+              useMaterial3: true,
+              fontFamily: 'Roboto',
+            ),
+            darkTheme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: Colors.indigo,
+                brightness: Brightness.dark,
+                surface: const Color(0xFF1E293B), // Slate 800
+                background: const Color(0xFF0F172A), // Slate 900
+              ),
+              scaffoldBackgroundColor: const Color(0xFF0F172A), // Slate 900
+              useMaterial3: true,
+              fontFamily: 'Roboto',
+              appBarTheme: const AppBarTheme(
+                backgroundColor: Color(0xFF1E293B), // Slate 800
+                foregroundColor: Colors.white,
+              ),
+              cardTheme: CardThemeData(
+                color: const Color(0xFF1E293B), // Slate 800
+              ),
+            ),
+            home: HomeScreen(),
+          );
+        },
       ),
     );
   }
