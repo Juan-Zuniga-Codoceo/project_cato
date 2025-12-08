@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import '../../../finance/presentation/screens/finance_screen.dart';
 import '../../../tasks/presentation/screens/tasks_screen.dart';
 import '../../../habits/presentation/screens/habits_screen.dart';
+import 'package:provider/provider.dart';
+import '../../../../core/providers/habit_provider.dart';
+import '../../../../core/utils/level_up_manager.dart';
 import '../../../settings/presentation/screens/settings_screen.dart';
 import 'apps_menu_screen.dart';
 
@@ -28,6 +31,20 @@ class _HomeScreenState extends State<HomeScreen> {
     'MISIONES',
     'SISTEMA CATO',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Listen for Level Up events
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final habitProvider = Provider.of<HabitProvider>(context, listen: false);
+      habitProvider.onLevelUp.listen((newLevel) {
+        if (mounted) {
+          LevelUpManager.showLevelUpDialog(context, newLevel);
+        }
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

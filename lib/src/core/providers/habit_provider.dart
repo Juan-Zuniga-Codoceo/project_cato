@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:uuid/uuid.dart';
 import '../../features/habits/domain/models/habit_model.dart';
 import '../../features/habits/domain/models/user_stats_model.dart';
@@ -9,6 +10,15 @@ class HabitProvider extends ChangeNotifier {
   final StorageService _storageService;
   final NotificationService _notificationService;
   final Uuid _uuid = const Uuid();
+
+  final _levelUpController = StreamController<int>.broadcast();
+  Stream<int> get onLevelUp => _levelUpController.stream;
+
+  @override
+  void dispose() {
+    _levelUpController.close();
+    super.dispose();
+  }
 
   HabitProvider(this._storageService, this._notificationService);
 
@@ -120,7 +130,7 @@ class HabitProvider extends ChangeNotifier {
       );
 
       final stats = userStats;
-      bool leveledUp = false;
+      final oldLevel = stats.currentLevel;
 
       if (existingIndex != -1) {
         // Undo completion
@@ -178,13 +188,16 @@ class HabitProvider extends ChangeNotifier {
         // Check Level Up
         if (stats.totalXp >= xpForNextLevel) {
           stats.currentLevel++;
-          leveledUp = true;
-          // Here we could trigger a UI event/dialog if we had a way to signal it
         }
       }
 
       // Save stats
       stats.save();
+
+      // Check for level up event
+      if (stats.currentLevel > oldLevel) {
+        _levelUpController.add(stats.currentLevel);
+      }
 
       // Update avatar based on dominant archetype
       _updateArchetype();

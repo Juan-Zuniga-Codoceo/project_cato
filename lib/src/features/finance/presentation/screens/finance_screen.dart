@@ -48,6 +48,47 @@ class FinanceScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 Consumer<FinanceProvider>(
                   builder: (context, provider, child) {
+                    if (provider.totalBalance == 0 &&
+                        provider.totalIncome == 0 &&
+                        provider.totalExpenses == 0) {
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '\$0',
+                                  style: theme.textTheme.displayMedium
+                                      ?.copyWith(
+                                        color: theme.colorScheme.primary,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  '"Tu imperio empieza con la primera moneda."',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    fontStyle: FontStyle.italic,
+                                    color: theme.colorScheme.onSurface
+                                        .withOpacity(0.6),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Placeholder Icon/Image
+                          Opacity(
+                            opacity: 0.8,
+                            child: Icon(
+                              Icons.account_balance_wallet,
+                              size: 48,
+                              color: theme.colorScheme.primary.withOpacity(0.5),
+                            ),
+                          ),
+                        ],
+                      );
+                    }
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [

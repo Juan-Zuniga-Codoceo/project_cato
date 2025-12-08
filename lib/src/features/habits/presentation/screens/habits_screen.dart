@@ -32,15 +32,50 @@ class HabitsScreen extends StatelessWidget {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(
-                              Icons.fitness_center,
-                              size: 64,
-                              color: Colors.grey[700],
+                            // Placeholder Image (Gato Guerrero)
+                            Container(
+                              width: 120,
+                              height: 120,
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.surface,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primary.withOpacity(0.5),
+                                  width: 2,
+                                ),
+                                image: const DecorationImage(
+                                  image: AssetImage(
+                                    'assets/avatars/hero_1.jpg',
+                                  ), // Using existing asset as placeholder
+                                  fit: BoxFit.cover,
+                                  opacity: 0.8,
+                                ),
+                              ),
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 24),
                             Text(
                               'No hay hábitos forjados aún',
-                              style: TextStyle(color: Colors.grey[600]),
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 8),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 32,
+                              ),
+                              child: Text(
+                                '"La disciplina es el puente entre metas y logros."',
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(
+                                      fontStyle: FontStyle.italic,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface.withOpacity(0.6),
+                                    ),
+                              ),
                             ),
                           ],
                         ),

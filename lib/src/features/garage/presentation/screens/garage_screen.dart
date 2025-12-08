@@ -533,27 +533,51 @@ class _GarageScreenState extends State<GarageScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.directions_car,
-                    size: 80,
-                    color: theme.colorScheme.onSurface.withOpacity(0.3),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Tu garaje está vacío',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.5),
+                  // Placeholder Image (Gato Mecánico)
+                  Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: theme.colorScheme.primary.withOpacity(0.5),
+                        width: 2,
+                      ),
+                      image: const DecorationImage(
+                        image: AssetImage(
+                          'assets/avatars/hero_3.jpg',
+                        ), // Using existing asset as placeholder
+                        fit: BoxFit.cover,
+                        opacity: 0.8,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Tu garaje está vacío',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '¡Trae las máquinas!',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurface.withOpacity(0.6),
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
                   ElevatedButton.icon(
                     onPressed: () => _showAddVehicleModal(context),
                     icon: const Icon(Icons.add),
                     label: const Text('AGREGAR VEHÍCULO'),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 12,
+                        horizontal: 32,
+                        vertical: 16,
                       ),
                       backgroundColor: theme.colorScheme.primary,
                       foregroundColor: theme.colorScheme.onPrimary,
