@@ -4,6 +4,7 @@ import '../../../tools/presentation/screens/tools_screen.dart';
 import '../../../tasks/presentation/screens/tasks_screen.dart';
 import '../../../habits/presentation/screens/habits_screen.dart';
 import '../../../garage/presentation/screens/garage_screen.dart';
+import '../../../lifestyle/presentation/screens/lifestyle_screen.dart';
 import '../../../settings/presentation/screens/settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -21,6 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
     const FinanceScreen(),
     const TasksScreen(),
     const HabitsScreen(), // Added HabitsScreen
+    const LifestyleScreen(),
     const GarageScreen(),
     const ToolsScreen(),
   ];
@@ -29,6 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
     'Finanzas',
     'Tareas',
     'Hábitos',
+    'Estilo de Vida',
     'Garaje',
     'Herramientas',
   ];
@@ -69,6 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Tareas',
           ),
           NavigationDestination(icon: Icon(Icons.whatshot), label: 'Hábitos'),
+          NavigationDestination(icon: Icon(Icons.favorite), label: 'Estilo'),
           NavigationDestination(
             icon: Icon(Icons.directions_car),
             label: 'Garaje',

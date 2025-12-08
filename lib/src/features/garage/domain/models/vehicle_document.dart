@@ -12,12 +12,15 @@ class VehicleDocument {
   final String imagePath;
   @HiveField(3)
   final DateTime dateAdded;
+  @HiveField(4)
+  final DateTime? expirationDate;
 
   VehicleDocument({
     required this.id,
     required this.name,
     required this.imagePath,
     required this.dateAdded,
+    this.expirationDate,
   });
 
   VehicleDocument copyWith({
@@ -25,12 +28,14 @@ class VehicleDocument {
     String? name,
     String? imagePath,
     DateTime? dateAdded,
+    DateTime? expirationDate,
   }) {
     return VehicleDocument(
       id: id ?? this.id,
       name: name ?? this.name,
       imagePath: imagePath ?? this.imagePath,
       dateAdded: dateAdded ?? this.dateAdded,
+      expirationDate: expirationDate ?? this.expirationDate,
     );
   }
 }

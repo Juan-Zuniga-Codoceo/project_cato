@@ -1,52 +1,74 @@
 import 'package:flutter/material.dart';
 import 'currency_converter_screen.dart';
+import 'compound_interest_screen.dart';
+import 'debt_payoff_screen.dart';
 
 class ToolsScreen extends StatelessWidget {
   const ToolsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return GridView.count(
-      crossAxisCount: 2,
-      padding: const EdgeInsets.all(16.0),
-      mainAxisSpacing: 16.0,
-      crossAxisSpacing: 16.0,
-      children: [
-        _buildToolCard(
-          context,
-          title: 'Conversor de Divisas',
-          icon: Icons.currency_exchange,
-          color: Colors.blueGrey,
-          onTap: () {
-            Navigator.push(
+    return Scaffold(
+      appBar: AppBar(title: const Text('Herramientas')),
+      body: GridView.count(
+        crossAxisCount: 2,
+        padding: const EdgeInsets.all(16),
+        mainAxisSpacing: 16,
+        crossAxisSpacing: 16,
+        children: [
+          _ToolCard(
+            title: 'Conversor de Divisas',
+            icon: Icons.currency_exchange,
+            color: Colors.blue,
+            onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => const CurrencyConverterScreen(),
               ),
-            );
-          },
-        ),
-        // Placeholder for future tools
-        _buildToolCard(
-          context,
-          title: 'Próximamente',
-          icon: Icons.build,
-          color: Colors.grey,
-          onTap: () {},
-        ),
-      ],
+            ),
+          ),
+          _ToolCard(
+            title: 'Interés Compuesto',
+            icon: Icons.trending_up,
+            color: Colors.green,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const CompoundInterestScreen(),
+              ),
+            ),
+          ),
+          _ToolCard(
+            title: 'Calculadora de Deuda',
+            icon: Icons.money_off,
+            color: Colors.redAccent,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const DebtPayoffScreen()),
+            ),
+          ),
+        ],
+      ),
     );
   }
+}
 
-  Widget _buildToolCard(
-    BuildContext context, {
-    required String title,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
+class _ToolCard extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ToolCard({
+    required this.title,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Card(
-      color: color,
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
@@ -55,16 +77,19 @@ class ToolsScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 48, color: Colors.white),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 40, color: color),
+            ),
             const SizedBox(height: 16),
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ],
         ),

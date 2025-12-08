@@ -21,13 +21,14 @@ class VehicleDocumentAdapter extends TypeAdapter<VehicleDocument> {
       name: fields[1] as String,
       imagePath: fields[2] as String,
       dateAdded: fields[3] as DateTime,
+      expirationDate: fields[4] as DateTime?,
     );
   }
 
   @override
   void write(BinaryWriter writer, VehicleDocument obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(5)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -35,7 +36,9 @@ class VehicleDocumentAdapter extends TypeAdapter<VehicleDocument> {
       ..writeByte(2)
       ..write(obj.imagePath)
       ..writeByte(3)
-      ..write(obj.dateAdded);
+      ..write(obj.dateAdded)
+      ..writeByte(4)
+      ..write(obj.expirationDate);
   }
 
   @override
