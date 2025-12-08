@@ -32,6 +32,28 @@ class AppTheme {
         ),
         margin: const EdgeInsets.all(8),
       ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+          textStyle: GoogleFonts.spaceMono(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: Colors.black,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+          side: const BorderSide(width: 2, color: Colors.black),
+          textStyle: GoogleFonts.spaceMono(fontWeight: FontWeight.bold),
+        ),
+      ),
       inputDecorationTheme: _buildInputDecorationTheme(Colors.grey.shade100),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.white,
@@ -64,6 +86,28 @@ class AppTheme {
           side: const BorderSide(color: Colors.white24, width: 1),
         ),
         margin: const EdgeInsets.all(8),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: primary,
+          foregroundColor: Colors.black,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+          textStyle: GoogleFonts.spaceMono(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: primary,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+          side: const BorderSide(width: 2, color: primary),
+          textStyle: GoogleFonts.spaceMono(fontWeight: FontWeight.bold),
+        ),
       ),
       inputDecorationTheme: _buildInputDecorationTheme(surface),
       appBarTheme: const AppBarTheme(

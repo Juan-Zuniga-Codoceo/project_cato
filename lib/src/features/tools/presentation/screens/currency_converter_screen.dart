@@ -51,8 +51,10 @@ class _CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Conversor de Divisas')),
+      appBar: AppBar(title: const Text('CONVERSOR DE DIVISAS')),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -66,7 +68,6 @@ class _CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
               ),
               decoration: const InputDecoration(
                 labelText: 'Monto',
-                border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.monetization_on_outlined),
               ),
             ),
@@ -77,11 +78,8 @@ class _CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    initialValue: _fromCurrency,
-                    decoration: const InputDecoration(
-                      labelText: 'De',
-                      border: OutlineInputBorder(),
-                    ),
+                    value: _fromCurrency,
+                    decoration: const InputDecoration(labelText: 'De'),
                     items: _rates.keys.map((String currency) {
                       return DropdownMenuItem<String>(
                         value: currency,
@@ -96,15 +94,12 @@ class _CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
                   ),
                 ),
                 const SizedBox(width: 16),
-                const Icon(Icons.arrow_forward),
+                Icon(Icons.arrow_forward, color: theme.colorScheme.primary),
                 const SizedBox(width: 16),
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    initialValue: _toCurrency,
-                    decoration: const InputDecoration(
-                      labelText: 'A',
-                      border: OutlineInputBorder(),
-                    ),
+                    value: _toCurrency,
+                    decoration: const InputDecoration(labelText: 'A'),
                     items: _rates.keys.map((String currency) {
                       return DropdownMenuItem<String>(
                         value: currency,
@@ -123,35 +118,34 @@ class _CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
             const SizedBox(height: 30),
 
             // Convert Button
-            ElevatedButton(
-              onPressed: _convert,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                textStyle: const TextStyle(fontSize: 18),
-              ),
-              child: const Text('Convertir'),
-            ),
+            ElevatedButton(onPressed: _convert, child: const Text('CONVERTIR')),
             const SizedBox(height: 40),
 
             // Result Display
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(12),
+                color: theme.colorScheme.surface,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: theme.colorScheme.onSurface.withOpacity(0.1),
+                ),
               ),
               child: Column(
                 children: [
                   Text(
-                    'Resultado',
-                    style: Theme.of(context).textTheme.titleMedium,
+                    'RESULTADO',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    ),
                   ),
                   const SizedBox(height: 10),
                   Text(
                     _result.isEmpty ? '---' : _result,
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    style: theme.textTheme.displayMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary,
+                      color: theme.colorScheme.primary,
+                      fontFamily: 'SpaceMono',
                     ),
                     textAlign: TextAlign.center,
                   ),

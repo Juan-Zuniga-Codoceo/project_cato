@@ -59,12 +59,12 @@ class _CompoundInterestScreenState extends State<CompoundInterestScreen> {
   @override
   Widget build(BuildContext context) {
     final currencyFormat = NumberFormat.currency(symbol: '\$');
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Interés Compuesto'),
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
+        title: const Text('INTERÉS COMPUESTO'),
+        // Inherits theme (White/Black)
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -72,10 +72,7 @@ class _CompoundInterestScreenState extends State<CompoundInterestScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+              // Inherits AppTheme CardTheme
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -88,7 +85,6 @@ class _CompoundInterestScreenState extends State<CompoundInterestScreen> {
                       decoration: const InputDecoration(
                         labelText: 'Inversión Inicial (\$)',
                         prefixIcon: Icon(Icons.attach_money),
-                        border: OutlineInputBorder(),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -100,7 +96,6 @@ class _CompoundInterestScreenState extends State<CompoundInterestScreen> {
                       decoration: const InputDecoration(
                         labelText: 'Aporte Mensual (\$)',
                         prefixIcon: Icon(Icons.savings),
-                        border: OutlineInputBorder(),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -112,7 +107,6 @@ class _CompoundInterestScreenState extends State<CompoundInterestScreen> {
                       decoration: const InputDecoration(
                         labelText: 'Tasa Anual (%)',
                         prefixIcon: Icon(Icons.percent),
-                        border: OutlineInputBorder(),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -122,27 +116,12 @@ class _CompoundInterestScreenState extends State<CompoundInterestScreen> {
                       decoration: const InputDecoration(
                         labelText: 'Años a proyectar',
                         prefixIcon: Icon(Icons.calendar_today),
-                        border: OutlineInputBorder(),
                       ),
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton(
                       onPressed: _calculate,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const Text(
-                        'CALCULAR',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      child: const Text('CALCULAR'),
                     ),
                   ],
                 ),
@@ -150,37 +129,38 @@ class _CompoundInterestScreenState extends State<CompoundInterestScreen> {
             ),
             const SizedBox(height: 24),
             if (_totalAmount != null) ...[
-              const Text(
-                'Resultados',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              Text(
+                'RESULTADOS',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 16),
               _ResultCard(
-                title: 'Total Final',
+                title: 'TOTAL FINAL',
                 value: currencyFormat.format(_totalAmount),
                 color: Colors.green,
                 icon: Icons.monetization_on,
+                isLarge: true,
               ),
               const SizedBox(height: 12),
               Row(
                 children: [
                   Expanded(
                     child: _ResultCard(
-                      title: 'Total Aportado',
+                      title: 'TOTAL APORTADO',
                       value: currencyFormat.format(_totalContributed),
                       color: Colors.blue,
                       icon: Icons.account_balance_wallet,
-                      isSmall: true,
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: _ResultCard(
-                      title: 'Interés Ganado',
+                      title: 'INTERÉS GANADO',
                       value: currencyFormat.format(_totalInterest),
                       color: Colors.orange,
                       icon: Icons.trending_up,
-                      isSmall: true,
                     ),
                   ),
                 ],
@@ -198,45 +178,51 @@ class _ResultCard extends StatelessWidget {
   final String value;
   final Color color;
   final IconData icon;
-  final bool isSmall;
+  final bool isLarge;
 
   const _ResultCard({
     required this.title,
     required this.value,
     required this.color,
     required this.icon,
-    this.isSmall = false,
+    this.isLarge = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: color.withOpacity(0.5), width: 1),
-      ),
+      // Inherits AppTheme CardTheme
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Icon(icon, color: color, size: isSmall ? 24 : 32),
+            Icon(icon, color: color, size: isLarge ? 32 : 24),
             const SizedBox(height: 8),
             Text(
               title,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: isSmall ? 12 : 14,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: theme.textTheme.bodyMedium?.color?.withOpacity(0.6),
               ),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 4),
             Text(
               value,
-              style: TextStyle(
-                color: color,
-                fontSize: isSmall ? 16 : 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: isLarge
+                  ? theme.textTheme.displaySmall?.copyWith(
+                      color: color,
+                      fontFamily: 'SpaceMono',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 24, // Explicit size adjustment if needed
+                    )
+                  : theme.textTheme.titleLarge?.copyWith(
+                      color: color,
+                      fontFamily: 'SpaceMono',
+                      fontWeight: FontWeight.bold,
+                    ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),

@@ -66,11 +66,6 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
       timeString += '$remainingMonths mes${remainingMonths != 1 ? 'es' : ''}';
     }
 
-    final totalPaid = totalMonths * monthlyPayment; // Approximation
-    // More accurate total paid calculation requires iterating or exact final payment
-    // For simplicity, we'll use (months * payment) but correct the final payment logic if needed.
-    // Actually, let's just use the simple approximation for "Total Interest" = (Total Paid - Principal)
-
     final totalInterest = (totalMonths * monthlyPayment) - totalDebt;
 
     setState(() {
@@ -82,12 +77,12 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
   @override
   Widget build(BuildContext context) {
     final currencyFormat = NumberFormat.currency(symbol: '\$');
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Calculadora de Deuda'),
-        backgroundColor: Colors.redAccent,
-        foregroundColor: Colors.white,
+        title: const Text('CALCULADORA DE DEUDA'),
+        // Inherits theme
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -95,10 +90,7 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+              // Inherits AppTheme CardTheme
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -111,7 +103,6 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
                       decoration: const InputDecoration(
                         labelText: 'Deuda Total (\$)',
                         prefixIcon: Icon(Icons.money_off),
-                        border: OutlineInputBorder(),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -123,7 +114,6 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
                       decoration: const InputDecoration(
                         labelText: 'Tasa Anual (%)',
                         prefixIcon: Icon(Icons.percent),
-                        border: OutlineInputBorder(),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -135,27 +125,16 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
                       decoration: const InputDecoration(
                         labelText: 'Pago Mensual (\$)',
                         prefixIcon: Icon(Icons.payment),
-                        border: OutlineInputBorder(),
                       ),
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton(
                       onPressed: _calculate,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.redAccent,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                        backgroundColor: theme.colorScheme.error,
+                        foregroundColor: theme.colorScheme.onError,
                       ),
-                      child: const Text(
-                        'CALCULAR',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      child: const Text('CALCULAR'),
                     ),
                   ],
                 ),
@@ -167,8 +146,8 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.red.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.red),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.red.withOpacity(0.5)),
                 ),
                 child: Row(
                   children: [
@@ -177,27 +156,31 @@ class _DebtPayoffScreenState extends State<DebtPayoffScreen> {
                     Expanded(
                       child: Text(
                         _errorMessage!,
-                        style: const TextStyle(color: Colors.red),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: Colors.red,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
             if (_timeToPayoff != null) ...[
-              const Text(
-                'Resultados',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              Text(
+                'RESULTADOS',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 16),
               _ResultCard(
-                title: 'Tiempo para pagar',
+                title: 'TIEMPO PARA PAGAR',
                 value: _timeToPayoff!,
                 color: Colors.blue,
                 icon: Icons.timer,
               ),
               const SizedBox(height: 12),
               _ResultCard(
-                title: 'Interés Total Pagado',
+                title: 'INTERÉS TOTAL PAGADO',
                 value: currencyFormat.format(_totalInterestPaid),
                 color: Colors.redAccent,
                 icon: Icons.money_off,
@@ -228,24 +211,16 @@ class _ResultCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: color.withOpacity(0.5), width: 1),
-      ),
+      // Inherits AppTheme CardTheme
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: color, size: 32),
-            ),
+            // No circle background, just clean icon
+            Icon(icon, color: color, size: 32),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -253,14 +228,18 @@ class _ResultCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: theme.textTheme.bodyMedium?.color?.withOpacity(
+                        0.6,
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     value,
-                    style: TextStyle(
+                    style: theme.textTheme.headlineSmall?.copyWith(
                       color: color,
-                      fontSize: 20,
+                      fontFamily: 'SpaceMono',
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -268,9 +247,10 @@ class _ResultCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       subtitle!,
-                      style: TextStyle(
-                        color: Colors.grey[500],
-                        fontSize: 12,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.textTheme.bodySmall?.color?.withOpacity(
+                          0.5,
+                        ),
                         fontStyle: FontStyle.italic,
                       ),
                     ),
