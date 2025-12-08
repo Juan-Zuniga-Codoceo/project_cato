@@ -189,8 +189,8 @@ class _GarageScreenState extends State<GarageScreen> {
                 },
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: Colors.indigo,
-                  foregroundColor: Colors.white,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
                 ),
                 child: Text(
                   vehicleToEdit != null
@@ -403,8 +403,8 @@ class _GarageScreenState extends State<GarageScreen> {
                     },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: Colors.indigo,
-                      foregroundColor: Colors.white,
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
                     ),
                     child: const Text('Guardar Mantenimiento'),
                   ),
@@ -522,8 +522,10 @@ class _GarageScreenState extends State<GarageScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Garaje Digital')),
+      appBar: AppBar(title: const Text('GARAJE DIGITAL')),
       body: Consumer<GarageProvider>(
         builder: (context, provider, child) {
           if (provider.vehicles.isEmpty) {
@@ -531,26 +533,30 @@ class _GarageScreenState extends State<GarageScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.directions_car,
                     size: 80,
-                    color: Colors.grey,
+                    color: theme.colorScheme.onSurface.withOpacity(0.3),
                   ),
                   const SizedBox(height: 20),
-                  const Text(
+                  Text(
                     'Tu garaje está vacío',
-                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.onSurface.withOpacity(0.5),
+                    ),
                   ),
                   const SizedBox(height: 30),
                   ElevatedButton.icon(
                     onPressed: () => _showAddVehicleModal(context),
                     icon: const Icon(Icons.add),
-                    label: const Text('Agregar Vehículo'),
+                    label: const Text('AGREGAR VEHÍCULO'),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 24,
                         vertical: 12,
                       ),
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: theme.colorScheme.onPrimary,
                     ),
                   ),
                 ],
@@ -589,28 +595,26 @@ class _GarageScreenState extends State<GarageScreen> {
                         width: MediaQuery.of(context).size.width * 0.85,
                         margin: const EdgeInsets.only(right: 16),
                         child: Card(
-                          elevation: isSelected ? 8 : 2,
+                          // Blueprint Style: Flat surface, accent border if selected
+                          elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                             side: isSelected
-                                ? const BorderSide(
-                                    color: Colors.indigo,
+                                ? BorderSide(
+                                    color: theme.colorScheme.primary,
                                     width: 2,
                                   )
-                                : BorderSide.none,
+                                : BorderSide(
+                                    color: theme.colorScheme.onSurface
+                                        .withOpacity(0.1),
+                                    width: 1,
+                                  ),
                           ),
                           child: Container(
                             decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: isSelected
-                                    ? [
-                                        Colors.blueGrey[800]!,
-                                        Colors.blueGrey[900]!,
-                                      ]
-                                    : [Colors.grey[800]!, Colors.grey[900]!],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
+                              color: theme
+                                  .colorScheme
+                                  .surface, // Flat color, no gradient
                               borderRadius: BorderRadius.circular(16),
                             ),
                             padding: const EdgeInsets.all(20),
@@ -630,7 +634,10 @@ class _GarageScreenState extends State<GarageScreen> {
                                               borderRadius:
                                                   BorderRadius.circular(12),
                                               border: Border.all(
-                                                color: Colors.white24,
+                                                color: theme
+                                                    .colorScheme
+                                                    .onSurface
+                                                    .withOpacity(0.2),
                                                 width: 1,
                                               ),
                                             ),
@@ -649,26 +656,24 @@ class _GarageScreenState extends State<GarageScreen> {
                                             width: 60,
                                             height: 60,
                                             decoration: BoxDecoration(
-                                              color: Colors.white.withOpacity(
-                                                0.2,
-                                              ),
+                                              color: theme.colorScheme.onSurface
+                                                  .withOpacity(0.1),
                                               borderRadius:
                                                   BorderRadius.circular(12),
                                             ),
                                             child: Icon(
                                               Icons.directions_car,
-                                              color: Colors.white.withOpacity(
-                                                0.8,
-                                              ),
+                                              color: theme.colorScheme.onSurface
+                                                  .withOpacity(0.5),
                                               size: 32,
                                             ),
                                           ),
                                     Row(
                                       children: [
                                         IconButton(
-                                          icon: const Icon(
+                                          icon: Icon(
                                             Icons.folder_shared,
-                                            color: Colors.white,
+                                            color: theme.colorScheme.primary,
                                           ),
                                           onPressed: () {
                                             Navigator.push(
@@ -684,9 +689,9 @@ class _GarageScreenState extends State<GarageScreen> {
                                           tooltip: 'Documentos',
                                         ),
                                         IconButton(
-                                          icon: const Icon(
+                                          icon: Icon(
                                             Icons.camera_alt,
-                                            color: Colors.white,
+                                            color: theme.colorScheme.primary,
                                           ),
                                           onPressed: () =>
                                               _pickVehiclePhoto(context, v),
@@ -698,40 +703,32 @@ class _GarageScreenState extends State<GarageScreen> {
                                             vertical: 6,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: Colors.black.withOpacity(
-                                              0.5,
-                                            ),
+                                            color: theme.colorScheme.surface,
                                             borderRadius: BorderRadius.circular(
                                               8,
                                             ),
                                             border: Border.all(
-                                              color: Colors.white.withOpacity(
-                                                0.3,
-                                              ),
+                                              color:
+                                                  theme.colorScheme.onSurface,
+                                              width: 2,
                                             ),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black.withOpacity(
-                                                  0.2,
-                                                ),
-                                                blurRadius: 4,
-                                                offset: const Offset(0, 2),
-                                              ),
-                                            ],
                                           ),
                                           child: Text(
                                             v.plate.toUpperCase(),
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              letterSpacing: 2.0,
-                                            ),
+                                            style: theme.textTheme.titleMedium
+                                                ?.copyWith(
+                                                  fontFamily:
+                                                      'SpaceMono', // Ensure mono font
+                                                  fontWeight: FontWeight.bold,
+                                                  letterSpacing: 2.0,
+                                                ),
                                           ),
                                         ),
                                         IconButton(
-                                          icon: const Icon(
+                                          icon: Icon(
                                             Icons.edit,
-                                            color: Colors.white,
+                                            color: theme.colorScheme.onSurface
+                                                .withOpacity(0.5),
                                           ),
                                           onPressed: () => _showAddVehicleModal(
                                             context,
@@ -745,35 +742,32 @@ class _GarageScreenState extends State<GarageScreen> {
                                 const Spacer(),
                                 Text(
                                   v.name,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                  style: theme.textTheme.headlineMedium
+                                      ?.copyWith(fontWeight: FontWeight.bold),
                                 ),
                                 Text(
                                   '${v.brand} ${v.model} (${v.year})',
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.7),
-                                    fontSize: 16,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    color: theme.colorScheme.onSurface
+                                        .withOpacity(0.7),
                                   ),
                                 ),
                                 const SizedBox(height: 10),
                                 Row(
                                   children: [
-                                    const Icon(
+                                    Icon(
                                       Icons.speed,
-                                      color: Colors.orange,
+                                      color: theme.colorScheme.secondary,
                                       size: 20,
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
                                       '${NumberFormat('#,###').format(v.currentMileage)} km',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                      style: theme.textTheme.headlineSmall
+                                          ?.copyWith(
+                                            fontFamily: 'SpaceMono',
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -792,18 +786,17 @@ class _GarageScreenState extends State<GarageScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Historial de Mantenimiento',
-                      style: TextStyle(
-                        fontSize: 18,
+                    Text(
+                      'HISTORIAL DE MANTENIMIENTO',
+                      style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.add_circle, color: Colors.indigo),
+                    TextButton.icon(
                       onPressed: () =>
                           _showAddMaintenanceModal(context, vehicle),
-                      tooltip: 'Registrar Mantenimiento',
+                      icon: const Icon(Icons.add),
+                      label: const Text('REGISTRAR'),
                     ),
                   ],
                 ),
@@ -813,8 +806,10 @@ class _GarageScreenState extends State<GarageScreen> {
                 child: maintenances.isEmpty
                     ? Center(
                         child: Text(
-                          'No hay registros de mantenimiento',
-                          style: TextStyle(color: Colors.grey[600]),
+                          'Sin registros de mantenimiento',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurface.withOpacity(0.5),
+                          ),
                         ),
                       )
                     : ListView.builder(
@@ -823,29 +818,34 @@ class _GarageScreenState extends State<GarageScreen> {
                         itemBuilder: (context, index) {
                           final m = maintenances[index];
                           return Card(
-                            margin: const EdgeInsets.only(bottom: 12),
+                            // Inherits theme
                             child: ListTile(
                               leading: CircleAvatar(
-                                backgroundColor: Colors.orange.withOpacity(0.1),
-                                child: const Icon(
+                                backgroundColor: theme.colorScheme.primary
+                                    .withOpacity(0.2),
+                                child: Icon(
                                   Icons.build,
-                                  color: Colors.orange,
+                                  color: theme.colorScheme.primary,
+                                  size: 20,
                                 ),
                               ),
                               title: Text(
                                 m.type,
-                                style: const TextStyle(
+                                style: theme.textTheme.titleSmall?.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               subtitle: Text(
                                 '${DateFormat('dd/MM/yyyy').format(m.date)} • ${NumberFormat('#,###').format(m.mileage)} km',
+                                style: theme.textTheme.bodySmall,
                               ),
                               trailing: Text(
                                 '\$${NumberFormat('#,###').format(m.cost)}',
-                                style: const TextStyle(
+                                style: theme.textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+                                  color: theme
+                                      .colorScheme
+                                      .error, // Cost is usually negative/expense
                                 ),
                               ),
                             ),
@@ -855,17 +855,6 @@ class _GarageScreenState extends State<GarageScreen> {
               ),
             ],
           );
-        },
-      ),
-      floatingActionButton: Consumer<GarageProvider>(
-        builder: (context, provider, child) {
-          return provider.vehicles.isNotEmpty
-              ? FloatingActionButton(
-                  onPressed: () => _showAddVehicleModal(context),
-                  backgroundColor: Colors.indigo,
-                  child: const Icon(Icons.add, color: Colors.white),
-                )
-              : const SizedBox.shrink();
         },
       ),
     );

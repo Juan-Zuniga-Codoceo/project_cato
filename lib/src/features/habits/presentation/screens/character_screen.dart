@@ -8,9 +8,14 @@ class CharacterScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Perfil de Personaje'),
+        title: Text(
+          'PERFIL DE PERSONAJE',
+          style: theme.textTheme.headlineSmall,
+        ),
         centerTitle: true,
       ),
       body: Consumer<HabitProvider>(
@@ -25,14 +30,7 @@ class CharacterScreen extends StatelessWidget {
               children: [
                 // Global Stats Header
                 Card(
-                  color: const Color(0xFF2A2A2A),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    side: BorderSide(
-                      color: Colors.amber.withOpacity(0.3),
-                      width: 2,
-                    ),
-                  ),
+                  // Inherits theme style (Dark: Surface, Light: White)
                   child: Padding(
                     padding: const EdgeInsets.all(24.0),
                     child: Column(
@@ -50,15 +48,18 @@ class CharacterScreen extends StatelessWidget {
                                   shape: BoxShape.circle,
                                   gradient: LinearGradient(
                                     colors: [
-                                      Colors.amber[700]!,
-                                      Colors.amber[300]!,
+                                      theme.colorScheme.primary,
+                                      theme.colorScheme.primary.withOpacity(
+                                        0.5,
+                                      ),
                                     ],
                                     begin: Alignment.bottomLeft,
                                     end: Alignment.topRight,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.amber.withOpacity(0.5),
+                                      color: theme.colorScheme.primary
+                                          .withOpacity(0.3),
                                       blurRadius: 20,
                                       spreadRadius: 5,
                                     ),
@@ -69,10 +70,9 @@ class CharacterScreen extends StatelessWidget {
                                     stats.avatarPath,
                                     fit: BoxFit.cover,
                                     errorBuilder: (context, error, stackTrace) {
-                                      // Fallback to icon if image not found
-                                      return const Icon(
+                                      return Icon(
                                         Icons.shield,
-                                        color: Colors.white,
+                                        color: theme.colorScheme.onPrimary,
                                         size: 48,
                                       );
                                     },
@@ -87,20 +87,22 @@ class CharacterScreen extends StatelessWidget {
                                     vertical: 4,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Colors.amber[700],
-                                    borderRadius: BorderRadius.circular(12),
+                                    color: theme.colorScheme.primary,
+                                    borderRadius: BorderRadius.circular(
+                                      4,
+                                    ), // More angular
                                     border: Border.all(
-                                      color: Colors.white,
+                                      color: theme.colorScheme.surface,
                                       width: 2,
                                     ),
                                   ),
                                   child: Text(
                                     'LVL ${stats.currentLevel}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
+                                    style: theme.textTheme.labelMedium
+                                        ?.copyWith(
+                                          color: theme.colorScheme.onPrimary,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                   ),
                                 ),
                               ),
@@ -115,17 +117,13 @@ class CharacterScreen extends StatelessWidget {
                             Flexible(
                               child: Text(
                                 stats.userName,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                style: theme.textTheme.headlineMedium,
                                 textAlign: TextAlign.center,
                               ),
                             ),
                             IconButton(
                               icon: const Icon(Icons.edit, size: 20),
-                              color: Colors.amber[400],
+                              color: theme.colorScheme.primary,
                               onPressed: () => _showNameEditor(
                                 context,
                                 provider,
@@ -138,9 +136,8 @@ class CharacterScreen extends StatelessWidget {
                         // Rank Title (Subtitle)
                         Text(
                           stats.rankTitle,
-                          style: TextStyle(
-                            color: Colors.grey[400],
-                            fontSize: 16,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: theme.colorScheme.onSurface.withOpacity(0.6),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -151,31 +148,37 @@ class CharacterScreen extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  'XP Global',
-                                  style: TextStyle(
-                                    color: Colors.grey[300],
-                                    fontSize: 14,
-                                  ),
+                                  'XP GLOBAL',
+                                  style: theme.textTheme.labelSmall,
                                 ),
                                 Text(
                                   '${stats.totalXp} / $xpForNext',
-                                  style: TextStyle(
-                                    color: Colors.amber[400],
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: theme.colorScheme.primary,
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 14,
                                   ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 8),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: LinearProgressIndicator(
-                                value: globalProgress.clamp(0.0, 1.0),
-                                minHeight: 12,
-                                backgroundColor: Colors.grey[800],
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.amber[600]!,
+                            Container(
+                              height: 16,
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: theme.colorScheme.onSurface
+                                      .withOpacity(0.2),
+                                ),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(2),
+                                child: LinearProgressIndicator(
+                                  value: globalProgress.clamp(0.0, 1.0),
+                                  minHeight: 16,
+                                  backgroundColor: Colors.transparent,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    theme.colorScheme.primary,
+                                  ),
                                 ),
                               ),
                             ),
@@ -189,26 +192,15 @@ class CharacterScreen extends StatelessWidget {
 
                 // Radar Chart
                 Card(
-                  color: const Color(0xFF2A2A2A),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    side: BorderSide(
-                      color: Colors.cyan.withOpacity(0.3),
-                      width: 2,
-                    ),
-                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
                       children: [
-                        const Text(
-                          'Balance de Atributos',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        Text(
+                          'BALANCE DE ATRIBUTOS',
+                          style: theme.textTheme.titleMedium,
                         ),
+                        const SizedBox(height: 16),
                         RadarChartWidget(stats: stats),
                       ],
                     ),
@@ -217,14 +209,7 @@ class CharacterScreen extends StatelessWidget {
                 const SizedBox(height: 24),
 
                 // Attributes Title
-                const Text(
-                  'Atributos',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                Text('ATRIBUTOS', style: theme.textTheme.headlineSmall),
                 const SizedBox(height: 16),
 
                 // Attributes Grid
@@ -237,28 +222,28 @@ class CharacterScreen extends StatelessWidget {
                   childAspectRatio: 1.1,
                   children: [
                     _AttributeCard(
-                      title: 'Fuerza',
+                      title: 'FUERZA',
                       icon: Icons.fitness_center,
                       color: Colors.red,
                       level: stats.getAttributeLevel('Fuerza'),
                       xp: stats.getAttributeXp('Fuerza'),
                     ),
                     _AttributeCard(
-                      title: 'Intelecto',
+                      title: 'INTELECTO',
                       icon: Icons.psychology,
                       color: Colors.blue,
                       level: stats.getAttributeLevel('Intelecto'),
                       xp: stats.getAttributeXp('Intelecto'),
                     ),
                     _AttributeCard(
-                      title: 'Vitalidad',
+                      title: 'VITALIDAD',
                       icon: Icons.favorite,
                       color: Colors.green,
                       level: stats.getAttributeLevel('Vitalidad'),
                       xp: stats.getAttributeXp('Vitalidad'),
                     ),
                     _AttributeCard(
-                      title: 'Disciplina',
+                      title: 'DISCIPLINA',
                       icon: Icons.shield,
                       color: Colors.grey,
                       level: stats.getAttributeLevel('Disciplina'),
@@ -292,15 +277,12 @@ class _AttributeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final progress = (xp % 100) / 100;
     final nextLevelXp = 100;
 
     return Card(
-      color: const Color(0xFF1E1E1E),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: color.withOpacity(0.3), width: 2),
-      ),
+      // Inherits theme style
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -309,22 +291,13 @@ class _AttributeCard extends StatelessWidget {
             // Icon and Title
             Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(icon, color: color, size: 24),
-                ),
+                Icon(icon, color: color, size: 24),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     title,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
                     ),
                   ),
                 ),
@@ -334,10 +307,9 @@ class _AttributeCard extends StatelessWidget {
 
             // Level
             Text(
-              'Nivel $level',
-              style: TextStyle(
+              'NIVEL $level',
+              style: theme.textTheme.headlineSmall?.copyWith(
                 color: color,
-                fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -347,16 +319,27 @@ class _AttributeCard extends StatelessWidget {
               children: [
                 Text(
                   '${xp % 100} / $nextLevelXp XP',
-                  style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                  ),
                 ),
                 const SizedBox(height: 4),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    minHeight: 6,
-                    backgroundColor: Colors.grey[800],
-                    valueColor: AlwaysStoppedAnimation<Color>(color),
+                Container(
+                  height: 8,
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: theme.colorScheme.onSurface.withOpacity(0.2),
+                    ),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(1),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 8,
+                      backgroundColor: Colors.transparent,
+                      valueColor: AlwaysStoppedAnimation<Color>(color),
+                    ),
                   ),
                 ),
               ],
@@ -381,23 +364,15 @@ const List<String> _availableAvatars = [
 void _showAvatarSelector(BuildContext context, HabitProvider provider) {
   showModalBottomSheet(
     context: context,
-    backgroundColor: const Color(0xFF1E1E1E),
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
     builder: (context) {
       return Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              'Selecciona tu Avatar',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+            Text(
+              'SELECCIONA TU AVATAR',
+              style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 20),
             GridView.builder(
@@ -418,20 +393,20 @@ void _showAvatarSelector(BuildContext context, HabitProvider provider) {
                   child: Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.amber, width: 2),
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.primary,
+                        width: 2,
+                      ),
                     ),
                     child: ClipOval(
                       child: Image.asset(
                         avatarPath,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: Colors.grey[800],
-                            child: Icon(
-                              Icons.person,
-                              color: Colors.grey[600],
-                              size: 40,
-                            ),
+                          return Icon(
+                            Icons.person,
+                            color: Theme.of(context).colorScheme.onSurface,
+                            size: 40,
                           );
                         },
                       ),
@@ -462,33 +437,19 @@ void _showNameEditor(
     context: context,
     builder: (context) {
       return AlertDialog(
-        backgroundColor: const Color(0xFF2A2A2A),
-        title: const Text(
-          'Editar Nombre',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text('EDITAR NOMBRE'),
         content: SingleChildScrollView(
           child: TextField(
             controller: controller,
             autofocus: true,
-            style: const TextStyle(color: Colors.white),
-            decoration: InputDecoration(
-              hintText: 'Ingresa tu nombre',
-              hintStyle: TextStyle(color: Colors.grey[600]),
-              enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.amber[400]!),
-              ),
-              focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.amber[600]!),
-              ),
-            ),
+            decoration: const InputDecoration(hintText: 'Ingresa tu nombre'),
             maxLength: 20,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancelar', style: TextStyle(color: Colors.grey[400])),
+            child: const Text('CANCELAR'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -498,8 +459,7 @@ void _showNameEditor(
                 Navigator.pop(context);
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber[700]),
-            child: const Text('Guardar', style: TextStyle(color: Colors.white)),
+            child: const Text('GUARDAR'),
           ),
         ],
       );

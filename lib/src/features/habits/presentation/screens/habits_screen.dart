@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
+
 import '../../../../core/providers/habit_provider.dart';
 import '../../domain/models/habit_model.dart';
 import 'character_screen.dart';
@@ -90,6 +90,7 @@ class HabitCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final today = DateTime.now();
     final isCompletedToday = habit.completedDates.any(
       (date) =>
@@ -99,14 +100,9 @@ class HabitCard extends StatelessWidget {
     );
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      color: const Color(0xFF1E1E1E), // Dark card background
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.white.withOpacity(0.05), width: 1),
-      ),
+      // Inherits theme style
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(8),
         onTap: () {
           // Navigate to detail screen
           Navigator.push(
@@ -130,6 +126,10 @@ class HabitCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: Color(habit.colorCode).withOpacity(0.2),
                       shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Color(habit.colorCode).withOpacity(0.5),
+                        width: 1,
+                      ),
                     ),
                     child: Center(
                       child: Icon(
@@ -140,11 +140,10 @@ class HabitCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    habit.attribute,
-                    style: TextStyle(
-                      color: Colors.grey[500],
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
+                    habit.attribute.toUpperCase(),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
@@ -158,15 +157,16 @@ class HabitCard extends StatelessWidget {
                   children: [
                     Text(
                       habit.title,
-                      style: TextStyle(
-                        fontSize: 16,
+                      style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         decoration: isCompletedToday
                             ? TextDecoration.lineThrough
                             : null,
                         color: isCompletedToday
-                            ? Colors.white.withOpacity(0.5)
-                            : Colors.white,
+                            ? theme.textTheme.titleMedium?.color?.withOpacity(
+                                0.5,
+                              )
+                            : theme.textTheme.titleMedium?.color,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -180,10 +180,10 @@ class HabitCard extends StatelessWidget {
                         const SizedBox(width: 4),
                         Flexible(
                           child: Text(
-                            '${habit.currentStreak} días seguidos',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[400],
+                            '${habit.currentStreak} DÍAS',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.textTheme.bodySmall?.color
+                                  ?.withOpacity(0.7),
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -199,9 +199,10 @@ class HabitCard extends StatelessWidget {
                 scale: 1.2,
                 child: Checkbox(
                   value: isCompletedToday,
-                  activeColor: Colors.green,
+                  activeColor: theme.colorScheme.primary,
+                  checkColor: theme.colorScheme.onPrimary,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(4),
                   ),
                   onChanged: (value) {
                     if (value == true) {
@@ -221,7 +222,7 @@ class HabitCard extends StatelessWidget {
                               fontSize: 16,
                             ),
                           ),
-                          backgroundColor: Colors.black87,
+                          backgroundColor: theme.colorScheme.inverseSurface,
                           duration: const Duration(seconds: 1),
                           behavior: SnackBarBehavior.floating,
                           shape: RoundedRectangleBorder(
@@ -241,7 +242,10 @@ class HabitCard extends StatelessWidget {
 
               // Options Menu
               PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert, color: Colors.white54),
+                icon: Icon(
+                  Icons.more_vert,
+                  color: theme.iconTheme.color?.withOpacity(0.5),
+                ),
                 onSelected: (value) {
                   if (value == 'edit') {
                     _showEditHabitModal(context, habit);
@@ -570,6 +574,7 @@ class MiniRpgStatsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Consumer<HabitProvider>(
       builder: (context, provider, child) {
         final stats = provider.userStats;
@@ -577,11 +582,7 @@ class MiniRpgStatsWidget extends StatelessWidget {
         final globalProgress = stats.totalXp / xpForNext;
 
         return Card(
-          color: const Color(0xFF2A2A2A),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: Colors.amber.withOpacity(0.3), width: 1.5),
-          ),
+          // Inherits theme style
           child: InkWell(
             onTap: () {
               Navigator.push(
@@ -591,7 +592,7 @@ class MiniRpgStatsWidget extends StatelessWidget {
                 ),
               );
             },
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(8),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -606,14 +607,14 @@ class MiniRpgStatsWidget extends StatelessWidget {
                           CircleAvatar(
                             radius: 30,
                             backgroundImage: AssetImage(stats.avatarPath),
-                            backgroundColor: Colors.amber[700],
-                            child: null, // Image will show via backgroundImage
+                            backgroundColor: theme.colorScheme.primary,
+                            child: null,
                           ),
                           // Fallback if image fails to load
                           if (stats.avatarPath.isEmpty)
-                            const Icon(
+                            Icon(
                               Icons.shield,
-                              color: Colors.white,
+                              color: theme.colorScheme.onPrimary,
                               size: 20,
                             ),
                           // Level badge overlay
@@ -625,24 +626,17 @@ class MiniRpgStatsWidget extends StatelessWidget {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.amber[700],
-                                borderRadius: BorderRadius.circular(8),
+                                color: theme.colorScheme.primary,
+                                borderRadius: BorderRadius.circular(4),
                                 border: Border.all(
-                                  color: Colors.white,
+                                  color: theme.colorScheme.surface,
                                   width: 1.5,
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.amber.withOpacity(0.4),
-                                    blurRadius: 4,
-                                    spreadRadius: 1,
-                                  ),
-                                ],
                               ),
                               child: Text(
                                 'LVL ${stats.currentLevel}',
-                                style: const TextStyle(
-                                  color: Colors.white,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.onPrimary,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 9,
                                 ),
@@ -658,76 +652,61 @@ class MiniRpgStatsWidget extends StatelessWidget {
                           children: [
                             Text(
                               stats.rankTitle,
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                fontSize: 15,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Nivel ${stats.currentLevel}',
-                              style: TextStyle(
-                                color: Colors.grey[400],
-                                fontSize: 12,
+                              'NIVEL ${stats.currentLevel}',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurface.withOpacity(
+                                  0.6,
+                                ),
                               ),
                             ),
                             const SizedBox(height: 6),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: LinearProgressIndicator(
-                                value: globalProgress.clamp(0.0, 1.0),
-                                minHeight: 6,
-                                backgroundColor: Colors.grey[800],
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.amber[600]!,
+                            Container(
+                              height: 6,
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: theme.colorScheme.onSurface
+                                      .withOpacity(0.2),
+                                ),
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(1),
+                                child: LinearProgressIndicator(
+                                  value: globalProgress.clamp(0.0, 1.0),
+                                  minHeight: 6,
+                                  backgroundColor: Colors.transparent,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    theme.colorScheme.primary,
+                                  ),
                                 ),
                               ),
                             ),
                             const SizedBox(height: 2),
                             Text(
                               '${stats.totalXp} / $xpForNext XP',
-                              style: TextStyle(
-                                color: Colors.amber[400],
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.primary,
                                 fontSize: 10,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Ver Perfil',
-                              style: TextStyle(
-                                color: Colors.amber[400],
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Icon(
-                              Icons.chevron_right,
-                              color: Colors.amber[400],
-                              size: 16,
-                            ),
-                          ],
-                        ),
+                      Icon(
+                        Icons.chevron_right,
+                        color: theme.colorScheme.primary,
+                        size: 24,
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  const Divider(color: Colors.white12, height: 1),
+                  Divider(color: theme.dividerColor, height: 1),
                   const SizedBox(height: 12),
 
                   // Bottom Row: 4 Mini Attribute Stats

@@ -14,6 +14,7 @@ import 'src/core/providers/garage_provider.dart';
 import 'src/core/providers/habit_provider.dart';
 import 'src/features/tasks/providers/task_provider.dart';
 import 'src/features/lifestyle/providers/lifestyle_provider.dart';
+import 'src/core/theme/app_theme.dart';
 
 // Screens
 import 'src/features/home/presentation/screens/home_screen.dart';
@@ -71,31 +72,8 @@ class MyApp extends StatelessWidget {
             themeMode: themeProvider.isDarkMode
                 ? ThemeMode.dark
                 : ThemeMode.light,
-            theme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(
-                seedColor: Colors.indigo,
-                brightness: Brightness.light,
-              ),
-              useMaterial3: true,
-              appBarTheme: const AppBarTheme(
-                centerTitle: true,
-                backgroundColor: Colors.indigo,
-                foregroundColor: Colors.white,
-              ),
-            ),
-            darkTheme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(
-                seedColor: Colors.blueGrey,
-                brightness: Brightness.dark,
-              ),
-              useMaterial3: true,
-              scaffoldBackgroundColor: const Color(0xFF121212),
-              appBarTheme: const AppBarTheme(
-                centerTitle: true,
-                backgroundColor: Color(0xFF1F1F1F),
-                foregroundColor: Colors.white,
-              ),
-            ),
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
             home: const HomeScreen(),
           );
         },

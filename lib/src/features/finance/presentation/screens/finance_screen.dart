@@ -1,85 +1,96 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/providers/finance_provider.dart';
+import '../../../../core/theme/app_theme.dart';
 import 'statistics_screen.dart';
 import 'subscriptions_screen.dart';
 import 'transactions_screen.dart';
 import 'savings_screen.dart';
-import 'budgets_screen.dart'; // Import único y correcto
+import 'budgets_screen.dart';
 
 class FinanceScreen extends StatelessWidget {
   const FinanceScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // Colores específicos para el dashboard (Cyberpunk muted)
+    final borderColor = isDark ? Colors.white12 : Colors.grey.shade300;
+
     return Scaffold(
       body: Column(
         children: [
           // Header - Balance Total
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.fromLTRB(
+              24,
+              60,
+              24,
+              24,
+            ), // SafeArea top padding manual
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.blueGrey.shade900, Colors.blueGrey.shade700],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(30),
-                bottomRight: Radius.circular(30),
-              ),
+              color: theme.scaffoldBackgroundColor,
+              border: Border(bottom: BorderSide(color: borderColor)),
             ),
-            child: SafeArea(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Balance Total',
-                    style: TextStyle(color: Colors.white70, fontSize: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'BALANCE TOTAL',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    letterSpacing: 1.5,
                   ),
-                  const SizedBox(height: 8),
-                  Consumer<FinanceProvider>(
-                    builder: (context, provider, child) {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '\$${provider.totalBalance.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 36,
-                              fontWeight: FontWeight.bold,
+                ),
+                const SizedBox(height: 8),
+                Consumer<FinanceProvider>(
+                  builder: (context, provider, child) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '\$${provider.totalBalance.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
+                          style: theme.textTheme.displayMedium?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _buildBreakdownItem(
+                              context,
+                              'INGRESOS',
+                              provider.totalIncome,
+                              Colors
+                                  .greenAccent, // Keep semantic colors but muted if needed
+                              Icons.arrow_upward,
                             ),
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              _buildBreakdownItem(
-                                'Ingresos',
-                                provider.totalIncome,
-                                Colors.greenAccent,
-                              ),
-                              const SizedBox(width: 16),
-                              _buildBreakdownItem(
-                                'Gastos',
-                                provider.totalExpenses,
-                                Colors.redAccent,
-                              ),
-                              const SizedBox(width: 16),
-                              _buildBreakdownItem(
-                                'Suscrip.',
-                                provider.totalMonthlySubscriptions,
-                                Colors.orangeAccent,
-                              ),
-                            ],
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ],
-              ),
+                            _buildBreakdownItem(
+                              context,
+                              'GASTOS',
+                              provider.totalExpenses,
+                              AppTheme.danger,
+                              Icons.arrow_downward,
+                            ),
+                            _buildBreakdownItem(
+                              context,
+                              'SUSCRIP.',
+                              provider.totalMonthlySubscriptions,
+                              AppTheme.secondary,
+                              Icons.repeat,
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ],
             ),
           ),
 
@@ -90,13 +101,14 @@ class FinanceScreen extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               mainAxisSpacing: 16,
               crossAxisSpacing: 16,
+              childAspectRatio: 1.4, // Más apaisado para estilo tarjeta técnica
               children: [
                 // Tarjeta 1: Suscripciones
                 _buildDashboardCard(
                   context,
-                  title: 'Suscripciones Fijas',
+                  title: 'SUSCRIPCIONES',
                   icon: Icons.repeat,
-                  color: Colors.purple,
+                  accentColor: Colors.purpleAccent,
                   onTap: () {
                     Navigator.push(
                       context,
@@ -109,9 +121,9 @@ class FinanceScreen extends StatelessWidget {
                 // Tarjeta 2: Registro Diario
                 _buildDashboardCard(
                   context,
-                  title: 'Registro Diario',
+                  title: 'REGISTRO',
                   icon: Icons.receipt_long,
-                  color: Colors.teal,
+                  accentColor: Colors.tealAccent,
                   onTap: () {
                     Navigator.push(
                       context,
@@ -121,12 +133,12 @@ class FinanceScreen extends StatelessWidget {
                     );
                   },
                 ),
-                // Tarjeta 3: Metas (Sin const)
+                // Tarjeta 3: Metas
                 _buildDashboardCard(
                   context,
-                  title: 'Metas',
+                  title: 'METAS',
                   icon: Icons.flag,
-                  color: Colors.indigo,
+                  accentColor: Colors.indigoAccent,
                   onTap: () {
                     Navigator.push(
                       context,
@@ -137,9 +149,9 @@ class FinanceScreen extends StatelessWidget {
                 // Tarjeta 4: Presupuestos
                 _buildDashboardCard(
                   context,
-                  title: 'Presupuestos',
+                  title: 'PRESUPUESTOS',
                   icon: Icons.speed,
-                  color: Colors.orange,
+                  accentColor: Colors.orangeAccent,
                   onTap: () {
                     Navigator.push(
                       context,
@@ -152,9 +164,9 @@ class FinanceScreen extends StatelessWidget {
                 // Tarjeta 5: Estadísticas
                 _buildDashboardCard(
                   context,
-                  title: 'Estadísticas',
+                  title: 'ESTADÍSTICAS',
                   icon: Icons.bar_chart,
-                  color: Colors.blueGrey,
+                  accentColor: Colors.blueGrey,
                   onTap: () {
                     Navigator.push(
                       context,
@@ -172,19 +184,36 @@ class FinanceScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBreakdownItem(String label, double amount, Color color) {
+  Widget _buildBreakdownItem(
+    BuildContext context,
+    String label,
+    double amount,
+    Color color,
+    IconData icon,
+  ) {
+    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: TextStyle(color: color.withOpacity(0.8), fontSize: 12),
+        Row(
+          children: [
+            Icon(icon, size: 12, color: color.withOpacity(0.7)),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurface.withOpacity(0.6),
+                fontSize: 10,
+                letterSpacing: 1,
+              ),
+            ),
+          ],
         ),
+        const SizedBox(height: 4),
         Text(
           '\$${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
-          style: TextStyle(
+          style: theme.textTheme.titleMedium?.copyWith(
             color: color,
-            fontSize: 14,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -196,36 +225,34 @@ class FinanceScreen extends StatelessWidget {
     BuildContext context, {
     required String title,
     required IconData icon,
-    required Color color,
+    required Color accentColor,
     required VoidCallback onTap,
   }) {
+    final theme = Theme.of(context);
+
     return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      // El tema ya define el color de fondo y borde, pero aquí podemos personalizar el borde para que coincida con el acento si queremos,
+      // o mantenerlo sutil como pide el usuario ("borde fino del color de la categoría").
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(color: accentColor.withOpacity(0.5), width: 1),
+      ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: LinearGradient(
-              colors: [color.withOpacity(0.8), color],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 48, color: Colors.white),
-              const SizedBox(height: 16),
+              Icon(icon, size: 32, color: accentColor),
+              const SizedBox(height: 12),
               Text(
                 title,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                  letterSpacing: 1.2,
                 ),
               ),
             ],
