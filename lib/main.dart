@@ -13,7 +13,9 @@ import 'src/core/providers/finance_provider.dart';
 import 'src/core/providers/garage_provider.dart';
 import 'src/core/providers/habit_provider.dart';
 import 'src/features/tasks/providers/task_provider.dart';
+
 import 'src/features/lifestyle/providers/lifestyle_provider.dart';
+import 'src/features/responsibility/providers/responsibility_provider.dart';
 import 'src/core/theme/app_theme.dart';
 
 // Screens
@@ -62,6 +64,9 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => TaskProvider(storageService)),
         ChangeNotifierProvider(
           create: (_) => LifestyleProvider(storageService),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ResponsibilityProvider(storageService)..init(),
         ),
       ],
       child: Consumer<ThemeProvider>(
