@@ -13,9 +13,13 @@ class MonthlyTaskModel {
   @HiveField(2)
   bool isCompleted;
 
+  @HiveField(3)
+  final int difficulty;
+
   MonthlyTaskModel({
     required this.id,
     required this.title,
     this.isCompleted = false,
+    this.difficulty = 1,
   });
 }

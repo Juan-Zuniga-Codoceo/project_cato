@@ -9,6 +9,7 @@ import '../../features/tasks/domain/models/task_model.dart';
 import '../../features/habits/domain/models/habit_model.dart';
 import '../../features/habits/domain/models/user_stats_model.dart';
 import '../../features/responsibility/domain/models/monthly_task_model.dart';
+import '../../features/social/domain/models/person_model.dart';
 
 class StorageService {
   static const String vehicleBoxName = 'vehicles';
@@ -21,6 +22,7 @@ class StorageService {
   static const String settingsBoxName = 'settings';
   static const String lifestyleBoxName = 'lifestyle';
   static const String protocolsBoxName = 'protocols';
+  static const String socialBoxName = 'social';
 
   Future<void> init() async {
     await Hive.initFlutter();
@@ -34,6 +36,7 @@ class StorageService {
     Hive.registerAdapter(HabitModelAdapter());
     Hive.registerAdapter(UserStatsModelAdapter());
     Hive.registerAdapter(MonthlyTaskModelAdapter());
+    Hive.registerAdapter(PersonModelAdapter());
 
     await Hive.openBox<Vehicle>(vehicleBoxName);
     await Hive.openBox<Maintenance>(maintenanceBoxName);
@@ -45,6 +48,7 @@ class StorageService {
     await Hive.openBox(settingsBoxName);
     await Hive.openBox(lifestyleBoxName);
     await Hive.openBox<MonthlyTaskModel>(protocolsBoxName);
+    await Hive.openBox<PersonModel>(socialBoxName);
   }
 
   Box<Vehicle> get vehicleBox => Hive.box<Vehicle>(vehicleBoxName);
@@ -62,6 +66,7 @@ class StorageService {
   Box get lifestyleBox => Hive.box(lifestyleBoxName);
   Box<MonthlyTaskModel> get protocolsBox =>
       Hive.box<MonthlyTaskModel>(protocolsBoxName);
+  Box<PersonModel> get socialBox => Hive.box<PersonModel>(socialBoxName);
 
   Future<void> clearAllData() async {
     await vehicleBox.clear();

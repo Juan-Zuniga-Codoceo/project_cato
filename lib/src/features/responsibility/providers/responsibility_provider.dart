@@ -37,6 +37,7 @@ class ResponsibilityProvider extends ChangeNotifier {
         id: task.id,
         title: task.title,
         isCompleted: false,
+        difficulty: task.difficulty,
       );
       await _box.put(task.id, updatedTask);
     }
@@ -45,11 +46,27 @@ class ResponsibilityProvider extends ChangeNotifier {
 
   Future<void> _loadDefaultTasks() async {
     final defaults = [
-      MonthlyTaskModel(id: 'rent', title: 'Pagar Arriendo/Dividendo'),
-      MonthlyTaskModel(id: 'bills', title: 'Pagar Cuentas Básicas'),
-      MonthlyTaskModel(id: 'tires', title: 'Revisar Presión Neumáticos'),
-      MonthlyTaskModel(id: 'backup', title: 'Respaldo Digital'),
-      MonthlyTaskModel(id: 'cleaning', title: 'Limpieza Profunda'),
+      MonthlyTaskModel(
+        id: 'rent',
+        title: 'Pagar Arriendo/Dividendo',
+        difficulty: 3,
+      ),
+      MonthlyTaskModel(
+        id: 'bills',
+        title: 'Pagar Cuentas Básicas',
+        difficulty: 1,
+      ),
+      MonthlyTaskModel(
+        id: 'tires',
+        title: 'Revisar Presión Neumáticos',
+        difficulty: 1,
+      ),
+      MonthlyTaskModel(id: 'backup', title: 'Respaldo Digital', difficulty: 2),
+      MonthlyTaskModel(
+        id: 'cleaning',
+        title: 'Limpieza Profunda',
+        difficulty: 3,
+      ),
     ];
 
     for (var task in defaults) {
@@ -65,6 +82,38 @@ class ResponsibilityProvider extends ChangeNotifier {
         id: task.id,
         title: task.title,
         isCompleted: !task.isCompleted,
+        difficulty: task.difficulty,
+      );
+      await _box.put(id, updatedTask);
+      notifyListeners();
+    }
+  }
+
+  Future<void> addTask(String title, int difficulty) async {
+    final id = DateTime.now().millisecondsSinceEpoch.toString();
+    final newTask = MonthlyTaskModel(
+      id: id,
+      title: title,
+      isCompleted: false,
+      difficulty: difficulty,
+    );
+    await _box.put(id, newTask);
+    notifyListeners();
+  }
+
+  Future<void> deleteTask(String id) async {
+    await _box.delete(id);
+    notifyListeners();
+  }
+
+  Future<void> updateTask(String id, String newTitle, int newDifficulty) async {
+    final task = _box.get(id);
+    if (task != null) {
+      final updatedTask = MonthlyTaskModel(
+        id: task.id,
+        title: newTitle,
+        isCompleted: task.isCompleted,
+        difficulty: newDifficulty,
       );
       await _box.put(id, updatedTask);
       notifyListeners();
@@ -78,4 +127,24 @@ class ResponsibilityProvider extends ChangeNotifier {
   }
 
   bool get isMonthCompleted => progress == 1.0;
+
+  int calculatePotentialXP() {
+    int totalXP = 0;
+    for (var task in tasks) {
+      switch (task.difficulty) {
+        case 1:
+          totalXP += 10;
+          break;
+        case 2:
+          totalXP += 25;
+          break;
+        case 3:
+          totalXP += 50;
+          break;
+        default:
+          totalXP += 10;
+      }
+    }
+    return totalXP;
+  }
 }

@@ -3,6 +3,7 @@ import '../../../garage/presentation/screens/garage_screen.dart';
 import '../../../lifestyle/presentation/screens/lifestyle_screen.dart';
 import '../../../tools/presentation/screens/tools_screen.dart';
 import '../../../responsibility/presentation/screens/adult_mode_screen.dart';
+import '../../../social/presentation/screens/social_screen.dart';
 
 class AppsMenuScreen extends StatelessWidget {
   const AppsMenuScreen({super.key});
@@ -46,11 +47,20 @@ class AppsMenuScreen extends StatelessWidget {
           ),
           _AppCard(
             title: 'ADULT MODE',
-            icon: Icons.shield_moon,
+            icon: Icons.shield,
             color: Colors.teal,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const AdultModeScreen()),
+            ),
+          ),
+          _AppCard(
+            title: 'ALIADOS',
+            icon: Icons.groups,
+            color: Colors.indigo,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const SocialScreen()),
             ),
           ),
         ],
