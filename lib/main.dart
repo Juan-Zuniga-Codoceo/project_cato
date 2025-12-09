@@ -57,13 +57,15 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider(storageService)),
         ChangeNotifierProvider(create: (_) => FinanceProvider(storageService)),
-        ChangeNotifierProvider(create: (_) => GarageProvider(storageService)),
+        ChangeNotifierProvider(
+          create: (_) => GarageProvider(storageService, notificationService),
+        ),
         ChangeNotifierProvider(
           create: (_) => HabitProvider(storageService, notificationService),
         ),
         ChangeNotifierProvider(create: (_) => TaskProvider(storageService)),
         ChangeNotifierProvider(
-          create: (_) => LifestyleProvider(storageService),
+          create: (_) => LifestyleProvider(storageService, notificationService),
         ),
         ChangeNotifierProvider(
           create: (_) => ResponsibilityProvider(storageService)..init(),

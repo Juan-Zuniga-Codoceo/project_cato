@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/services/storage_service.dart';
+import '../../../core/services/notification_service.dart';
 
 class LifestyleProvider extends ChangeNotifier {
   final StorageService _storageService;
+  final NotificationService _notificationService;
 
-  LifestyleProvider(this._storageService);
+  LifestyleProvider(this._storageService, this._notificationService);
 
   // Checkup Types
   static const String checkupGeneral = 'general';
@@ -25,6 +28,45 @@ class LifestyleProvider extends ChangeNotifier {
       date.toIso8601String(),
     );
     notifyListeners();
+
+    // Schedule next checkup notification
+    DateTime nextCheckupDate;
+    String bodyText;
+
+    switch (type) {
+      case checkupDental:
+        nextCheckupDate = date.add(const Duration(days: 180)); // 6 months
+        bodyText = 'Ya pasaron 6 meses desde tu último dentista. ¡Agenda hora!';
+        break;
+      case checkupGeneral:
+        nextCheckupDate = date.add(const Duration(days: 365)); // 1 year
+        bodyText =
+            'Ya pasó un año desde tu último chequeo general. ¡Agenda hora!';
+        break;
+      case checkupVision:
+        nextCheckupDate = date.add(const Duration(days: 365)); // 1 year
+        bodyText =
+            'Ya pasó un año desde tu último chequeo de vista. ¡Agenda hora!';
+        break;
+      default:
+        return;
+    }
+
+    // Set time to 9:00 AM
+    final scheduledDate = DateTime(
+      nextCheckupDate.year,
+      nextCheckupDate.month,
+      nextCheckupDate.day,
+      9,
+      0,
+    );
+
+    await _notificationService.scheduleDateNotification(
+      id: type.hashCode,
+      title: '🏥 Mantenimiento de Salud',
+      body: bodyText,
+      scheduledDate: scheduledDate,
+    );
   }
 
   Color getHealthStatus(String type) {

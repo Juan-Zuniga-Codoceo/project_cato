@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../garage/presentation/screens/garage_screen.dart';
 import '../../../lifestyle/presentation/screens/lifestyle_screen.dart';
 import '../../../tools/presentation/screens/tools_screen.dart';
-import '../../../responsibility/presentation/screens/protocols_screen.dart';
+import '../../../responsibility/presentation/screens/adult_mode_screen.dart';
 
 class AppsMenuScreen extends StatelessWidget {
   const AppsMenuScreen({super.key});
@@ -45,12 +45,12 @@ class AppsMenuScreen extends StatelessWidget {
             ),
           ),
           _AppCard(
-            title: 'PROTOCOLOS',
-            icon: Icons.verified_user,
+            title: 'ADULT MODE',
+            icon: Icons.shield_moon,
             color: Colors.teal,
             onTap: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const ProtocolsScreen()),
+              MaterialPageRoute(builder: (context) => const AdultModeScreen()),
             ),
           ),
         ],

@@ -283,28 +283,31 @@ class _StyleTab extends StatelessWidget {
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          Card(
-            color: Colors.indigo.shade50,
-            elevation: 2,
-            shape: RoundedRectangleBorder(
+          Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+              ),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  const Icon(Icons.lightbulb, color: Colors.amber, size: 40),
-                  const SizedBox(height: 12),
-                  Text(
-                    randomTip,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ],
-              ),
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.lightbulb,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 40,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  randomTip,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.copyWith(fontStyle: FontStyle.italic),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 24),

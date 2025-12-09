@@ -5,11 +5,13 @@ import '../../features/garage/domain/models/vehicle_document.dart';
 import '../../features/garage/domain/models/maintenance.dart';
 import '../services/storage_service.dart';
 import '../services/file_manager_service.dart';
+import '../services/notification_service.dart';
 
 class GarageProvider extends ChangeNotifier {
   final StorageService _storageService;
+  final NotificationService _notificationService;
 
-  GarageProvider(this._storageService);
+  GarageProvider(this._storageService, this._notificationService);
 
   List<Vehicle> get vehicles => _storageService.vehicleBox.values.toList();
   List<Maintenance> get maintenances =>
@@ -118,6 +120,30 @@ class GarageProvider extends ChangeNotifier {
           ..add(permanentDocument);
         updateVehicle(vehicle.copyWith(documents: updatedDocuments));
         print('✅ Documento agregado: ${document.name}');
+
+        // Schedule notification if expiration date exists
+        if (permanentDocument.expirationDate != null) {
+          final expirationDate = permanentDocument.expirationDate!;
+          final notificationDate = expirationDate.subtract(
+            const Duration(days: 7),
+          );
+          // Set time to 9:00 AM
+          final scheduledDate = DateTime(
+            notificationDate.year,
+            notificationDate.month,
+            notificationDate.day,
+            9,
+            0,
+          );
+
+          await _notificationService.scheduleDateNotification(
+            id: permanentDocument.id.hashCode,
+            title: '⚠️ Vencimiento Próximo',
+            body:
+                'El documento ${permanentDocument.name} vence el ${expirationDate.day}/${expirationDate.month}/${expirationDate.year}',
+            scheduledDate: scheduledDate,
+          );
+        }
       } else {
         print('❌ Vehículo no encontrado con ID: $vehicleId');
       }
@@ -145,6 +171,10 @@ class GarageProvider extends ChangeNotifier {
             .where((doc) => doc.id != documentId)
             .toList();
         updateVehicle(vehicle.copyWith(documents: updatedDocuments));
+
+        // Cancel notification
+        await _notificationService.cancelNotification(docToDelete.id.hashCode);
+
         print('✅ Documento eliminado');
       } catch (e) {
         print('❌ Error eliminando documento: $e');

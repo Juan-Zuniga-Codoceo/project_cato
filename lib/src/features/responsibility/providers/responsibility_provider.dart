@@ -45,11 +45,11 @@ class ResponsibilityProvider extends ChangeNotifier {
 
   Future<void> _loadDefaultTasks() async {
     final defaults = [
-      MonthlyTaskModel(id: 'bills', title: 'Pagar cuentas'),
-      MonthlyTaskModel(id: 'tires', title: 'Revisar neumáticos'),
-      MonthlyTaskModel(id: 'backup', title: 'Respaldo digital'),
-      MonthlyTaskModel(id: 'cleaning', title: 'Limpieza profunda'),
-      MonthlyTaskModel(id: 'budget', title: 'Revisar presupuesto'),
+      MonthlyTaskModel(id: 'rent', title: 'Pagar Arriendo/Dividendo'),
+      MonthlyTaskModel(id: 'bills', title: 'Pagar Cuentas Básicas'),
+      MonthlyTaskModel(id: 'tires', title: 'Revisar Presión Neumáticos'),
+      MonthlyTaskModel(id: 'backup', title: 'Respaldo Digital'),
+      MonthlyTaskModel(id: 'cleaning', title: 'Limpieza Profunda'),
     ];
 
     for (var task in defaults) {

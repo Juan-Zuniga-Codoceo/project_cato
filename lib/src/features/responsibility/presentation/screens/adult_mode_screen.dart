@@ -5,14 +5,14 @@ import 'package:confetti/confetti.dart';
 import '../../providers/responsibility_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 
-class ProtocolsScreen extends StatefulWidget {
-  const ProtocolsScreen({super.key});
+class AdultModeScreen extends StatefulWidget {
+  const AdultModeScreen({super.key});
 
   @override
-  State<ProtocolsScreen> createState() => _ProtocolsScreenState();
+  State<AdultModeScreen> createState() => _AdultModeScreenState();
 }
 
-class _ProtocolsScreenState extends State<ProtocolsScreen> {
+class _AdultModeScreenState extends State<AdultModeScreen> {
   late ConfettiController _confettiController;
 
   @override
@@ -84,7 +84,7 @@ class _ProtocolsScreenState extends State<ProtocolsScreen> {
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  'MANTENIMIENTO\nCOMPLETADO',
+                  'SISTEMA ESTABILIZADO',
                   style: GoogleFonts.spaceMono(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -94,7 +94,7 @@ class _ProtocolsScreenState extends State<ProtocolsScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  '+100 XP',
+                  '+200 XP',
                   style: GoogleFonts.spaceMono(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
@@ -118,7 +118,7 @@ class _ProtocolsScreenState extends State<ProtocolsScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  child: const Text('SISTEMA OPTIMIZADO'),
+                  child: const Text('CONTINUAR'),
                 ),
               ],
             ),
@@ -145,7 +145,7 @@ class _ProtocolsScreenState extends State<ProtocolsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'PROTOCOLOS MENSUALES',
+          'PROTOCOLO MENSUAL',
           style: GoogleFonts.spaceMono(fontWeight: FontWeight.bold),
         ),
       ),
@@ -194,7 +194,7 @@ class _ProtocolsScreenState extends State<ProtocolsScreen> {
                     border: Border.all(
                       color: task.isCompleted
                           ? Colors.green.withOpacity(0.5)
-                          : Colors.white12,
+                          : Theme.of(context).dividerColor,
                     ),
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -213,7 +213,11 @@ class _ProtocolsScreenState extends State<ProtocolsScreen> {
                         decoration: task.isCompleted
                             ? TextDecoration.lineThrough
                             : null,
-                        color: task.isCompleted ? Colors.grey : Colors.white,
+                        color: task.isCompleted
+                            ? Theme.of(
+                                context,
+                              ).textTheme.bodyMedium?.color?.withOpacity(0.5)
+                            : Theme.of(context).textTheme.bodyMedium?.color,
                       ),
                     ),
                     secondary: Icon(

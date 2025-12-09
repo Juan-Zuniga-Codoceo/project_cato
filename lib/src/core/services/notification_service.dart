@@ -181,6 +181,88 @@ class NotificationService {
     }
   }
 
+  /// Schedule a notification at a specific date and time
+  Future<void> scheduleDateNotification({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime scheduledDate,
+  }) async {
+    // Validate that the date is in the future
+    if (scheduledDate.isBefore(DateTime.now())) {
+      debugPrint('⚠️ Cannot schedule notification in the past: $scheduledDate');
+      return;
+    }
+
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'mens_lifestyle_channel_v3',
+          'Recordatorios de Hábitos',
+          channelDescription:
+              'Notificaciones para recordar tus hábitos diarios',
+          importance: Importance.max,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
+          largeIcon: DrawableResourceAndroidBitmap('app_icon'),
+          styleInformation: BigPictureStyleInformation(
+            DrawableResourceAndroidBitmap('app_icon'),
+            largeIcon: DrawableResourceAndroidBitmap('app_icon'),
+          ),
+          playSound: true,
+          enableVibration: true,
+        );
+
+    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    const NotificationDetails notificationDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    // Convert DateTime to TZDateTime
+    final tzScheduledDate = tz.TZDateTime.from(scheduledDate, tz.local);
+
+    try {
+      await _notifications.zonedSchedule(
+        id,
+        title,
+        body,
+        tzScheduledDate,
+        notificationDetails,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        // No matchDateTimeComponents for one-time notification
+      );
+
+      debugPrint('✅ Scheduled date notification $id for $scheduledDate');
+    } catch (e) {
+      debugPrint('⚠️ Error scheduling date notification: $e');
+      // Fallback to inexact
+      try {
+        await _notifications.zonedSchedule(
+          id,
+          title,
+          body,
+          tzScheduledDate,
+          notificationDetails,
+          androidScheduleMode: AndroidScheduleMode.inexact,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
+        );
+        debugPrint(
+          '✅ Scheduled inexact date notification $id for $scheduledDate',
+        );
+      } catch (e2) {
+        debugPrint('❌ Fatal error scheduling date notification: $e2');
+      }
+    }
+  }
+
   /// Cancel a specific notification
   Future<void> cancelNotification(int id) async {
     await _notifications.cancel(id);
