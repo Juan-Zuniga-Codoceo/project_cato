@@ -1,9 +1,12 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../providers/social_provider.dart';
 import '../../domain/models/person_model.dart';
+import '../widgets/person_dialog.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AllyDetailScreen extends StatelessWidget {
   final PersonModel person;
@@ -31,6 +34,14 @@ class AllyDetailScreen extends StatelessWidget {
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () => showDialog(
+              context: context,
+              builder: (context) =>
+                  PersonDialog(provider: provider, person: updatedPerson),
+            ),
+          ),
+          IconButton(
             icon: const Icon(Icons.delete_outline),
             onPressed: () => _confirmDelete(context, provider, updatedPerson),
           ),
@@ -54,17 +65,30 @@ class AllyDetailScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundColor: statusColor.withOpacity(0.1),
-                    child: Text(
-                      updatedPerson.name[0].toUpperCase(),
-                      style: GoogleFonts.spaceMono(
-                        fontSize: 40,
-                        fontWeight: FontWeight.bold,
-                        color: statusColor,
-                      ),
-                    ),
+                  Builder(
+                    builder: (context) {
+                      ImageProvider? avatarImage;
+                      if (updatedPerson.photoPath != null &&
+                          File(updatedPerson.photoPath!).existsSync()) {
+                        avatarImage = FileImage(File(updatedPerson.photoPath!));
+                      }
+
+                      return CircleAvatar(
+                        radius: 50,
+                        backgroundColor: statusColor.withOpacity(0.1),
+                        backgroundImage: avatarImage,
+                        child: avatarImage == null
+                            ? Text(
+                                updatedPerson.name[0].toUpperCase(),
+                                style: GoogleFonts.spaceMono(
+                                  fontSize: 40,
+                                  fontWeight: FontWeight.bold,
+                                  color: statusColor,
+                                ),
+                              )
+                            : null,
+                      );
+                    },
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -75,6 +99,29 @@ class AllyDetailScreen extends StatelessWidget {
                       color: Colors.grey,
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  if (updatedPerson.phoneNumber != null &&
+                      updatedPerson.phoneNumber!.isNotEmpty)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _ActionButton(
+                          icon: Icons.phone,
+                          color: Colors.green,
+                          onTap: () =>
+                              _launchUrl('tel:${updatedPerson.phoneNumber}'),
+                        ),
+                        const SizedBox(width: 16),
+                        _ActionButton(
+                          icon: Icons
+                              .message, // WhatsApp icon usually not available in material icons, using message
+                          color: Colors.green.shade700,
+                          onTap: () => _launchUrl(
+                            'https://wa.me/${updatedPerson.phoneNumber!.replaceAll(RegExp(r'[^0-9]'), '')}',
+                          ),
+                        ),
+                      ],
+                    ),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
                     onPressed: () {
@@ -225,7 +272,11 @@ class AllyDetailScreen extends StatelessWidget {
                             style: GoogleFonts.inter(fontSize: 14),
                           ),
                           dense: true,
-                          // In a real app, we would add delete functionality here
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete_outline, size: 18),
+                            onPressed: () =>
+                                provider.removeGiftIdea(updatedPerson.id, idea),
+                          ),
                         ),
                       ),
                     ),
@@ -418,5 +469,41 @@ class _DateCard extends StatelessWidget {
     }
     final days = nextDate.difference(now).inDays;
     return '$days DÍAS';
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ActionButton({
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(50),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          shape: BoxShape.circle,
+          border: Border.all(color: color.withOpacity(0.5)),
+        ),
+        child: Icon(icon, color: color, size: 24),
+      ),
+    );
+  }
+}
+
+Future<void> _launchUrl(String urlString) async {
+  final Uri url = Uri.parse(urlString);
+  if (!await launchUrl(url)) {
+    throw Exception('Could not launch $url');
   }
 }

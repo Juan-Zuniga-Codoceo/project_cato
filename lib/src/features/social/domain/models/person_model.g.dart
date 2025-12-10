@@ -27,13 +27,14 @@ class PersonModelAdapter extends TypeAdapter<PersonModel> {
       contactFrequency: fields[7] as int,
       lastContactDate: fields[8] as DateTime?,
       isFavorite: fields[9] as bool,
+      phoneNumber: fields[10] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, PersonModel obj) {
     writer
-      ..writeByte(10)
+      ..writeByte(11)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -53,7 +54,9 @@ class PersonModelAdapter extends TypeAdapter<PersonModel> {
       ..writeByte(8)
       ..write(obj.lastContactDate)
       ..writeByte(9)
-      ..write(obj.isFavorite);
+      ..write(obj.isFavorite)
+      ..writeByte(10)
+      ..write(obj.phoneNumber);
   }
 
   @override

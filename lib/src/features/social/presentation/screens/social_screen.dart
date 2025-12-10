@@ -6,7 +6,7 @@ import '../../domain/models/person_model.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'ally_detail_screen.dart';
 import 'dart:io';
-import 'package:image_picker/image_picker.dart';
+import '../widgets/person_dialog.dart';
 
 class SocialScreen extends StatelessWidget {
   const SocialScreen({super.key});
@@ -98,151 +98,9 @@ class SocialScreen extends StatelessWidget {
   }
 
   void _showAddPersonDialog(BuildContext context, SocialProvider provider) {
-    final nameController = TextEditingController();
-    final relationshipController = TextEditingController();
-    int frequency = 7;
-    File? imageFile;
-    bool isFavorite = false;
-
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) {
-          Future<void> pickImage() async {
-            final picker = ImagePicker();
-            final pickedFile = await picker.pickImage(
-              source: ImageSource.gallery,
-            );
-            if (pickedFile != null) {
-              setState(() => imageFile = File(pickedFile.path));
-            }
-          }
-
-          return AlertDialog(
-            title: Text(
-              'Nuevo Aliado',
-              style: GoogleFonts.spaceMono(fontWeight: FontWeight.bold),
-            ),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GestureDetector(
-                    onTap: pickImage,
-                    child: CircleAvatar(
-                      radius: 40,
-                      backgroundColor: Colors.grey[800],
-                      backgroundImage: imageFile != null
-                          ? FileImage(imageFile!)
-                          : null,
-                      child: imageFile == null
-                          ? const Icon(
-                              Icons.add_a_photo,
-                              size: 30,
-                              color: Colors.white,
-                            )
-                          : null,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Nombre',
-                      hintText: 'Ej: Ana',
-                    ),
-                    textCapitalization: TextCapitalization.words,
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: relationshipController,
-                    decoration: const InputDecoration(
-                      labelText: 'Relación',
-                      hintText: 'Ej: Pareja, Amigo',
-                    ),
-                    textCapitalization: TextCapitalization.words,
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.timer_outlined,
-                        size: 20,
-                        color: Colors.grey,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Frecuencia de contacto:',
-                        style: GoogleFonts.spaceMono(
-                          fontSize: 12,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  DropdownButtonFormField<int>(
-                    value: frequency,
-                    decoration: const InputDecoration(
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: 1, child: Text('Diario')),
-                      DropdownMenuItem(value: 3, child: Text('Cada 3 días')),
-                      DropdownMenuItem(value: 7, child: Text('Semanal')),
-                      DropdownMenuItem(value: 14, child: Text('Quincenal')),
-                      DropdownMenuItem(value: 30, child: Text('Mensual')),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) setState(() => frequency = value);
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      const Text('Marcar como Favorito'),
-                      const Spacer(),
-                      IconButton(
-                        icon: Icon(
-                          isFavorite ? Icons.star : Icons.star_border,
-                          color: isFavorite ? Colors.amber : Colors.grey,
-                        ),
-                        onPressed: () =>
-                            setState(() => isFavorite = !isFavorite),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('CANCELAR'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  if (nameController.text.isNotEmpty &&
-                      relationshipController.text.isNotEmpty) {
-                    provider.addPerson(
-                      name: nameController.text,
-                      relationship: relationshipController.text,
-                      contactFrequency: frequency,
-                      photoPath: imageFile?.path,
-                      isFavorite: isFavorite,
-                    );
-                    Navigator.pop(context);
-                  }
-                },
-                child: const Text('AGREGAR'),
-              ),
-            ],
-          );
-        },
-      ),
+      builder: (context) => PersonDialog(provider: provider),
     );
   }
 }
@@ -262,7 +120,6 @@ class _AllyCard extends StatelessWidget {
     final isEventNear = upcomingEvent != null;
 
     // Override status color if event is near
-    // Override status color if event is near
     final statusColor = isEventNear
         ? Colors.amber
         : (status == ContactStatus.good
@@ -277,8 +134,6 @@ class _AllyCard extends StatelessWidget {
             builder: (context) => AllyDetailScreen(person: person),
           ),
         );
-        // Force refresh by notifying listeners if needed, though Consumer handles it.
-        // provider.notifyListeners(); // Protected, but updatePerson in detail screen triggers it.
       },
       child: Container(
         decoration: BoxDecoration(
@@ -316,48 +171,34 @@ class _AllyCard extends StatelessWidget {
                 children: [
                   Builder(
                     builder: (context) {
-                      File? imageFile;
-                      if (person.photoPath != null &&
-                          person.photoPath!.isNotEmpty) {
-                        final file = File(person.photoPath!);
-                        if (file.existsSync()) {
-                          imageFile = file;
-                        }
-                      }
+                      final hasPhoto =
+                          person.photoPath != null &&
+                          File(person.photoPath!).existsSync();
 
-                      if (imageFile != null) {
-                        return CircleAvatar(
-                          key: ValueKey(
-                            person.photoPath,
-                          ), // Force rebuild on path change
-                          radius: 32,
-                          backgroundImage: FileImage(imageFile),
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.surface,
-                        );
-                      } else {
-                        return CircleAvatar(
-                          radius: 32,
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.surface,
-                          child: Text(
-                            person.name.isNotEmpty
-                                ? person.name[0].toUpperCase()
-                                : '?',
-                            style: GoogleFonts.spaceMono(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: statusColor,
-                            ),
-                          ),
-                        );
-                      }
+                      return CircleAvatar(
+                        radius: 32,
+                        backgroundImage: hasPhoto
+                            ? FileImage(File(person.photoPath!))
+                            : null,
+                        backgroundColor: Theme.of(context).colorScheme.surface,
+                        key: ValueKey(person.photoPath),
+                        onBackgroundImageError: hasPhoto ? (_, __) {} : null,
+                        child: hasPhoto
+                            ? null
+                            : Text(
+                                person.name.isNotEmpty
+                                    ? person.name[0].toUpperCase()
+                                    : '?',
+                                style: GoogleFonts.spaceMono(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: statusColor,
+                                ),
+                              ),
+                      );
                     },
                   ),
                   const SizedBox(height: 16),
-
                   if (isEventNear) ...[
                     const SizedBox(height: 8),
                     Container(

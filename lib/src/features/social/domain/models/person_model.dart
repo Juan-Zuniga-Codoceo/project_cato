@@ -34,6 +34,9 @@ class PersonModel {
   @HiveField(9)
   bool isFavorite;
 
+  @HiveField(10)
+  String? phoneNumber;
+
   PersonModel({
     required this.id,
     required this.name,
@@ -45,6 +48,7 @@ class PersonModel {
     this.contactFrequency = 7,
     this.lastContactDate,
     this.isFavorite = false,
+    this.phoneNumber,
   });
 
   PersonModel copyWith({
@@ -57,6 +61,7 @@ class PersonModel {
     int? contactFrequency,
     DateTime? lastContactDate,
     bool? isFavorite,
+    String? phoneNumber,
   }) {
     return PersonModel(
       id: id,
@@ -69,6 +74,7 @@ class PersonModel {
       contactFrequency: contactFrequency ?? this.contactFrequency,
       lastContactDate: lastContactDate ?? this.lastContactDate,
       isFavorite: isFavorite ?? this.isFavorite,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
     );
   }
 }

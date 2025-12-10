@@ -49,6 +49,7 @@ class SocialProvider extends ChangeNotifier {
     String? photoPath,
     int contactFrequency = 7,
     bool isFavorite = false,
+    String? phoneNumber,
   }) async {
     String? permanentPhotoPath;
     if (photoPath != null) {
@@ -69,6 +70,7 @@ class SocialProvider extends ChangeNotifier {
       contactFrequency: contactFrequency,
       lastContactDate: DateTime.now(), // Assume contact on creation
       isFavorite: isFavorite,
+      phoneNumber: phoneNumber,
     );
     await _box.put(id, newPerson);
     await _scheduleReminders(newPerson);
@@ -124,6 +126,16 @@ class SocialProvider extends ChangeNotifier {
     final person = _box.get(personId);
     if (person != null) {
       final updatedIdeas = List<String>.from(person.giftIdeas)..add(idea);
+      final updatedPerson = person.copyWith(giftIdeas: updatedIdeas);
+      await _box.put(personId, updatedPerson);
+      notifyListeners();
+    }
+  }
+
+  Future<void> removeGiftIdea(String personId, String idea) async {
+    final person = _box.get(personId);
+    if (person != null) {
+      final updatedIdeas = List<String>.from(person.giftIdeas)..remove(idea);
       final updatedPerson = person.copyWith(giftIdeas: updatedIdeas);
       await _box.put(personId, updatedPerson);
       notifyListeners();
