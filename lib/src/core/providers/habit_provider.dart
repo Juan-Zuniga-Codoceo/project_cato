@@ -269,6 +269,15 @@ class HabitProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Update user's profile (name and age)
+  void updateUserProfile({String? name, int? age}) {
+    final stats = userStats;
+    if (name != null) stats.userName = name;
+    if (age != null) stats.age = age;
+    stats.save();
+    notifyListeners();
+  }
+
   /// Update user's avatar
   void updateAvatar(String newPath) {
     final stats = userStats;

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../finance/presentation/screens/finance_screen.dart';
-import '../../../tasks/presentation/screens/tasks_screen.dart';
 import '../../../habits/presentation/screens/habits_screen.dart';
+import '../../../tasks/presentation/screens/tasks_screen.dart';
+import 'dashboard_screen.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/providers/habit_provider.dart';
 import '../../../../core/utils/level_up_manager.dart';
@@ -19,6 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
+    const DashboardScreen(),
     const FinanceScreen(),
     const HabitsScreen(),
     const TasksScreen(),
@@ -26,10 +28,11 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
 
   final List<String> _screenTitles = [
+    'MI DÍA',
     'FINANZAS',
-    'DISCIPLINA RPG',
-    'MISIONES',
-    'SISTEMA CATO',
+    'RPG',
+    'TAREAS',
+    'MÓDULOS',
   ];
 
   @override
@@ -80,15 +83,19 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         destinations: const [
           NavigationDestination(
+            icon: Icon(Icons.dashboard_customize),
+            label: 'Mi Día',
+          ),
+          NavigationDestination(
             icon: Icon(Icons.attach_money),
             label: 'Finanzas',
           ),
-          NavigationDestination(icon: Icon(Icons.whatshot), label: 'Hábitos'),
+          NavigationDestination(icon: Icon(Icons.whatshot), label: 'RPG'),
           NavigationDestination(
             icon: Icon(Icons.check_circle_outline),
             label: 'Tareas',
           ),
-          NavigationDestination(icon: Icon(Icons.apps), label: 'Apps'),
+          NavigationDestination(icon: Icon(Icons.apps), label: 'Módulos'),
         ],
       ),
     );

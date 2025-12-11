@@ -28,6 +28,9 @@ class UserStatsModel extends HiveObject {
   @HiveField(7, defaultValue: 'assets/avatars/hero_1.jpg')
   String avatarPath;
 
+  @HiveField(8)
+  int? age;
+
   UserStatsModel({
     required this.totalXp,
     required this.currentLevel,
@@ -37,6 +40,7 @@ class UserStatsModel extends HiveObject {
     this.disciplineXp = 0,
     this.userName = 'Guerrero',
     this.avatarPath = 'assets/avatars/hero_1.jpg',
+    this.age,
   });
 
   String get rankTitle {
