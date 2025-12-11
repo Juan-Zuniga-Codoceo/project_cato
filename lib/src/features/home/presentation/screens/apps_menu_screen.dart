@@ -4,6 +4,7 @@ import '../../../lifestyle/presentation/screens/lifestyle_screen.dart';
 import '../../../tools/presentation/screens/tools_screen.dart';
 import '../../../responsibility/presentation/screens/adult_mode_screen.dart';
 import '../../../social/presentation/screens/social_screen.dart';
+import '../../../academic/presentation/screens/academic_screen.dart';
 
 class AppsMenuScreen extends StatelessWidget {
   const AppsMenuScreen({super.key});
@@ -61,6 +62,15 @@ class AppsMenuScreen extends StatelessWidget {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const SocialScreen()),
+            ),
+          ),
+          _AppCard(
+            title: 'ACADEMIA',
+            icon: Icons.school,
+            color: Colors.indigo,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const AcademicScreen()),
             ),
           ),
         ],

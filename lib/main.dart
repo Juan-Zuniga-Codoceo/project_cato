@@ -17,6 +17,7 @@ import 'src/features/tasks/providers/task_provider.dart';
 import 'src/features/lifestyle/providers/lifestyle_provider.dart';
 import 'src/features/responsibility/providers/responsibility_provider.dart';
 import 'src/features/social/providers/social_provider.dart';
+import 'src/features/academic/providers/academic_provider.dart';
 import 'src/core/theme/app_theme.dart';
 
 // Screens
@@ -74,6 +75,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => SocialProvider(storageService, notificationService),
         ),
+        ChangeNotifierProvider(create: (_) => AcademicProvider(storageService)),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {

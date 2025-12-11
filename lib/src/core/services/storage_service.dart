@@ -4,12 +4,14 @@ import '../../features/garage/domain/models/vehicle_document.dart';
 import '../../features/garage/domain/models/maintenance.dart';
 import '../../features/finance/domain/models/transaction.dart';
 import '../../features/finance/domain/models/category.dart';
-
 import '../../features/tasks/domain/models/task_model.dart';
-import '../../features/habits/domain/models/habit_model.dart';
-import '../../features/habits/domain/models/user_stats_model.dart';
 import '../../features/responsibility/domain/models/monthly_task_model.dart';
 import '../../features/social/domain/models/person_model.dart';
+import '../../features/academic/domain/models/subject_model.dart';
+import '../../features/academic/domain/models/evaluation_model.dart';
+import '../../features/academic/domain/models/academic_event_model.dart';
+import '../../features/habits/domain/models/habit_model.dart';
+import '../../features/habits/domain/models/user_stats_model.dart';
 
 class StorageService {
   static const String vehicleBoxName = 'vehicles';
@@ -22,7 +24,10 @@ class StorageService {
   static const String settingsBoxName = 'settings';
   static const String lifestyleBoxName = 'lifestyle';
   static const String protocolsBoxName = 'protocols';
+
   static const String socialBoxName = 'social';
+  static const String academicBoxName = 'academic';
+  static const String academicEventsBoxName = 'academic_events';
 
   Future<void> init() async {
     await Hive.initFlutter();
@@ -36,7 +41,11 @@ class StorageService {
     Hive.registerAdapter(HabitModelAdapter());
     Hive.registerAdapter(UserStatsModelAdapter());
     Hive.registerAdapter(MonthlyTaskModelAdapter());
+
     Hive.registerAdapter(PersonModelAdapter());
+    Hive.registerAdapter(EvaluationModelAdapter());
+    Hive.registerAdapter(SubjectModelAdapter());
+    Hive.registerAdapter(AcademicEventModelAdapter());
 
     await Hive.openBox<Vehicle>(vehicleBoxName);
     await Hive.openBox<Maintenance>(maintenanceBoxName);
@@ -48,7 +57,10 @@ class StorageService {
     await Hive.openBox(settingsBoxName);
     await Hive.openBox(lifestyleBoxName);
     await Hive.openBox<MonthlyTaskModel>(protocolsBoxName);
+
     await Hive.openBox<PersonModel>(socialBoxName);
+    await Hive.openBox<SubjectModel>(academicBoxName);
+    await Hive.openBox<AcademicEventModel>(academicEventsBoxName);
   }
 
   Box<Vehicle> get vehicleBox => Hive.box<Vehicle>(vehicleBoxName);
@@ -66,7 +78,11 @@ class StorageService {
   Box get lifestyleBox => Hive.box(lifestyleBoxName);
   Box<MonthlyTaskModel> get protocolsBox =>
       Hive.box<MonthlyTaskModel>(protocolsBoxName);
+
   Box<PersonModel> get socialBox => Hive.box<PersonModel>(socialBoxName);
+  Box<SubjectModel> get academicBox => Hive.box<SubjectModel>(academicBoxName);
+  Box<AcademicEventModel> get academicEventsBox =>
+      Hive.box<AcademicEventModel>(academicEventsBoxName);
 
   Future<void> clearAllData() async {
     await vehicleBox.clear();
@@ -76,6 +92,8 @@ class StorageService {
     await taskBox.clear();
     await habitBox.clear();
     await userStatsBox.clear();
+
     await settingsBox.clear();
+    await academicBox.clear();
   }
 }

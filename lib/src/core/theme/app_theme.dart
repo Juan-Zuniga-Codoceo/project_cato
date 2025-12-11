@@ -61,6 +61,15 @@ class AppTheme {
         elevation: 0,
         centerTitle: true,
       ),
+      tabBarTheme: TabBarThemeData(
+        labelColor: Colors.black,
+        unselectedLabelColor: Colors.black54,
+        indicatorColor: Colors.black,
+        labelStyle: GoogleFonts.spaceMono(fontWeight: FontWeight.bold),
+        unselectedLabelStyle: GoogleFonts.spaceMono(
+          fontWeight: FontWeight.normal,
+        ),
+      ),
     );
   }
 
@@ -115,6 +124,15 @@ class AppTheme {
         foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
+      ),
+      tabBarTheme: TabBarThemeData(
+        labelColor: primary,
+        unselectedLabelColor: Colors.white70,
+        indicatorColor: primary,
+        labelStyle: GoogleFonts.spaceMono(fontWeight: FontWeight.bold),
+        unselectedLabelStyle: GoogleFonts.spaceMono(
+          fontWeight: FontWeight.normal,
+        ),
       ),
     );
   }

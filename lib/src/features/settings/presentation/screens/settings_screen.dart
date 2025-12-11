@@ -4,6 +4,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../../../../core/providers/theme_provider.dart';
 import '../../../../core/providers/habit_provider.dart';
 import '../../../../core/services/storage_service.dart';
+import '../../../academic/providers/academic_provider.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -60,6 +61,51 @@ class SettingsScreen extends StatelessWidget {
                   );
                 }
               }
+            },
+          ),
+
+          const Divider(),
+
+          // Grading Scale Selector
+          ValueListenableBuilder(
+            valueListenable: Hive.box(
+              StorageService.settingsBoxName,
+            ).listenable(keys: ['gradingScale']),
+            builder: (context, box, _) {
+              return ListTile(
+                leading: const Icon(Icons.school),
+                title: const Text('🎓 Escala de Notas'),
+                subtitle: const Text('Define el sistema de evaluación'),
+                trailing: DropdownButton<int>(
+                  value: box.get('gradingScale', defaultValue: 0),
+                  underline: const SizedBox(),
+                  items: const [
+                    DropdownMenuItem(
+                      value: 0,
+                      child: Text('Chile (1.0 - 7.0)'),
+                    ),
+                    DropdownMenuItem(
+                      value: 1,
+                      child: Text('Latam (0.0 - 10.0)'),
+                    ),
+                    DropdownMenuItem(
+                      value: 2,
+                      child: Text('Porcentaje (0 - 100)'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      box.put('gradingScale', value);
+                      context.read<AcademicProvider>().refresh();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('✅ Escala de notas actualizada'),
+                        ),
+                      );
+                    }
+                  },
+                ),
+              );
             },
           ),
 
