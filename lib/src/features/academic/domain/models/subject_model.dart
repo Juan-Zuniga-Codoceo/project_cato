@@ -32,6 +32,12 @@ class SubjectModel {
   @HiveField(8, defaultValue: 0.75)
   final double minAttendance;
 
+  @HiveField(9, defaultValue: 0.3)
+  final double examWeight;
+
+  @HiveField(10)
+  final double? exemptionGrade;
+
   SubjectModel({
     required this.id,
     required this.name,
@@ -42,5 +48,7 @@ class SubjectModel {
     this.totalClasses = 0,
     this.attendedClasses = 0,
     this.minAttendance = 0.75,
+    this.examWeight = 0.3,
+    this.exemptionGrade = 5.0,
   });
 }

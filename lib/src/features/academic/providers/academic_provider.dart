@@ -60,6 +60,8 @@ class AcademicProvider extends ChangeNotifier {
     double? passingGrade,
     double? targetGrade,
     int? gradingScale,
+    double? examWeight,
+    double? exemptionGrade,
   }) async {
     final newSubject = SubjectModel(
       id: _uuid.v4(),
@@ -68,6 +70,8 @@ class AcademicProvider extends ChangeNotifier {
       passingGrade: passingGrade ?? 4.0,
       targetGrade: targetGrade ?? 7.0,
       gradingScale: gradingScale ?? defaultGradingScale,
+      examWeight: examWeight ?? 0.3,
+      exemptionGrade: exemptionGrade ?? 5.0,
     );
     await _academicBox.put(newSubject.id, newSubject);
     notifyListeners();
@@ -174,6 +178,68 @@ class AcademicProvider extends ChangeNotifier {
     return required;
   }
 
+  ExamScenario calculateExamScenario(SubjectModel subject) {
+    final presentationGrade = calculateCurrentAverage(subject);
+    final maxGrade = getMaxGrade(subject);
+
+    // Step 2: Check Exemption
+    // We only check exemption if they have enough grades (e.g. > 70% progress)
+    // But for simplicity, let's assume if currentAvg >= exemption, they are exempt
+    // UNLESS they haven't finished the semester.
+    // Usually exemption applies to the "Presentation Grade" which is the average of the semester.
+    // So we assume calculateCurrentAverage IS the presentation grade.
+
+    if (subject.exemptionGrade != null &&
+        presentationGrade >= subject.exemptionGrade!) {
+      return ExamScenario(
+        status: ExamStatus.exempt,
+        presentationGrade: presentationGrade,
+      );
+    }
+
+    // Step 3: Calculate Exam Grade
+    // Formula: FinalGrade = (Presentation * (1 - ExamWeight)) + (Exam * ExamWeight)
+    // We need FinalGrade >= PassingGrade
+    // Exam * ExamWeight >= PassingGrade - (Presentation * (1 - ExamWeight))
+    // Exam >= (PassingGrade - (Presentation * (1 - ExamWeight))) / ExamWeight
+
+    final examWeight = subject.examWeight;
+    // Avoid division by zero
+    if (examWeight <= 0) {
+      // If exam weight is 0, then presentation grade is final grade.
+      // If passing, exempt/passed. If not, fail.
+      if (presentationGrade >= subject.passingGrade) {
+        return ExamScenario(
+          status: ExamStatus.exempt,
+          presentationGrade: presentationGrade,
+        );
+      } else {
+        return ExamScenario(
+          status: ExamStatus.virtualFail,
+          presentationGrade: presentationGrade,
+        );
+      }
+    }
+
+    final requiredExamGrade =
+        (subject.passingGrade - (presentationGrade * (1 - examWeight))) /
+        examWeight;
+
+    if (requiredExamGrade > maxGrade) {
+      return ExamScenario(
+        status: ExamStatus.virtualFail,
+        presentationGrade: presentationGrade,
+        requiredExamGrade: requiredExamGrade,
+      );
+    }
+
+    return ExamScenario(
+      status: ExamStatus.exam,
+      presentationGrade: presentationGrade,
+      requiredExamGrade: requiredExamGrade,
+    );
+  }
+
   // --- Attendance Logic ---
 
   Future<void> incrementAttendance(String subjectId) async {
@@ -233,27 +299,29 @@ class AcademicProvider extends ChangeNotifier {
     }
   }
 
-  // --- Global GPA ---
+  // --- Critical Subject Logic ---
 
-  double get globalAverage {
-    if (subjects.isEmpty) return 0.0;
+  SubjectModel? get criticalSubject {
+    if (subjects.isEmpty) return null;
 
-    double totalSum = 0.0;
-    int count = 0;
+    SubjectModel? worstSubject;
+    double minNormalizedScore = 2.0; // Start higher than max possible (1.0)
 
     for (final subject in subjects) {
-      // Only include subjects that have at least one evaluation or a valid average
-      // For now, we just take the current average.
-      // Ideally, we should normalize if scales are mixed, but assuming consistent scale for now.
-      final avg = calculateCurrentAverage(subject);
-      if (avg > 0) {
-        totalSum += avg;
-        count++;
+      final currentAvg = calculateCurrentAverage(subject);
+      final maxGrade = getMaxGrade(subject);
+
+      // Normalize score to 0.0 - 1.0 range
+      // If maxGrade is 0 (shouldn't happen), treat as 0 score
+      final normalizedScore = maxGrade > 0 ? currentAvg / maxGrade : 0.0;
+
+      if (normalizedScore < minNormalizedScore) {
+        minNormalizedScore = normalizedScore;
+        worstSubject = subject;
       }
     }
 
-    if (count == 0) return 0.0;
-    return totalSum / count;
+    return worstSubject;
   }
 
   /// Call this when settings change to update UI
@@ -324,4 +392,18 @@ class AcademicProvider extends ChangeNotifier {
     }
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
+}
+
+enum ExamStatus { exempt, exam, virtualFail }
+
+class ExamScenario {
+  final ExamStatus status;
+  final double? requiredExamGrade;
+  final double presentationGrade;
+
+  ExamScenario({
+    required this.status,
+    this.requiredExamGrade,
+    required this.presentationGrade,
+  });
 }

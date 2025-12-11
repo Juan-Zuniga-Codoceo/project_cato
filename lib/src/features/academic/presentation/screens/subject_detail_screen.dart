@@ -45,7 +45,20 @@ class SubjectDetailScreen extends StatelessWidget {
             provider.getMaxGrade(currentSubject),
             provider.getMinGrade(currentSubject),
           ),
-          _buildAttendanceCard(context, currentSubject), // Added here
+          const Divider(height: 32, thickness: 1),
+          _buildAttendanceCard(context, currentSubject),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              "EVALUACIONES",
+              style: GoogleFonts.spaceMono(
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+                letterSpacing: 1.5,
+              ),
+            ),
+          ),
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
@@ -106,94 +119,175 @@ class SubjectDetailScreen extends StatelessWidget {
   }
 
   Widget _buildAttendanceCard(BuildContext context, SubjectModel subject) {
-    final double attendancePercentage = subject.totalClasses == 0
-        ? 1.0
-        : subject.attendedClasses / subject.totalClasses;
+    // Logic: If totalClasses == 0, show neutral state
+    final bool hasRecords = subject.totalClasses > 0;
+    final double attendancePercentage = hasRecords
+        ? subject.attendedClasses / subject.totalClasses
+        : 1.0;
 
     final bool isPassingAttendance =
         attendancePercentage >= subject.minAttendance;
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'CONTROL DE ASISTENCIA',
-              style: GoogleFonts.spaceMono(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: Theme.of(context).colorScheme.primary,
-              ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            "📊 ASISTENCIA",
+            style: GoogleFonts.spaceMono(
+              fontWeight: FontWeight.bold,
+              color: Colors.grey,
+              letterSpacing: 1.5,
             ),
-            const SizedBox(height: 16),
-            Row(
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Theme.of(context).dividerColor.withOpacity(0.1),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
               children: [
-                CircularProgressIndicator(
-                  value: attendancePercentage,
-                  backgroundColor: Colors.grey.shade800,
-                  color: isPassingAttendance ? Colors.green : Colors.red,
-                  strokeWidth: 8,
-                ),
-                const SizedBox(width: 16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Row(
                   children: [
-                    Text(
-                      '${(attendancePercentage * 100).toStringAsFixed(1)}%',
-                      style: GoogleFonts.spaceMono(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: isPassingAttendance ? Colors.green : Colors.red,
+                    SizedBox(
+                      height: 80, // Increased size
+                      width: 80, // Increased size
+                      child: Stack(
+                        children: [
+                          Center(
+                            child: SizedBox(
+                              height: 80,
+                              width: 80,
+                              child: CircularProgressIndicator(
+                                value: hasRecords ? attendancePercentage : 0,
+                                backgroundColor: Colors.grey.shade800,
+                                color: !hasRecords
+                                    ? Colors.grey
+                                    : (isPassingAttendance
+                                          ? Colors.green
+                                          : Colors.red),
+                                strokeWidth: 10, // Thicker stroke
+                              ),
+                            ),
+                          ),
+                          Center(
+                            child: Text(
+                              hasRecords
+                                  ? '${(attendancePercentage * 100).toStringAsFixed(0)}%'
+                                  : '--',
+                              style: GoogleFonts.spaceMono(
+                                fontSize: 18, // Larger font
+                                fontWeight: FontWeight.bold,
+                                color: !hasRecords
+                                    ? Colors.grey
+                                    : (isPassingAttendance
+                                          ? Colors.green
+                                          : Colors.red),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    Text(
-                      '${subject.attendedClasses} de ${subject.totalClasses} clases',
-                      style: GoogleFonts.inter(color: Colors.grey),
+                    const SizedBox(width: 24), // More spacing
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            !hasRecords
+                                ? 'Sin registros'
+                                : (isPassingAttendance
+                                      ? 'Asistencia OK'
+                                      : 'Riesgo Faltas'),
+                            style: GoogleFonts.spaceMono(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: !hasRecords
+                                  ? Colors.grey
+                                  : (isPassingAttendance
+                                        ? Colors.green
+                                        : Colors.red),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${subject.attendedClasses} de ${subject.totalClasses} clases asistidas',
+                            style: GoogleFonts.inter(
+                              color: Colors.grey,
+                              fontSize: 14,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          context.read<AcademicProvider>().incrementAttendance(
+                            subject.id,
+                          );
+                        },
+                        icon: const Icon(Icons.check, color: Colors.white),
+                        label: const Text('ASISTÍ'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          context.read<AcademicProvider>().registerAbsence(
+                            subject.id,
+                          );
+                        },
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        label: const Text('FALTÉ'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      context.read<AcademicProvider>().incrementAttendance(
-                        subject.id,
-                      );
-                    },
-                    icon: const Icon(Icons.check, color: Colors.white),
-                    label: const Text('ASISTÍ'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      context.read<AcademicProvider>().registerAbsence(
-                        subject.id,
-                      );
-                    },
-                    icon: const Icon(Icons.close, color: Colors.white),
-                    label: const Text('FALTÉ'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
@@ -207,37 +301,32 @@ class SubjectDetailScreen extends StatelessWidget {
     double minGrade,
   ) {
     final theme = Theme.of(context);
+    final provider = context.read<AcademicProvider>();
+    final examScenario = provider.calculateExamScenario(subject);
 
     String predictionText;
     Color predictionColor;
+    IconData predictionIcon;
 
-    if (isPassing) {
-      predictionText = "¡RAMO APROBADO! 🎉";
-      predictionColor = Colors.green;
-    } else if (requiredGrade == null) {
-      // Should not happen if not passing, logic-wise
-      predictionText = "Matemáticamente reprobado 💀";
-      predictionColor = Colors.red;
-    } else if (requiredGrade == 999.0) {
-      // Sentinel value for impossible
-      predictionText = "MATEMÁTICAMENTE REPROBADO 💀";
-      predictionColor = Colors.red;
-    } else if (requiredGrade > maxGrade) {
-      // Fallback check
-      predictionText = "MATEMÁTICAMENTE REPROBADO 💀";
-      predictionColor = Colors.red;
-    } else if (requiredGrade < minGrade) {
-      predictionText =
-          "¡Ya casi! Necesitas un ${minGrade.toStringAsFixed(1)} para cerrar.";
-      predictionColor = Colors.green;
-    } else {
-      final remainingWeight =
-          (1.0 -
-              context.read<AcademicProvider>().calculateTotalWeight(subject)) *
-          100;
-      predictionText =
-          "Necesitas nota ${requiredGrade.toStringAsFixed(1)} en el ${remainingWeight.toStringAsFixed(0)}% restante";
-      predictionColor = Colors.amber;
+    switch (examScenario.status) {
+      case ExamStatus.exempt:
+        predictionText = "🎉 ¡EXIMIDO! Promedio final asegurado.";
+        predictionColor = Colors.green;
+        predictionIcon = Icons.check_circle;
+        break;
+      case ExamStatus.virtualFail:
+        predictionText = "⚠️ Reprobación Virtual (Examen imposible)";
+        predictionColor = Colors.red;
+        predictionIcon = Icons.cancel;
+        break;
+      case ExamStatus.exam:
+        final required = examScenario.requiredExamGrade ?? 0.0;
+        final weight = (subject.examWeight * 100).toInt();
+        predictionText =
+            "⚠️ Vas a Examen (Vale $weight%). Necesitas un ${required.toStringAsFixed(1)} para aprobar.";
+        predictionColor = Colors.orange;
+        predictionIcon = Icons.warning_amber_rounded;
+        break;
     }
 
     return Container(
@@ -247,7 +336,7 @@ class SubjectDetailScreen extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            'PROMEDIO ACTUAL',
+            'NOTA PRESENTACIÓN',
             style: GoogleFonts.spaceMono(
               fontSize: 12,
               letterSpacing: 2.0,
@@ -256,44 +345,52 @@ class SubjectDetailScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            currentAverage.toStringAsFixed(1),
+            examScenario.presentationGrade.toStringAsFixed(1),
             style: GoogleFonts.spaceMono(
               fontSize: 48,
               fontWeight: FontWeight.bold,
-              color: isPassing ? Colors.green : Colors.red,
+              color: isPassing ? Colors.green : Colors.amber,
             ),
           ),
           const SizedBox(height: 4),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-            decoration: BoxDecoration(
-              color: Colors.grey.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              'META: ${subject.passingGrade.toStringAsFixed(1)}',
-              style: GoogleFonts.spaceMono(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[700],
+          if (subject.exemptionGrade != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.grey.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                'EXIMICIÓN: ${subject.exemptionGrade!.toStringAsFixed(1)}',
+                style: GoogleFonts.spaceMono(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[700],
+                ),
               ),
             ),
-          ),
           const SizedBox(height: 16),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: predictionColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(color: predictionColor.withOpacity(0.5)),
             ),
-            child: Text(
-              predictionText,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: predictionColor,
-                fontWeight: FontWeight.bold,
-              ),
+            child: Row(
+              children: [
+                Icon(predictionIcon, color: predictionColor),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    predictionText,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: predictionColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -328,49 +425,51 @@ class SubjectDetailScreen extends StatelessWidget {
           isEditing ? 'Editar Evaluación' : 'Nueva Evaluación',
           style: GoogleFonts.spaceMono(fontWeight: FontWeight.bold),
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(
-                labelText: 'Nombre (ej: Parcial 1)',
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Nombre (ej: Parcial 1)',
+                ),
+                textCapitalization: TextCapitalization.sentences,
               ),
-              textCapitalization: TextCapitalization.sentences,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: gradeController,
-                    decoration: InputDecoration(
-                      labelText: 'Nota',
-                      suffixText: '/ $maxGrade',
-                      counterText: "",
-                    ),
-                    maxLength: 5, // Increased to allow 100.0
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: TextField(
-                    controller: weightController,
-                    decoration: const InputDecoration(
-                      labelText: 'Peso %',
-                      suffixText: '%',
-                    ),
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: gradeController,
+                      decoration: InputDecoration(
+                        labelText: 'Nota',
+                        suffixText: '/ $maxGrade',
+                        counterText: "",
+                      ),
+                      maxLength: 5, // Increased to allow 100.0
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: TextField(
+                      controller: weightController,
+                      decoration: const InputDecoration(
+                        labelText: 'Peso %',
+                        suffixText: '%',
+                      ),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(

@@ -26,13 +26,15 @@ class SubjectModelAdapter extends TypeAdapter<SubjectModel> {
       totalClasses: fields[6] == null ? 0 : fields[6] as int,
       attendedClasses: fields[7] == null ? 0 : fields[7] as int,
       minAttendance: fields[8] == null ? 0.75 : fields[8] as double,
+      examWeight: fields[9] == null ? 0.3 : fields[9] as double,
+      exemptionGrade: fields[10] as double?,
     );
   }
 
   @override
   void write(BinaryWriter writer, SubjectModel obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(11)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -50,7 +52,11 @@ class SubjectModelAdapter extends TypeAdapter<SubjectModel> {
       ..writeByte(7)
       ..write(obj.attendedClasses)
       ..writeByte(8)
-      ..write(obj.minAttendance);
+      ..write(obj.minAttendance)
+      ..writeByte(9)
+      ..write(obj.examWeight)
+      ..writeByte(10)
+      ..write(obj.exemptionGrade);
   }
 
   @override

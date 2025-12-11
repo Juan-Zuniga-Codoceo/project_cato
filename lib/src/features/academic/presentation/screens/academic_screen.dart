@@ -30,9 +30,7 @@ class AcademicScreen extends StatelessWidget {
               Tab(text: 'ASIGNATURAS'),
               Tab(text: 'ESTUDIO'),
             ],
-            indicatorColor: Colors.indigo,
-            labelColor: Colors.indigo,
-            unselectedLabelColor: Colors.grey,
+            // Removed hardcoded colors to allow Theme to handle it
           ),
         ),
         body: const TabBarView(children: [_SubjectsTab(), _StudyTab()]),
@@ -57,9 +55,11 @@ class AcademicScreen extends StatelessWidget {
   void _showAddSubjectDialog(BuildContext context) {
     final nameController = TextEditingController();
     final passingGradeController = TextEditingController(text: '4.0');
+    final exemptionGradeController = TextEditingController(text: '5.0');
 
-    // We need state for the dropdown, so we use a StatefulBuilder
+    // We need state for the dropdown and slider, so we use a StatefulBuilder
     int selectedScale = 0; // Default to Chile
+    double examWeight = 0.3; // Default 30%
 
     showDialog(
       context: context,
@@ -70,65 +70,129 @@ class AcademicScreen extends StatelessWidget {
               'Nuevo Ramo',
               style: GoogleFonts.spaceMono(fontWeight: FontWeight.bold),
             ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Nombre del Ramo',
-                  ),
-                  textCapitalization: TextCapitalization.sentences,
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<int>(
-                  value: selectedScale,
-                  decoration: const InputDecoration(
-                    labelText: 'Escala de Notas',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: const [
-                    DropdownMenuItem(
-                      value: 0,
-                      child: Text('Chile (1.0 - 7.0)'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Nombre del Ramo',
                     ),
-                    DropdownMenuItem(
-                      value: 1,
-                      child: Text('Latam (0.0 - 10.0)'),
-                    ),
-                    DropdownMenuItem(
-                      value: 2,
-                      child: Text('Porcentaje (0 - 100)'),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() {
-                        selectedScale = value;
-                        // Update default passing grade based on scale
-                        switch (selectedScale) {
-                          case 1:
-                            passingGradeController.text = '6.0';
-                            break;
-                          case 2:
-                            passingGradeController.text = '60.0';
-                            break;
-                          default:
-                            passingGradeController.text = '4.0';
-                        }
-                      });
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: passingGradeController,
-                  decoration: const InputDecoration(labelText: 'Nota Mínima'),
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
+                    textCapitalization: TextCapitalization.sentences,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<int>(
+                    value: selectedScale,
+                    decoration: const InputDecoration(
+                      labelText: 'Escala de Notas',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: const [
+                      DropdownMenuItem(
+                        value: 0,
+                        child: Text('Chile (1.0 - 7.0)'),
+                      ),
+                      DropdownMenuItem(
+                        value: 1,
+                        child: Text('Latam (0.0 - 10.0)'),
+                      ),
+                      DropdownMenuItem(
+                        value: 2,
+                        child: Text('Porcentaje (0 - 100)'),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          selectedScale = value;
+                          // Update default passing/exemption grade based on scale
+                          switch (selectedScale) {
+                            case 1:
+                              passingGradeController.text = '6.0';
+                              exemptionGradeController.text = '8.0';
+                              break;
+                            case 2:
+                              passingGradeController.text = '60.0';
+                              exemptionGradeController.text = '80.0';
+                              break;
+                            default:
+                              passingGradeController.text = '4.0';
+                              exemptionGradeController.text = '5.0';
+                          }
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: passingGradeController,
+                          decoration: const InputDecoration(
+                            labelText: 'Nota Mínima',
+                          ),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: TextField(
+                          controller: exemptionGradeController,
+                          decoration: const InputDecoration(
+                            labelText: 'Nota Eximición',
+                            helperText: 'Opcional',
+                          ),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Ponderación Examen',
+                    style: GoogleFonts.spaceMono(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Slider(
+                          value: examWeight,
+                          min: 0.0,
+                          max: 0.6,
+                          divisions: 12, // 5% steps
+                          label: '${(examWeight * 100).toInt()}%',
+                          onChanged: (value) {
+                            setState(() {
+                              examWeight = value;
+                            });
+                          },
+                        ),
+                      ),
+                      Text(
+                        '${(examWeight * 100).toInt()}%',
+                        style: GoogleFonts.spaceMono(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    'Semestre: ${(100 - (examWeight * 100)).toInt()}%  |  Examen: ${(examWeight * 100).toInt()}%',
+                    style: GoogleFonts.inter(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
+              ),
             ),
             actions: [
               TextButton(
@@ -140,12 +204,17 @@ class AcademicScreen extends StatelessWidget {
                   final name = nameController.text.trim();
                   final passingGrade =
                       double.tryParse(passingGradeController.text) ?? 4.0;
+                  final exemptionGrade = double.tryParse(
+                    exemptionGradeController.text,
+                  );
 
                   if (name.isNotEmpty) {
                     context.read<AcademicProvider>().addSubject(
                       name,
                       passingGrade: passingGrade,
                       gradingScale: selectedScale,
+                      examWeight: examWeight,
+                      exemptionGrade: exemptionGrade,
                     );
                     Navigator.pop(context);
                   }
@@ -216,63 +285,193 @@ class _SubjectsTab extends StatelessWidget {
     BuildContext context,
     AcademicProvider provider,
   ) {
-    final globalAverage = provider.globalAverage;
-    final theme = Theme.of(context);
+    final criticalSubject = provider.criticalSubject;
 
-    String message;
-    Color color;
-
-    if (globalAverage >= 6.0) {
-      message = "¡Excelente Semestre! 🚀";
-      color = Colors.green;
-    } else if (globalAverage >= 4.0) {
-      message = "Vas bien, mantén el ritmo 👍";
-      color = Colors.blue;
-    } else if (globalAverage > 0) {
-      message = "¡Cuidado! A subir esas notas ⚠️";
-      color = Colors.orange;
-    } else {
-      message = "Sin notas registradas";
-      color = Colors.grey;
+    if (criticalSubject == null) {
+      // Stable State (No critical subjects found)
+      return Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.green.shade900, Colors.teal.shade800],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.shield_outlined,
+                  color: Colors.white,
+                  size: 32,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'SISTEMA ESTABLE',
+                  style: GoogleFonts.spaceMono(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 20,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Todos los indicadores académicos en orden.',
+              style: GoogleFonts.inter(
+                color: Colors.white.withOpacity(0.9),
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      );
     }
+
+    // Critical State
+    final currentAvg = provider.calculateCurrentAverage(criticalSubject);
+    final maxGrade = provider.getMaxGrade(criticalSubject);
+    final normalizedScore = maxGrade > 0 ? currentAvg / maxGrade : 0.0;
+    final isCritical =
+        normalizedScore < 0.6 || currentAvg < criticalSubject.passingGrade;
+
+    if (!isCritical) {
+      // Fallback if logic returns a subject but it's not actually critical
+      // (Should match the "Stable" block above, or maybe a "Warning" block)
+      // For now, let's reuse the stable block logic or just show nothing if not truly critical.
+      // But criticalSubject logic returns the *worst*, even if it's 100%.
+      // So we need to check if the worst is actually bad.
+      // If worst is > 0.6 and passing, then we are stable.
+      return Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.green.shade900, Colors.teal.shade800],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.shield_outlined,
+                  color: Colors.white,
+                  size: 32,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'SISTEMA ESTABLE',
+                  style: GoogleFonts.spaceMono(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 20,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Todos los indicadores académicos en orden.',
+              style: GoogleFonts.inter(
+                color: Colors.white.withOpacity(0.9),
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Truly Critical
+    final percent = (normalizedScore * 100).toStringAsFixed(0);
 
     return Container(
       width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.red.shade900, Colors.red.shade700],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.red.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
       padding: const EdgeInsets.all(24),
-      color: theme.colorScheme.surfaceVariant.withOpacity(0.3),
       child: Column(
         children: [
-          Text(
-            'PROMEDIO GLOBAL',
-            style: GoogleFonts.spaceMono(
-              fontSize: 12,
-              letterSpacing: 2.0,
-              color: Colors.grey,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            globalAverage.toStringAsFixed(1),
-            style: GoogleFonts.spaceMono(
-              fontSize: 48,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: color.withOpacity(0.5)),
-            ),
-            child: Text(
-              message,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: color,
-                fontWeight: FontWeight.bold,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.warning_amber_rounded,
+                color: Colors.white,
+                size: 32,
               ),
+              const SizedBox(width: 12),
+              Text(
+                'PRIORIDAD MÁXIMA',
+                style: GoogleFonts.spaceMono(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontSize: 20,
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            criticalSubject.name.toUpperCase(),
+            style: GoogleFonts.blackOpsOne(
+              color: Colors.white,
+              fontSize: 28,
+              letterSpacing: 1.5,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Estás al $percent% de la meta. Peligro de reprobación.',
+            style: GoogleFonts.inter(
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      SubjectDetailScreen(subject: criticalSubject),
+                ),
+              );
+            },
+            icon: const Icon(Icons.visibility, color: Colors.red),
+            label: const Text('VER ESTRATEGIA'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.red,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              textStyle: GoogleFonts.spaceMono(fontWeight: FontWeight.bold),
             ),
           ),
         ],
