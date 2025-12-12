@@ -1,10 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/providers/habit_provider.dart';
 import '../widgets/radar_chart_widget.dart';
 
 class CharacterScreen extends StatelessWidget {
   const CharacterScreen({super.key});
+
+  void _showInfoDialog(
+    BuildContext context,
+    String title,
+    String description,
+    IconData icon,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(icon, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                title,
+                style: GoogleFonts.spaceMono(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        content: Text(description, style: GoogleFonts.inter()),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'ENTENDIDO',
+              style: GoogleFonts.spaceMono(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -142,47 +178,56 @@ class CharacterScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 16),
                         // Global XP Progress
-                        Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'XP GLOBAL',
-                                  style: theme.textTheme.labelSmall,
+                        GestureDetector(
+                          onTap: () => _showInfoDialog(
+                            context,
+                            'CRECIMIENTO CONTINUO',
+                            'El nivel no es un destino, es una consecuencia de tus hábitos diarios. Sigue ejecutando.',
+                            Icons.trending_up,
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'XP GLOBAL',
+                                    style: theme.textTheme.labelSmall,
+                                  ),
+                                  Text(
+                                    '${stats.totalXp} / $xpForNext',
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: theme.colorScheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                height: 16,
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: theme.colorScheme.onSurface
+                                        .withOpacity(0.2),
+                                  ),
+                                  borderRadius: BorderRadius.circular(4),
                                 ),
-                                Text(
-                                  '${stats.totalXp} / $xpForNext',
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                    color: theme.colorScheme.primary,
-                                    fontWeight: FontWeight.bold,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(2),
+                                  child: LinearProgressIndicator(
+                                    value: globalProgress.clamp(0.0, 1.0),
+                                    minHeight: 16,
+                                    backgroundColor: Colors.transparent,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      theme.colorScheme.primary,
+                                    ),
                                   ),
                                 ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Container(
-                              height: 16,
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: theme.colorScheme.onSurface
-                                      .withOpacity(0.2),
-                                ),
-                                borderRadius: BorderRadius.circular(4),
                               ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(2),
-                                child: LinearProgressIndicator(
-                                  value: globalProgress.clamp(0.0, 1.0),
-                                  minHeight: 16,
-                                  backgroundColor: Colors.transparent,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    theme.colorScheme.primary,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -192,17 +237,25 @@ class CharacterScreen extends StatelessWidget {
 
                 // Radar Chart
                 Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      children: [
-                        Text(
-                          'BALANCE DE ATRIBUTOS',
-                          style: theme.textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: 16),
-                        RadarChartWidget(stats: stats),
-                      ],
+                  child: InkWell(
+                    onTap: () => _showInfoDialog(
+                      context,
+                      'BALANCE DE SISTEMA',
+                      'Un Operador desbalanceado es vulnerable. Busca expandir el gráfico uniformemente hacia los bordes.',
+                      Icons.radar,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          Text(
+                            'BALANCE DE ATRIBUTOS',
+                            style: theme.textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 16),
+                          RadarChartWidget(stats: stats),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -227,6 +280,12 @@ class CharacterScreen extends StatelessWidget {
                       color: Colors.red,
                       level: stats.getAttributeLevel('Fuerza'),
                       xp: stats.getAttributeXp('Fuerza'),
+                      onTap: () => _showInfoDialog(
+                        context,
+                        'RESILIENCIA',
+                        'No es solo levantar peso, es la capacidad de soportar la adversidad sin quebrarse.',
+                        Icons.fitness_center,
+                      ),
                     ),
                     _AttributeCard(
                       title: 'INTELECTO',
@@ -234,6 +293,12 @@ class CharacterScreen extends StatelessWidget {
                       color: Colors.blue,
                       level: stats.getAttributeLevel('Intelecto'),
                       xp: stats.getAttributeXp('Intelecto'),
+                      onTap: () => _showInfoDialog(
+                        context,
+                        'ADAPTABILIDAD',
+                        'La agudeza mental para resolver problemas complejos y aprender de los errores.',
+                        Icons.psychology,
+                      ),
                     ),
                     _AttributeCard(
                       title: 'VITALIDAD',
@@ -241,6 +306,12 @@ class CharacterScreen extends StatelessWidget {
                       color: Colors.green,
                       level: stats.getAttributeLevel('Vitalidad'),
                       xp: stats.getAttributeXp('Vitalidad'),
+                      onTap: () => _showInfoDialog(
+                        context,
+                        'ENERGÍA OPERATIVA',
+                        'Sin salud física y mental, ningún sistema puede funcionar a largo plazo.',
+                        Icons.favorite,
+                      ),
                     ),
                     _AttributeCard(
                       title: 'DISCIPLINA',
@@ -248,6 +319,12 @@ class CharacterScreen extends StatelessWidget {
                       color: Colors.grey,
                       level: stats.getAttributeLevel('Disciplina'),
                       xp: stats.getAttributeXp('Disciplina'),
+                      onTap: () => _showInfoDialog(
+                        context,
+                        'CONSISTENCIA',
+                        'La única estadística que importa cuando la motivación desaparece.',
+                        Icons.shield,
+                      ),
                     ),
                   ],
                 ),
@@ -266,6 +343,7 @@ class _AttributeCard extends StatelessWidget {
   final Color color;
   final int level;
   final int xp;
+  final VoidCallback? onTap;
 
   const _AttributeCard({
     required this.title,
@@ -273,6 +351,7 @@ class _AttributeCard extends StatelessWidget {
     required this.color,
     required this.level,
     required this.xp,
+    this.onTap,
   });
 
   @override
@@ -283,68 +362,72 @@ class _AttributeCard extends StatelessWidget {
 
     return Card(
       // Inherits theme style
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Icon and Title
-            Row(
-              children: [
-                Icon(icon, color: color, size: 24),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Icon and Title
+              Row(
+                children: [
+                  Icon(icon, color: color, size: 24),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // Level
-            Text(
-              'NIVEL $level',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                color: color,
-                fontWeight: FontWeight.bold,
+                ],
               ),
-            ),
+              const SizedBox(height: 12),
 
-            // XP Progress
-            Column(
-              children: [
-                Text(
-                  '${xp % 100} / $nextLevelXp XP',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
-                  ),
+              // Level
+              Text(
+                'NIVEL $level',
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.bold,
                 ),
-                const SizedBox(height: 4),
-                Container(
-                  height: 8,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: theme.colorScheme.onSurface.withOpacity(0.2),
-                    ),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(1),
-                    child: LinearProgressIndicator(
-                      value: progress,
-                      minHeight: 8,
-                      backgroundColor: Colors.transparent,
-                      valueColor: AlwaysStoppedAnimation<Color>(color),
+              ),
+
+              // XP Progress
+              Column(
+                children: [
+                  Text(
+                    '${xp % 100} / $nextLevelXp XP',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onSurface.withOpacity(0.6),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                  const SizedBox(height: 4),
+                  Container(
+                    height: 8,
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: theme.colorScheme.onSurface.withOpacity(0.2),
+                      ),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(1),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 8,
+                        backgroundColor: Colors.transparent,
+                        valueColor: AlwaysStoppedAnimation<Color>(color),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

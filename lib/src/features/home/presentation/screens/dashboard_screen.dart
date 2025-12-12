@@ -15,6 +15,10 @@ import '../../../responsibility/providers/responsibility_provider.dart';
 // Widgets
 import '../widgets/dashboard_widgets.dart';
 
+// Screens
+import '../../../finance/presentation/screens/transactions_screen.dart';
+import '../../../tasks/presentation/screens/tasks_screen.dart';
+
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -31,6 +35,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     "La mejor venganza es no ser como tu enemigo.",
     "Domina tu mente o ella te dominará a ti.",
     "Haz cada cosa como si fuera la última de tu vida.",
+  ];
+
+  static const List<String> _sideMissions = [
+    "Beber un vaso de agua",
+    "Leer 10 páginas",
+    "Llamar a un familiar",
+    "Hacer 10 flexiones",
+    "Meditar 5 minutos",
+    "Organizar el escritorio",
+    "Revisar presupuesto semanal",
   ];
 
   @override
@@ -112,6 +126,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
             },
             child: Text(
               'INICIAR SISTEMA',
+              style: GoogleFonts.spaceMono(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showInfoDialog(String title, String description, IconData icon) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(icon, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                title,
+                style: GoogleFonts.spaceMono(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        content: Text(description, style: GoogleFonts.inter()),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'ENTENDIDO',
               style: GoogleFonts.spaceMono(fontWeight: FontWeight.bold),
             ),
           ),
@@ -326,13 +370,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
     }
 
-    // Default: Stable
-    return const PriorityCard(
+    // Default: Side Mission
+    final randomMission = _sideMissions[now.day % _sideMissions.length];
+    return PriorityCard(
       title: 'SISTEMAS ESTABLES',
-      subtitle: 'NO SE DETECTAN AMENAZAS INMEDIATAS',
+      subtitle: 'MISIÓN SECUNDARIA: $randomMission',
       icon: Icons.shield,
       color: Colors.green,
-      actionLabel: 'VER REGISTROS',
+      actionLabel: 'VER MISIONES',
+      onAction: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const TasksScreen()),
+        );
+      },
     );
   }
 
@@ -347,32 +398,62 @@ class _DashboardScreenState extends State<DashboardScreen> {
       maxStreak = habitProvider.habits.map((h) => h.currentStreak).reduce(max);
     }
 
+    // Integrity Color Logic
+    final integrity = responsibilityProvider.progress;
+    Color integrityColor = Colors.blueAccent;
+    if (integrity < 0.3) {
+      integrityColor = Colors.redAccent;
+    } else if (integrity < 0.7) {
+      integrityColor = Colors.amber;
+    }
+
     return Row(
       children: [
         Expanded(
-          child: MetricTile(
-            icon: Icons.attach_money,
-            label: 'BALANCE',
-            value: '\$${financeProvider.totalBalance.toInt()}',
-            color: Colors.cyan,
+          child: GestureDetector(
+            onTap: () => _showInfoDialog(
+              'BALANCE FINANCIERO',
+              'Capital disponible actual calculado desde el módulo de Finanzas.',
+              Icons.attach_money,
+            ),
+            child: MetricTile(
+              icon: Icons.attach_money,
+              label: 'BALANCE',
+              value: '\$${financeProvider.totalBalance.toInt()}',
+              color: Colors.cyan,
+            ),
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: MetricTile(
-            icon: Icons.verified_user,
-            label: 'INTEGRIDAD',
-            value: '${(responsibilityProvider.progress * 100).toInt()}%',
-            color: Colors.blueAccent,
+          child: GestureDetector(
+            onTap: () => _showInfoDialog(
+              'INTEGRIDAD DEL SISTEMA',
+              'Porcentaje de cumplimiento de tus protocolos mensuales de responsabilidad (Adult Mode).',
+              Icons.verified_user,
+            ),
+            child: MetricTile(
+              icon: Icons.verified_user,
+              label: 'INTEGRIDAD',
+              value: '${(integrity * 100).toInt()}%',
+              color: integrityColor,
+            ),
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: MetricTile(
-            icon: Icons.local_fire_department,
-            label: 'RACHA',
-            value: '$maxStreak DÍAS',
-            color: Colors.orangeAccent,
+          child: GestureDetector(
+            onTap: () => _showInfoDialog(
+              'RACHA DE DISCIPLINA',
+              'Tu mejor racha actual entre todos tus hábitos activos.',
+              Icons.local_fire_department,
+            ),
+            child: MetricTile(
+              icon: Icons.local_fire_department,
+              label: 'RACHA',
+              value: '$maxStreak DÍAS',
+              color: Colors.orangeAccent,
+            ),
           ),
         ),
       ],
@@ -476,9 +557,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     if (entries.isEmpty) {
       return Center(
-        child: Text(
-          'SIN ACTIVIDAD REGISTRADA',
-          style: GoogleFonts.spaceMono(color: theme.disabledColor),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'SIN ACTIVIDAD PROGRAMADA',
+              style: GoogleFonts.spaceMono(color: theme.disabledColor),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const TransactionsScreen(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.attach_money, size: 16),
+                  label: const Text('GASTO RÁPIDO'),
+                ),
+                const SizedBox(width: 12),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const TasksScreen(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.check, size: 16),
+                  label: const Text('NUEVA TAREA'),
+                ),
+              ],
+            ),
+          ],
         ),
       );
     }

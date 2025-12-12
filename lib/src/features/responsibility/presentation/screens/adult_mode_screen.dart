@@ -131,19 +131,58 @@ class _AdultModeScreenState extends State<AdultModeScreen> {
     );
   }
 
+  void _showInfoDialog(String title, String description, IconData icon) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(icon, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                title,
+                style: GoogleFonts.spaceMono(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        content: Text(description, style: GoogleFonts.inter()),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'ENTENDIDO',
+              style: GoogleFonts.spaceMono(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<ResponsibilityProvider>(context);
     final progress = provider.progress;
 
-    Color progressColor;
-    if (progress < 0.5) {
-      progressColor = AppTheme.danger;
-    } else if (progress < 1.0) {
-      progressColor = AppTheme.primary;
+    String statusText;
+    Color statusColor;
+    if (progress < 0.3) {
+      statusText = 'CRÍTICO';
+      statusColor = AppTheme.danger;
+    } else if (progress < 0.7) {
+      statusText = 'ESTABLE';
+      statusColor = Colors.amber;
     } else {
-      progressColor = Colors.green;
+      statusText = 'ÓPTIMO';
+      statusColor = Colors.green;
     }
+
+    // ... (Dialog functions remain the same, omitting for brevity in this replacement block if possible, but since I'm replacing the whole build method structure, I should probably keep them or assume they are outside. Wait, the dialog functions are inside build in the original code. I should keep them or move them out. Moving them out is cleaner but might break context access if not careful. I'll keep them inside for now to minimize diff risk, but I need to be careful with the line range.
+    // Actually, the previous view showed them inside build. I will keep them there but I need to include them in the replacement or ensure I don't delete them.
+    // The replacement range starts at 134 (start of build) and ends at 800 (end of file view).
+    // I will rewrite the build method to include the new UI structure.
 
     void showEditTaskDialog(MonthlyTaskModel task) {
       final controller = TextEditingController(text: task.title);
@@ -363,25 +402,22 @@ class _AdultModeScreenState extends State<AdultModeScreen> {
       );
     }
 
-    String statusText;
-    Color statusColor;
-    if (progress < 0.3) {
-      statusText = 'CRÍTICO';
-      statusColor = AppTheme.danger;
-    } else if (progress < 1.0) {
-      statusText = 'ESTABLE';
-      statusColor = AppTheme.primary;
-    } else {
-      statusText = 'ÓPTIMO';
-      statusColor = Colors.green;
-    }
-
     return Scaffold(
       appBar: AppBar(
         title: Text(
           'ADULT MODE',
           style: GoogleFonts.spaceMono(fontWeight: FontWeight.bold),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            onPressed: () => _showInfoDialog(
+              'PROTOCOLOS DE MANTENIMIENTO',
+              'Tareas recurrentes necesarias para evitar el colapso de tu infraestructura vital. El reinicio es mensual.',
+              Icons.security,
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: showAddTaskDialog,
@@ -390,38 +426,41 @@ class _AdultModeScreenState extends State<AdultModeScreen> {
       ),
       body: Column(
         children: [
-          // Header Dashboard
+          // Header Dashboard (Reactor Core)
           Container(
             padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
             color: Theme.of(context).colorScheme.surface,
             child: Column(
               children: [
-                // Nivel 1: Monitor Circular Grande
+                // Reactor Core (Circular Monitor)
                 Stack(
                   alignment: Alignment.center,
                   children: [
+                    // Background Circle
                     SizedBox(
-                      width: 160,
-                      height: 160,
+                      width: 180,
+                      height: 180,
                       child: CircularProgressIndicator(
-                        value: progress,
-                        strokeWidth: 16,
-                        backgroundColor: Colors.grey.withOpacity(0.1),
-                        color: statusColor,
+                        value: 1.0,
+                        strokeWidth: 15,
+                        color: Colors.grey.withOpacity(0.1),
                       ),
                     ),
+                    // Progress Circle
+                    SizedBox(
+                      width: 180,
+                      height: 180,
+                      child: CircularProgressIndicator(
+                        value: progress,
+                        strokeWidth: 15,
+                        color: statusColor,
+                        strokeCap: StrokeCap.round,
+                      ),
+                    ),
+                    // Center Data
                     Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          'INTEGRIDAD',
-                          style: GoogleFonts.spaceMono(
-                            color: Colors.grey,
-                            fontSize: 12,
-                            letterSpacing: 2,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
                         Text(
                           '${(progress * 100).toInt()}%',
                           style: GoogleFonts.spaceMono(
@@ -430,159 +469,107 @@ class _AdultModeScreenState extends State<AdultModeScreen> {
                             fontSize: 42,
                           ),
                         ),
+                        Text(
+                          'INTEGRIDAD',
+                          style: GoogleFonts.spaceMono(
+                            color: Colors.grey,
+                            fontSize: 10,
+                            letterSpacing: 2,
+                          ),
+                        ),
                       ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 32),
-                // Nivel 3: Stats Row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Status Card
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: statusColor.withOpacity(0.3)),
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            'ESTADO',
-                            style: GoogleFonts.spaceMono(
-                              fontSize: 10,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            statusText,
-                            style: GoogleFonts.spaceMono(
-                              color: statusColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).scaffoldBackgroundColor,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.timer_outlined,
-                                  size: 12,
-                                  color: () {
-                                    final now = DateTime.now();
-                                    final lastDay = DateTime(
-                                      now.year,
-                                      now.month + 1,
-                                      0,
-                                    );
-                                    final daysLeft = lastDay
-                                        .difference(now)
-                                        .inDays;
-                                    return daysLeft < 5
-                                        ? Colors.red
-                                        : Colors.grey;
-                                  }(),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  () {
-                                    final now = DateTime.now();
-                                    final lastDay = DateTime(
-                                      now.year,
-                                      now.month + 1,
-                                      0,
-                                    );
-                                    final daysLeft = lastDay
-                                        .difference(now)
-                                        .inDays;
-                                    return 'REINICIO EN $daysLeft DÍAS';
-                                  }(),
-                                  style: GoogleFonts.spaceMono(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    color: () {
-                                      final now = DateTime.now();
-                                      final lastDay = DateTime(
-                                        now.year,
-                                        now.month + 1,
-                                        0,
-                                      );
-                                      final daysLeft = lastDay
-                                          .difference(now)
-                                          .inDays;
-                                      return daysLeft < 5
-                                          ? Colors.red
-                                          : Colors.grey;
-                                    }(),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                const SizedBox(height: 24),
+
+                // Status Chip
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: statusColor.withOpacity(0.5)),
+                  ),
+                  child: Text(
+                    'ESTADO: $statusText',
+                    style: GoogleFonts.spaceMono(
+                      color: statusColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
                     ),
-                    const SizedBox(width: 16),
-                    // XP Card
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.amber.withOpacity(0.3),
+                  ),
+                ),
+                const SizedBox(height: 32),
+
+                // Stats Row (Restored)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    // Days Left
+                    Column(
+                      children: [
+                        Icon(
+                          Icons.timer_outlined,
+                          color: Theme.of(context).hintColor,
+                          size: 20,
                         ),
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.bolt,
-                                size: 12,
-                                color: Colors.amber,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'XP POTENCIAL',
-                                style: GoogleFonts.spaceMono(
-                                  fontSize: 10,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ],
+                        const SizedBox(height: 4),
+                        Text(
+                          () {
+                            final now = DateTime.now();
+                            final lastDay = DateTime(
+                              now.year,
+                              now.month + 1,
+                              0,
+                            );
+                            final daysLeft = lastDay.difference(now).inDays;
+                            return '$daysLeft DÍAS';
+                          }(),
+                          style: GoogleFonts.spaceMono(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '+${provider.calculatePotentialXP()}',
-                            style: GoogleFonts.spaceMono(
-                              color: Colors.amber,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
+                        ),
+                        Text(
+                          'REINICIO',
+                          style: GoogleFonts.spaceMono(
+                            color: Colors.grey,
+                            fontSize: 10,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
+                    ),
+                    // Divider
+                    Container(
+                      height: 30,
+                      width: 1,
+                      color: Theme.of(context).dividerColor,
+                    ),
+                    // XP Potential
+                    Column(
+                      children: [
+                        const Icon(Icons.bolt, color: Colors.amber, size: 20),
+                        const SizedBox(height: 4),
+                        Text(
+                          '+${provider.calculatePotentialXP()}',
+                          style: GoogleFonts.spaceMono(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                            color: Colors.amber,
+                          ),
+                        ),
+                        Text(
+                          'XP POTENCIAL',
+                          style: GoogleFonts.spaceMono(
+                            color: Colors.grey,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -592,52 +579,6 @@ class _AdultModeScreenState extends State<AdultModeScreen> {
 
           const Divider(height: 1),
 
-          // Briefing
-          Container(
-            margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Theme.of(context).cardColor,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Theme.of(context).dividerColor),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  Icons.info_outline,
-                  size: 20,
-                  color: Theme.of(context).hintColor,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: RichText(
-                    text: TextSpan(
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: Theme.of(context).hintColor,
-                      ),
-                      children: [
-                        const TextSpan(
-                          text: 'Los protocolos se reinician cada mes.\n',
-                        ),
-                        TextSpan(
-                          text:
-                              '💡 Tip: Mantén presionado para editar, desliza para borrar.',
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.amber,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
           // List
           Expanded(
             child: provider.tasks.isEmpty
@@ -646,24 +587,32 @@ class _AdultModeScreenState extends State<AdultModeScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          Icons.playlist_add,
-                          size: 64,
-                          color: Colors.grey.withOpacity(0.5),
+                          Icons.security,
+                          size: 80,
+                          color: Colors.grey.withOpacity(0.3),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 24),
                         Text(
-                          'Sistema limpio.\nAgrega tus rutinas mensuales.',
-                          textAlign: TextAlign.center,
+                          'SISTEMAS EN ESPERA',
+                          style: GoogleFonts.spaceMono(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'AGREGA UN PROTOCOLO',
                           style: GoogleFonts.spaceMono(
                             color: Colors.grey,
-                            fontSize: 16,
+                            fontSize: 14,
                           ),
                         ),
                       ],
                     ),
                   )
                 : ListView.builder(
-                    padding: const EdgeInsets.only(bottom: 80),
+                    padding: const EdgeInsets.only(bottom: 80, top: 16),
                     itemCount: provider.tasks.length,
                     itemBuilder: (context, index) {
                       final sortedTasks = List<MonthlyTaskModel>.from(
@@ -680,15 +629,15 @@ class _AdultModeScreenState extends State<AdultModeScreen> {
                       switch (task.difficulty) {
                         case 3:
                           difficultyColor = Colors.red;
-                          difficultyLabel = 'PESADO';
+                          difficultyLabel = 'NIVEL 3';
                           break;
                         case 2:
                           difficultyColor = Colors.amber;
-                          difficultyLabel = 'GESTIÓN';
+                          difficultyLabel = 'NIVEL 2';
                           break;
                         default:
                           difficultyColor = Colors.green;
-                          difficultyLabel = 'RUTINA';
+                          difficultyLabel = 'NIVEL 1';
                       }
 
                       return Dismissible(
@@ -706,7 +655,7 @@ class _AdultModeScreenState extends State<AdultModeScreen> {
                             builder: (BuildContext context) {
                               return AlertDialog(
                                 title: Text(
-                                  '¿Eliminar módulo?',
+                                  '¿Eliminar protocolo?',
                                   style: GoogleFonts.spaceMono(
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -736,100 +685,83 @@ class _AdultModeScreenState extends State<AdultModeScreen> {
                         onDismissed: (direction) {
                           provider.deleteTask(task.id);
                         },
-                        child: Card(
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 6,
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            side: BorderSide(
-                              color: task.isCompleted
-                                  ? Colors.green.withOpacity(0.3)
-                                  : Theme.of(
-                                      context,
-                                    ).dividerColor.withOpacity(0.5),
-                            ),
-                          ),
-                          child: IntrinsicHeight(
-                            child: Row(
-                              children: [
-                                // Difficulty Indicator Strip
-                                Container(
-                                  width: 6,
-                                  color: task.isCompleted
-                                      ? Colors.green.withOpacity(0.5)
-                                      : difficultyColor,
+                        child: GestureDetector(
+                          onTap: () {
+                            if (!_hasShownHint) {
+                              setState(() => _hasShownHint = true);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    '¡Bien hecho! Recuerda que puedes editar manteniendo presionado.',
+                                    style: GoogleFonts.spaceMono(fontSize: 12),
+                                  ),
+                                  backgroundColor: AppTheme.primary,
+                                  duration: const Duration(seconds: 4),
                                 ),
-                                Expanded(
-                                  child: InkWell(
-                                    onLongPress: () => showEditTaskDialog(task),
-                                    onTap: () {
-                                      if (!_hasShownHint) {
-                                        setState(() => _hasShownHint = true);
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              '¡Bien hecho! Recuerda que puedes editar manteniendo presionado.',
-                                              style: GoogleFonts.spaceMono(
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                            backgroundColor: AppTheme.primary,
-                                            duration: const Duration(
-                                              seconds: 4,
-                                            ),
-                                          ),
-                                        );
-                                      }
-                                      HapticFeedback.mediumImpact();
-                                      provider.toggleTask(task.id).then((_) {
-                                        if (provider.isMonthCompleted) {
-                                          _checkCompletion(provider);
-                                        }
-                                      });
-                                    },
-                                    child: IgnorePointer(
-                                      child: CheckboxListTile(
-                                        value: task.isCompleted,
-                                        onChanged: (value) {},
-                                        title: Text(
-                                          task.title,
-                                          style: GoogleFonts.inter(
-                                            fontWeight: FontWeight.w500,
-                                            decoration: task.isCompleted
-                                                ? TextDecoration.lineThrough
-                                                : null,
-                                            color: task.isCompleted
-                                                ? Theme.of(context)
-                                                      .textTheme
-                                                      .bodyMedium
-                                                      ?.color
-                                                      ?.withOpacity(0.5)
-                                                : Theme.of(
-                                                    context,
-                                                  ).textTheme.bodyMedium?.color,
-                                          ),
-                                        ),
-                                        subtitle: Padding(
-                                          padding: const EdgeInsets.only(
-                                            top: 6,
-                                          ),
-                                          child: Row(
+                              );
+                            }
+                            HapticFeedback.mediumImpact();
+                            provider.toggleTask(task.id).then((_) {
+                              if (provider.isMonthCompleted) {
+                                _checkCompletion(provider);
+                              }
+                            });
+                          },
+                          onLongPress: () => showEditTaskDialog(task),
+                          child: Card(
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 6,
+                            ),
+                            color: task.isCompleted
+                                ? Theme.of(context).cardColor.withOpacity(0.5)
+                                : Theme.of(context).cardColor,
+                            elevation: task.isCompleted ? 0 : 2,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: BorderSide(
+                                color: task.isCompleted
+                                    ? Colors.transparent
+                                    : difficultyColor.withOpacity(0.3),
+                              ),
+                            ),
+                            child: IntrinsicHeight(
+                              child: Row(
+                                children: [
+                                  // Difficulty Strip
+                                  Container(
+                                    width: 6,
+                                    decoration: BoxDecoration(
+                                      color: task.isCompleted
+                                          ? Colors.grey
+                                          : difficultyColor,
+                                      borderRadius: const BorderRadius.only(
+                                        topLeft: Radius.circular(12),
+                                        bottomLeft: Radius.circular(12),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16.0),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
                                             children: [
                                               Container(
                                                 padding:
                                                     const EdgeInsets.symmetric(
-                                                      horizontal: 6,
+                                                      horizontal: 8,
                                                       vertical: 2,
                                                     ),
                                                 decoration: BoxDecoration(
                                                   color: task.isCompleted
                                                       ? Colors.grey.withOpacity(
-                                                          0.1,
+                                                          0.2,
                                                         )
                                                       : difficultyColor
                                                             .withOpacity(0.1),
@@ -847,29 +779,39 @@ class _AdultModeScreenState extends State<AdultModeScreen> {
                                                   ),
                                                 ),
                                               ),
+                                              if (task.isCompleted)
+                                                Icon(
+                                                  Icons.check_circle,
+                                                  color: Colors.green
+                                                      .withOpacity(0.7),
+                                                  size: 20,
+                                                ),
                                             ],
                                           ),
-                                        ),
-                                        secondary: Icon(
-                                          task.isCompleted
-                                              ? Icons.check_circle
-                                              : Icons.circle_outlined,
-                                          color: task.isCompleted
-                                              ? Colors.green
-                                              : Colors.grey.withOpacity(0.5),
-                                        ),
-                                        activeColor: Colors.green,
-                                        checkColor: Colors.white,
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                              horizontal: 16,
-                                              vertical: 8,
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            task.title,
+                                            style: GoogleFonts.inter(
+                                              fontSize: 16,
+                                              decoration: task.isCompleted
+                                                  ? TextDecoration.lineThrough
+                                                  : null,
+                                              color: task.isCompleted
+                                                  ? Theme.of(
+                                                      context,
+                                                    ).disabledColor
+                                                  : Theme.of(context)
+                                                        .textTheme
+                                                        .bodyLarge
+                                                        ?.color,
                                             ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),

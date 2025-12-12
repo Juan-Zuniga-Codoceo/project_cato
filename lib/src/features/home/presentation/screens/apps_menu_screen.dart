@@ -47,8 +47,8 @@ class AppsMenuScreen extends StatelessWidget {
             ),
           ),
           _AppCard(
-            title: 'ADULT MODE',
-            icon: Icons.shield,
+            title: 'SISTEMAS',
+            icon: Icons.dns,
             color: Colors.teal,
             onTap: () => Navigator.push(
               context,

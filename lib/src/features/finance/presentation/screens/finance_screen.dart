@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/providers/finance_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'statistics_screen.dart';
@@ -10,6 +11,41 @@ import 'budgets_screen.dart';
 
 class FinanceScreen extends StatelessWidget {
   const FinanceScreen({super.key});
+
+  void _showInfoDialog(
+    BuildContext context,
+    String title,
+    String description,
+    IconData icon,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(icon, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                title,
+                style: GoogleFonts.spaceMono(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        content: Text(description, style: GoogleFonts.inter()),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'ENTENDIDO',
+              style: GoogleFonts.spaceMono(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,33 +74,42 @@ class FinanceScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'BALANCE TOTAL',
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.6),
-                    letterSpacing: 1.5,
+                GestureDetector(
+                  onTap: () => _showInfoDialog(
+                    context,
+                    'CAPITAL DE OPERACIÓN',
+                    'Es tu liquidez actual. Un balance positivo te da libertad de maniobra; uno negativo te hace esclavo de las deudas. Cuídalo.',
+                    Icons.account_balance_wallet,
                   ),
-                ),
-                const SizedBox(height: 8),
-                Consumer<FinanceProvider>(
-                  builder: (context, provider, child) {
-                    if (provider.totalBalance == 0 &&
-                        provider.totalIncome == 0 &&
-                        provider.totalExpenses == 0) {
-                      return Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '\$0',
-                                  style: theme.textTheme.displayMedium
-                                      ?.copyWith(
-                                        color: theme.colorScheme.primary,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'BALANCE TOTAL',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: theme.colorScheme.onSurface.withOpacity(0.6),
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Consumer<FinanceProvider>(
+                        builder: (context, provider, child) {
+                          final isZeroState =
+                              provider.totalBalance == 0 &&
+                              provider.totalIncome == 0 &&
+                              provider.totalExpenses == 0;
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '\$${provider.totalBalance.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
+                                style: theme.textTheme.displayMedium?.copyWith(
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
                                 ),
+                              ),
+                              if (isZeroState) ...[
                                 const SizedBox(height: 8),
                                 Text(
                                   '"Tu imperio empieza con la primera moneda."',
@@ -75,61 +120,58 @@ class FinanceScreen extends StatelessWidget {
                                   ),
                                 ),
                               ],
-                            ),
-                          ),
-                          // Placeholder Icon/Image
-                          Opacity(
-                            opacity: 0.8,
-                            child: Icon(
-                              Icons.account_balance_wallet,
-                              size: 48,
-                              color: theme.colorScheme.primary.withOpacity(0.5),
-                            ),
-                          ),
-                        ],
-                      );
-                    }
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '\$${provider.totalBalance.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
-                          style: theme.textTheme.displayMedium?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            _buildBreakdownItem(
-                              context,
-                              'INGRESOS',
-                              provider.totalIncome,
-                              Colors
-                                  .greenAccent, // Keep semantic colors but muted if needed
-                              Icons.arrow_upward,
-                            ),
-                            _buildBreakdownItem(
-                              context,
-                              'GASTOS',
-                              provider.totalExpenses,
-                              AppTheme.danger,
-                              Icons.arrow_downward,
-                            ),
-                            _buildBreakdownItem(
-                              context,
-                              'SUSCRIP.',
-                              provider.totalMonthlySubscriptions,
-                              AppTheme.secondary,
-                              Icons.repeat,
-                            ),
-                          ],
-                        ),
-                      ],
-                    );
-                  },
+                              const SizedBox(height: 24),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  _buildBreakdownItem(
+                                    context,
+                                    'INGRESOS',
+                                    provider.totalIncome,
+                                    Colors.greenAccent,
+                                    Icons.arrow_upward,
+                                    onTap: () => _showInfoDialog(
+                                      context,
+                                      'FLUJO DE ENTRADA',
+                                      'El combustible de tu sistema. Busca diversificar tus fuentes, no solo aumentar el caudal.',
+                                      Icons.arrow_upward,
+                                    ),
+                                  ),
+                                  _buildBreakdownItem(
+                                    context,
+                                    'GASTOS',
+                                    provider.totalExpenses,
+                                    AppTheme.danger,
+                                    Icons.arrow_downward,
+                                    onTap: () => _showInfoDialog(
+                                      context,
+                                      'FUGAS DE CAPITAL',
+                                      'Fugas de energía. No se trata de no gastar, sino de que cada moneda tenga un propósito estratégico.',
+                                      Icons.arrow_downward,
+                                    ),
+                                  ),
+                                  _buildBreakdownItem(
+                                    context,
+                                    'SUSCRIP.',
+                                    provider.totalMonthlySubscriptions,
+                                    AppTheme.secondary,
+                                    Icons.repeat,
+                                    onTap: () => _showInfoDialog(
+                                      context,
+                                      'COSTOS PASIVOS',
+                                      'Costos pasivos. Revisalos mensualmente; son los asesinos silenciosos del ahorro.',
+                                      Icons.repeat,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -230,35 +272,47 @@ class FinanceScreen extends StatelessWidget {
     String label,
     double amount,
     Color color,
-    IconData icon,
-  ) {
+    IconData icon, {
+    VoidCallback? onTap,
+  }) {
     final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.all(8.0),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, size: 12, color: color.withOpacity(0.7)),
-            const SizedBox(width: 4),
+            Row(
+              children: [
+                Icon(icon, size: 12, color: color.withOpacity(0.7)),
+                const SizedBox(width: 4),
+                Text(
+                  label,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    fontSize: 10,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
             Text(
-              label,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
-                fontSize: 10,
-                letterSpacing: 1,
+              '\$${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: color,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 4),
-        Text(
-          '\$${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}',
-          style: theme.textTheme.titleMedium?.copyWith(
-            color: color,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
+      ),
     );
   }
 
