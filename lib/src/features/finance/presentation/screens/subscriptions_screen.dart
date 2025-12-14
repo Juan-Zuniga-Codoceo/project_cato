@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/providers/finance_provider.dart';
 import '../../domain/models/subscription.dart';
 
@@ -117,38 +118,58 @@ class SubscriptionsScreen extends StatelessWidget {
       body: Column(
         children: [
           // Header - Total Monthly Expense
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24.0),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.purple.shade700, Colors.purple.shade500],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(30),
-                bottomRight: Radius.circular(30),
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Gasto Mensual Total',
-                  style: TextStyle(color: Colors.white70, fontSize: 16),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '\$${provider.totalMonthlySubscriptions.toStringAsFixed(0)}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 36,
-                    fontWeight: FontWeight.bold,
+          // Header - Hero Image
+          Stack(
+            children: [
+              Container(
+                height: 180,
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/images/module_finance.png'),
+                    fit: BoxFit.cover,
                   ),
                 ),
-              ],
-            ),
+              ),
+              Container(
+                height: 180,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Colors.transparent, Colors.black.withOpacity(0.8)],
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 20,
+                left: 20,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'COSTOS FIJOS',
+                      style: GoogleFonts.spaceMono(
+                        color: Colors.amber,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '\$${provider.totalMonthlySubscriptions.toStringAsFixed(0)}',
+                      style: GoogleFonts.spaceMono(
+                        color: Colors.white,
+                        fontSize: 36,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
 
           // List of Subscriptions
@@ -160,6 +181,26 @@ class SubscriptionsScreen extends StatelessWidget {
                     itemCount: provider.subscriptions.length,
                     itemBuilder: (context, index) {
                       final sub = provider.subscriptions[index];
+
+                      // Calculate progress to next payment
+                      final now = DateTime.now();
+                      final daysInMonth = DateTime(
+                        now.year,
+                        now.month + 1,
+                        0,
+                      ).day;
+                      final progress = (now.day / daysInMonth).clamp(0.0, 1.0);
+
+                      // Determine next payment date text
+                      String nextPaymentText;
+                      if (now.day > sub.paymentDay) {
+                        nextPaymentText =
+                            'Próximo: ${sub.paymentDay}/${now.month + 1}';
+                      } else {
+                        nextPaymentText =
+                            'Próximo: ${sub.paymentDay}/${now.month}';
+                      }
+
                       return Dismissible(
                         key: Key('${sub.name}_$index'),
                         direction: DismissDirection.endToStart,
@@ -168,10 +209,16 @@ class SubscriptionsScreen extends StatelessWidget {
                           padding: const EdgeInsets.only(right: 20),
                           margin: const EdgeInsets.only(bottom: 12),
                           decoration: BoxDecoration(
-                            color: Colors.red,
-                            borderRadius: BorderRadius.circular(16),
+                            color: Colors.red.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.red.withOpacity(0.5),
+                            ),
                           ),
-                          child: const Icon(Icons.delete, color: Colors.white),
+                          child: const Icon(
+                            Icons.delete_outline,
+                            color: Colors.red,
+                          ),
                         ),
                         onDismissed: (direction) {
                           provider.removeSubscription(sub.id);
@@ -179,32 +226,89 @@ class SubscriptionsScreen extends StatelessWidget {
                             SnackBar(content: Text('${sub.name} eliminado')),
                           );
                         },
-                        child: Card(
+                        child: Container(
                           margin: const EdgeInsets.only(bottom: 12),
-                          child: ListTile(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1E1E1E), // Dark Surface
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border(
+                              left: BorderSide(
+                                color: sub.color ?? Colors.blueAccent,
+                                width: 4,
+                              ),
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: InkWell(
                             onTap: () =>
                                 _showAddEditModal(context, index: index),
-                            leading: CircleAvatar(
-                              backgroundColor:
-                                  sub.color?.withOpacity(0.1) ??
-                                  Colors.grey[200],
-                              child: Icon(
-                                sub.icon ?? Icons.credit_card,
-                                color: sub.color ?? Colors.grey,
-                              ),
-                            ),
-                            title: Text(
-                              sub.name,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            subtitle: Text('Día de pago: ${sub.paymentDay}'),
-                            trailing: Text(
-                              '\$${sub.price.toStringAsFixed(0)}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
+                            borderRadius: BorderRadius.circular(12),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                children: [
+                                  // Row Superior: Nombre y Precio
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        sub.name.toUpperCase(),
+                                        style: GoogleFonts.spaceMono(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                      Text(
+                                        '\$${sub.price.toStringAsFixed(0)}',
+                                        style: GoogleFonts.spaceMono(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  // Row Inferior: Info Pago + Progreso
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.calendar_today,
+                                        size: 14,
+                                        color: Colors.grey[400],
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        nextPaymentText,
+                                        style: GoogleFonts.inter(
+                                          fontSize: 12,
+                                          color: Colors.grey[400],
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      SizedBox(
+                                        width: 60,
+                                        child: LinearProgressIndicator(
+                                          value: progress,
+                                          backgroundColor: Colors.grey[800],
+                                          color: sub.color ?? Colors.blueAccent,
+                                          minHeight: 4,
+                                          borderRadius: BorderRadius.circular(
+                                            2,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ),
                           ),

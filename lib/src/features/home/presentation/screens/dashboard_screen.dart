@@ -11,6 +11,7 @@ import '../../../academic/providers/academic_provider.dart';
 import '../../../social/providers/social_provider.dart';
 import '../../../tasks/providers/task_provider.dart';
 import '../../../responsibility/providers/responsibility_provider.dart';
+import '../../../tasks/domain/models/task_model.dart';
 
 // Widgets
 import '../widgets/dashboard_widgets.dart';
@@ -281,6 +282,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final socialProvider = context.watch<SocialProvider>();
     final taskProvider = context.watch<TaskProvider>();
     final garageProvider = context.watch<GarageProvider>();
+    final theme = Theme.of(context);
 
     final now = DateTime.now();
     final tomorrow = now.add(const Duration(days: 1));
@@ -377,11 +379,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
       subtitle: 'MISIÓN SECUNDARIA: $randomMission',
       icon: Icons.shield,
       color: Colors.green,
-      actionLabel: 'VER MISIONES',
+      actionLabel: 'ACEPTAR MISIÓN',
       onAction: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const TasksScreen()),
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(
+              'INTELIGENCIA TÁCTICA',
+              style: GoogleFonts.spaceMono(fontWeight: FontWeight.bold),
+            ),
+            content: Text(
+              '¿Deseas agregar la misión "$randomMission" a tu lista de objetivos de hoy?',
+              style: GoogleFonts.inter(),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('CANCELAR'),
+              ),
+              TextButton(
+                onPressed: () {
+                  // Create Task
+                  final newTask = TaskModel(
+                    id: DateTime.now().toString(),
+                    title: randomMission,
+                    description: 'Misión generada desde el Dashboard',
+                    dueDate: DateTime.now(),
+                    isCompleted: false,
+                  );
+                  taskProvider.addTask(newTask, context);
+                  Navigator.pop(context); // Close dialog
+
+                  // Navigate to Tasks
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const TasksScreen(),
+                    ),
+                  );
+                },
+                child: Text(
+                  'ACEPTAR',
+                  style: GoogleFonts.spaceMono(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
