@@ -53,6 +53,49 @@ class _VitalityTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Container(
+            height: 160,
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 20),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              image: const DecorationImage(
+                image: AssetImage('assets/images/module_bio.png'),
+                fit: BoxFit.cover,
+              ),
+              border: Border.all(
+                color: const Color(0xFF00E5FF).withOpacity(0.5),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF00E5FF).withOpacity(0.2),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [Colors.black.withOpacity(0.9), Colors.transparent],
+                ),
+              ),
+              alignment: Alignment.bottomLeft,
+              padding: const EdgeInsets.all(20),
+              child: Text(
+                "BIO-MONITOR: ACTIVO",
+                style: GoogleFonts.spaceMono(
+                  color: const Color(0xFF00E5FF),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ),
+          ),
           Text(
             'MANTENIMIENTO DE HARDWARE',
             style: GoogleFonts.spaceMono(
@@ -354,6 +397,47 @@ class _ExteriorTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Container(
+            height: 160,
+            width: double.infinity,
+            margin: const EdgeInsets.only(bottom: 20),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              image: const DecorationImage(
+                image: AssetImage('assets/images/module_exterior.png'),
+                fit: BoxFit.cover,
+              ),
+              border: Border.all(color: Colors.orangeAccent.withOpacity(0.5)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.orangeAccent.withOpacity(0.2),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [Colors.black.withOpacity(0.9), Colors.transparent],
+                ),
+              ),
+              alignment: Alignment.bottomLeft,
+              padding: const EdgeInsets.all(20),
+              child: Text(
+                "EQUIPAMIENTO: LISTO",
+                style: GoogleFonts.spaceMono(
+                  color: Colors.orangeAccent,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ),
+          ),
           Text(
             'INTELIGENCIA VISUAL',
             style: GoogleFonts.spaceMono(

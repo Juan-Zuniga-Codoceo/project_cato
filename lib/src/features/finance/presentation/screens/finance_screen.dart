@@ -60,6 +60,39 @@ class FinanceScreen extends StatelessWidget {
         children: [
           // Header - Balance Total
           Container(
+            height: 140,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              image: const DecorationImage(
+                image: AssetImage('assets/images/module_finance.png'),
+                fit: BoxFit.cover,
+              ),
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [
+                    Theme.of(context).scaffoldBackgroundColor,
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+              alignment: Alignment.bottomLeft,
+              padding: const EdgeInsets.all(20),
+              child: Text(
+                "BÓVEDA PRINCIPAL",
+                style: GoogleFonts.spaceMono(
+                  color: const Color(0xFFFFC107), // Amber
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  letterSpacing: 2.0,
+                ),
+              ),
+            ),
+          ),
+          Container(
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(
               24,

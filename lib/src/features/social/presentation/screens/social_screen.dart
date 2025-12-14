@@ -51,6 +51,40 @@ class SocialScreen extends StatelessWidget {
             )
           : Column(
               children: [
+                Container(
+                  height: 140,
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    image: const DecorationImage(
+                      image: AssetImage('assets/images/module_social.png'),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [
+                          Theme.of(context).scaffoldBackgroundColor,
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
+                    alignment: Alignment.bottomLeft,
+                    padding: const EdgeInsets.all(20),
+                    child: Text(
+                      "RED DE ALIADOS",
+                      style: GoogleFonts.spaceMono(
+                        color: Colors.indigoAccent,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        letterSpacing: 2.0,
+                      ),
+                    ),
+                  ),
+                ),
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,

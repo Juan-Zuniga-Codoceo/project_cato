@@ -276,7 +276,7 @@ class CharacterScreen extends StatelessWidget {
                   children: [
                     _AttributeCard(
                       title: 'FUERZA',
-                      icon: Icons.fitness_center,
+                      iconPath: 'assets/icons/attr_strength.png',
                       color: Colors.red,
                       level: stats.getAttributeLevel('Fuerza'),
                       xp: stats.getAttributeXp('Fuerza'),
@@ -289,7 +289,7 @@ class CharacterScreen extends StatelessWidget {
                     ),
                     _AttributeCard(
                       title: 'INTELECTO',
-                      icon: Icons.psychology,
+                      iconPath: 'assets/icons/attr_intellect.png',
                       color: Colors.blue,
                       level: stats.getAttributeLevel('Intelecto'),
                       xp: stats.getAttributeXp('Intelecto'),
@@ -302,7 +302,7 @@ class CharacterScreen extends StatelessWidget {
                     ),
                     _AttributeCard(
                       title: 'VITALIDAD',
-                      icon: Icons.favorite,
+                      iconPath: 'assets/icons/attr_vitality.png',
                       color: Colors.green,
                       level: stats.getAttributeLevel('Vitalidad'),
                       xp: stats.getAttributeXp('Vitalidad'),
@@ -315,7 +315,7 @@ class CharacterScreen extends StatelessWidget {
                     ),
                     _AttributeCard(
                       title: 'DISCIPLINA',
-                      icon: Icons.shield,
+                      iconPath: 'assets/icons/attr_discipline.png',
                       color: Colors.grey,
                       level: stats.getAttributeLevel('Disciplina'),
                       xp: stats.getAttributeXp('Disciplina'),
@@ -339,7 +339,7 @@ class CharacterScreen extends StatelessWidget {
 
 class _AttributeCard extends StatelessWidget {
   final String title;
-  final IconData icon;
+  final String iconPath;
   final Color color;
   final int level;
   final int xp;
@@ -347,7 +347,7 @@ class _AttributeCard extends StatelessWidget {
 
   const _AttributeCard({
     required this.title,
-    required this.icon,
+    required this.iconPath,
     required this.color,
     required this.level,
     required this.xp,
@@ -373,7 +373,13 @@ class _AttributeCard extends StatelessWidget {
               // Icon and Title
               Row(
                 children: [
-                  Icon(icon, color: color, size: 24),
+                  Image.asset(
+                    iconPath,
+                    width: 32,
+                    height: 32,
+                    filterQuality: FilterQuality.none,
+                    fit: BoxFit.contain,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -436,11 +442,15 @@ class _AttributeCard extends StatelessWidget {
 
 // Available avatar options
 const List<String> _availableAvatars = [
-  'assets/avatars/hero_1.jpg', // Guerrero
-  'assets/avatars/hero_2.jpg', // Magnate
-  'assets/avatars/hero_3.jpg', // Hacker
-  'assets/avatars/hero_4.jpg', // Ninja
-  'assets/avatars/hero_5.jpg', // Sensei
+  'assets/avatars/hero_1.jpg',
+  'assets/avatars/hero_2.jpg',
+  'assets/avatars/hero_3.jpg',
+  'assets/avatars/hero_4.jpg',
+  'assets/avatars/hero_5.jpg',
+  'assets/avatars/hero_mechanic.png',
+  'assets/avatars/hero_valkyrie.png',
+  'assets/avatars/hero_ghost.png',
+  'assets/avatars/hero_diplomat.png',
 ];
 
 // Show Avatar Selector Modal

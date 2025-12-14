@@ -5,6 +5,7 @@ import '../../../../core/providers/theme_provider.dart';
 import '../../../../core/providers/habit_provider.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../academic/providers/academic_provider.dart';
+import '../../../../core/utils/data_seeder.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -147,6 +148,32 @@ class SettingsScreen extends StatelessWidget {
                 const Text(
                   'Esta acción es irreversible y eliminará todos tus datos.',
                   style: TextStyle(color: Colors.grey),
+                ),
+                const SizedBox(height: 16),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      await DataSeeder.seedData(context);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              '✅ Datos inyectados. Reinicia la app si es necesario.',
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.science),
+                    label: const Text('Inyectar Datos de Prueba'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.teal,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16),
                 SizedBox(

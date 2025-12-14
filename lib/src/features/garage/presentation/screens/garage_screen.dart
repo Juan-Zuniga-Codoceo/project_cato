@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/providers/garage_provider.dart';
 import '../../../../core/providers/finance_provider.dart';
 import '../../domain/models/vehicle.dart';
@@ -520,12 +521,49 @@ class _GarageScreenState extends State<GarageScreen> {
     );
   }
 
+  void _confirmDeleteVehicle(BuildContext context, Vehicle vehicle) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('¿Vender/Eliminar Vehículo?'),
+        content: Text(
+          'Se borrará "${vehicle.name}" y todo su historial de mantenimiento.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('CANCELAR'),
+          ),
+          TextButton(
+            onPressed: () {
+              Provider.of<GarageProvider>(
+                context,
+                listen: false,
+              ).deleteVehicle(vehicle.id);
+              Navigator.pop(context);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text(
+              'ELIMINAR',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(title: const Text('GARAJE DIGITAL')),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddVehicleModal(context),
+        backgroundColor: theme.colorScheme.primary,
+        child: const Icon(Icons.add),
+      ),
       body: Consumer<GarageProvider>(
         builder: (context, provider, child) {
           if (provider.vehicles.isEmpty) {
@@ -594,6 +632,40 @@ class _GarageScreenState extends State<GarageScreen> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              Container(
+                height: 140,
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  image: const DecorationImage(
+                    image: AssetImage('assets/images/module_garage.png'),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [
+                        Theme.of(context).scaffoldBackgroundColor,
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                  alignment: Alignment.bottomLeft,
+                  padding: const EdgeInsets.all(20),
+                  child: Text(
+                    "TALLER MECÁNICO",
+                    style: GoogleFonts.spaceMono(
+                      color: Colors.orangeAccent,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                      letterSpacing: 2.0,
+                    ),
+                  ),
+                ),
+              ),
               SizedBox(
                 height: 260,
                 child: ListView.builder(
@@ -619,7 +691,6 @@ class _GarageScreenState extends State<GarageScreen> {
                         width: MediaQuery.of(context).size.width * 0.85,
                         margin: const EdgeInsets.only(right: 16),
                         child: Card(
-                          // Blueprint Style: Flat surface, accent border if selected
                           elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
@@ -631,172 +702,199 @@ class _GarageScreenState extends State<GarageScreen> {
                                 : BorderSide(
                                     color: theme.colorScheme.onSurface
                                         .withOpacity(0.1),
-                                    width: 1,
                                   ),
                           ),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: theme
-                                  .colorScheme
-                                  .surface, // Flat color, no gradient
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            padding: const EdgeInsets.all(20),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                          child: Stack(
+                            children: [
+                              // CONTENIDO PRINCIPAL
+                              Padding(
+                                padding: const EdgeInsets.all(24),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    v.imagePath != null &&
-                                            File(v.imagePath!).existsSync()
-                                        ? Container(
-                                            width: 60,
-                                            height: 60,
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              border: Border.all(
-                                                color: theme
-                                                    .colorScheme
-                                                    .onSurface
-                                                    .withOpacity(0.2),
-                                                width: 1,
-                                              ),
-                                            ),
-                                            child: ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(11),
-                                              child: Image.file(
-                                                File(v.imagePath!),
-                                                width: 60,
-                                                height: 60,
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
-                                          )
-                                        : Container(
-                                            width: 60,
-                                            height: 60,
-                                            decoration: BoxDecoration(
-                                              color: theme.colorScheme.onSurface
-                                                  .withOpacity(0.1),
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                            ),
-                                            child: Icon(
-                                              Icons.directions_car,
-                                              color: theme.colorScheme.onSurface
-                                                  .withOpacity(0.5),
-                                              size: 32,
-                                            ),
-                                          ),
+                                    // Fila Superior: Foto + Botones Funcionales
                                     Row(
                                       children: [
-                                        IconButton(
-                                          icon: Icon(
-                                            Icons.folder_shared,
-                                            color: theme.colorScheme.primary,
-                                          ),
-                                          onPressed: () {
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) =>
-                                                    VehicleDetailScreen(
-                                                      vehicle: v,
-                                                    ),
-                                              ),
-                                            );
-                                          },
-                                          tooltip: 'Documentos',
-                                        ),
-                                        IconButton(
-                                          icon: Icon(
-                                            Icons.camera_alt,
-                                            color: theme.colorScheme.primary,
-                                          ),
-                                          onPressed: () =>
-                                              _pickVehiclePhoto(context, v),
-                                          tooltip: 'Cambiar foto',
-                                        ),
+                                        // Foto del Vehículo
                                         Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 6,
-                                          ),
+                                          width: 60,
+                                          height: 60,
                                           decoration: BoxDecoration(
                                             color: theme.colorScheme.surface,
                                             borderRadius: BorderRadius.circular(
-                                              8,
+                                              12,
                                             ),
                                             border: Border.all(
-                                              color:
-                                                  theme.colorScheme.onSurface,
-                                              width: 2,
+                                              color: theme.colorScheme.onSurface
+                                                  .withOpacity(0.2),
+                                            ),
+                                          ),
+                                          child:
+                                              v.imagePath != null &&
+                                                  File(
+                                                    v.imagePath!,
+                                                  ).existsSync()
+                                              ? ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(11),
+                                                  child: Image.file(
+                                                    File(v.imagePath!),
+                                                    fit: BoxFit.cover,
+                                                  ),
+                                                )
+                                              : Icon(
+                                                  Icons.directions_car,
+                                                  color: theme
+                                                      .colorScheme
+                                                      .onSurface
+                                                      .withOpacity(0.5),
+                                                ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        // Botones de Acción (Docs, Camara, Editar)
+                                        Expanded(
+                                          child: Wrap(
+                                            // Usamos Wrap para evitar overflow si la pantalla es chica
+                                            spacing: 0,
+                                            children: [
+                                              IconButton(
+                                                icon: Icon(
+                                                  Icons.folder_shared,
+                                                  color:
+                                                      theme.colorScheme.primary,
+                                                ),
+                                                onPressed: () {
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          VehicleDetailScreen(
+                                                            vehicle: v,
+                                                          ),
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                              IconButton(
+                                                icon: Icon(
+                                                  Icons.camera_alt,
+                                                  color:
+                                                      theme.colorScheme.primary,
+                                                ),
+                                                onPressed: () =>
+                                                    _pickVehiclePhoto(
+                                                      context,
+                                                      v,
+                                                    ),
+                                              ),
+                                              IconButton(
+                                                icon: Icon(
+                                                  Icons.edit,
+                                                  color: theme
+                                                      .colorScheme
+                                                      .onSurface
+                                                      .withOpacity(0.5),
+                                                ),
+                                                onPressed: () =>
+                                                    _showAddVehicleModal(
+                                                      context,
+                                                      vehicleToEdit: v,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const Spacer(),
+                                    const SizedBox(height: 12),
+                                    // Placa y Nombre
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 4,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.black,
+                                            borderRadius: BorderRadius.circular(
+                                              6,
+                                            ),
+                                            border: Border.all(
+                                              color: Colors.amber,
+                                              width: 1,
                                             ),
                                           ),
                                           child: Text(
                                             v.plate.toUpperCase(),
-                                            style: theme.textTheme.titleMedium
-                                                ?.copyWith(
-                                                  fontFamily:
-                                                      'SpaceMono', // Ensure mono font
-                                                  fontWeight: FontWeight.bold,
-                                                  letterSpacing: 2.0,
-                                                ),
+                                            style: GoogleFonts.spaceMono(
+                                              color: Colors.amber,
+                                              fontWeight: FontWeight.bold,
+                                              letterSpacing: 1.5,
+                                            ),
                                           ),
                                         ),
-                                        IconButton(
-                                          icon: Icon(
-                                            Icons.edit,
-                                            color: theme.colorScheme.onSurface
-                                                .withOpacity(0.5),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      v.name,
+                                      style: theme.textTheme.headlineMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
                                           ),
-                                          onPressed: () => _showAddVehicleModal(
-                                            context,
-                                            vehicleToEdit: v,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      '${v.brand} ${v.model} (${v.year})',
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(color: Colors.grey),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    // Kilometraje
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.speed,
+                                          color: theme.colorScheme.secondary,
+                                          size: 18,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          '${NumberFormat('#,###').format(v.currentMileage)} km',
+                                          style: GoogleFonts.spaceMono(
+                                            fontWeight: FontWeight.bold,
                                           ),
                                         ),
                                       ],
                                     ),
                                   ],
                                 ),
-                                const Spacer(),
-                                Text(
-                                  v.name,
-                                  style: theme.textTheme.headlineMedium
-                                      ?.copyWith(fontWeight: FontWeight.bold),
-                                ),
-                                Text(
-                                  '${v.brand} ${v.model} (${v.year})',
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    color: theme.colorScheme.onSurface
-                                        .withOpacity(0.7),
+                              ),
+                              // BOTÓN ELIMINAR (POSICIONADO ABSOLUTO ARRIBA DERECHA)
+                              Positioned(
+                                top: 8,
+                                right: 8,
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(20),
+                                    onTap: () =>
+                                        _confirmDeleteVehicle(context, v),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      child: Icon(
+                                        Icons.delete_outline,
+                                        color: Colors.red.withOpacity(0.7),
+                                        size: 20,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                                const SizedBox(height: 10),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.speed,
-                                      color: theme.colorScheme.secondary,
-                                      size: 20,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      '${NumberFormat('#,###').format(v.currentMileage)} km',
-                                      style: theme.textTheme.headlineSmall
-                                          ?.copyWith(
-                                            fontFamily: 'SpaceMono',
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                       ),

@@ -240,6 +240,40 @@ class _SubjectsTab extends StatelessWidget {
 
     return Column(
       children: [
+        Container(
+          height: 140,
+          width: double.infinity,
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            image: const DecorationImage(
+              image: AssetImage('assets/images/module_academy.png'),
+              fit: BoxFit.cover,
+            ),
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.bottomCenter,
+                end: Alignment.topCenter,
+                colors: [
+                  Theme.of(context).scaffoldBackgroundColor,
+                  Colors.transparent,
+                ],
+              ),
+            ),
+            alignment: Alignment.bottomLeft,
+            padding: const EdgeInsets.all(20),
+            child: Text(
+              "NEXO DE CONOCIMIENTO",
+              style: GoogleFonts.spaceMono(
+                color: Colors.blueAccent,
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                letterSpacing: 1.5,
+              ),
+            ),
+          ),
+        ),
         _buildSemesterSummary(context, provider),
         Expanded(
           child: subjects.isEmpty
