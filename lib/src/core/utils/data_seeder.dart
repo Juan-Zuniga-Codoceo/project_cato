@@ -12,6 +12,9 @@ import '../../features/gamification/providers/achievement_provider.dart';
 import '../../features/academic/providers/academic_provider.dart';
 import '../../features/academic/domain/models/subject_model.dart';
 import '../../features/academic/domain/models/evaluation_model.dart';
+import '../services/home_widget_service.dart';
+import '../../features/tasks/providers/task_provider.dart';
+import '../../features/tasks/domain/models/task_model.dart';
 
 class DataSeeder {
   static const Uuid _uuid = Uuid();
@@ -180,10 +183,21 @@ class DataSeeder {
     );
     garageProvider.addMaintenance(maintenance);
 
-    print('✅ Datos inyectados correctamente.');
+    // 7. Sync Widget
+    print('🔄 Sincronizando Widget...');
+    final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+    // Buscar la tarea prioritaria real
+    final topTask = taskProvider.tasksForToday.isNotEmpty
+        ? taskProvider.tasksForToday.first.title
+        : "Sin misiones activas";
 
-    // 5. Academic (Scholar Badge)
-    print('🎓 Inyectando datos Académicos...');
+    await HomeWidgetService.updateData(
+      level: 5,
+      xp: 450,
+      maxXp: 500,
+      topTask: topTask,
+    );
+
     // 5. Academic (Scholar Badge)
     print('🎓 Inyectando datos Académicos...');
     if (academicProvider.subjects.isEmpty) {

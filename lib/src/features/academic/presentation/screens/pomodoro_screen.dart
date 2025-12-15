@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:just_audio/just_audio.dart'; // Asegúrate de tener esta librería
 
 class PomodoroScreen extends StatefulWidget {
   const PomodoroScreen({super.key});
@@ -11,8 +12,20 @@ class PomodoroScreen extends StatefulWidget {
 }
 
 class _PomodoroScreenState extends State<PomodoroScreen> {
-  // Modes: 0 = Focus (25), 1 = Short Break (5), 2 = Long Break (15)
-  int _mode = 0;
+  // Audio Logic
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  String _selectedSound = 'Silencio';
+
+  // URLs de Sonidos Ambientales (Cyberpunk/Focus)
+  final Map<String, String> _soundUrls = {
+    'Silencio': '',
+    'Lluvia': 'https://luan.xyz/files/audio/ambient_c_motion.mp3',
+    'White Noise': 'https://luan.xyz/files/audio/nasa_on_a_beam.mp3',
+    'Drone': 'https://luan.xyz/files/audio/coins_on_table.mp3',
+  };
+
+  // Timer Logic
+  int _mode = 0; // 0: Focus, 1: Short, 2: Long
   late int _remainingSeconds;
   Timer? _timer;
   bool _isActive = false;
@@ -25,43 +38,26 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
     2: Colors.purpleAccent,
   };
 
-  final Map<int, String> _modeNames = {
-    0: 'FOCUS',
-    1: 'SHORT BREAK',
-    2: 'LONG BREAK',
-  };
-
   @override
   void initState() {
     super.initState();
     _resetTimer();
   }
 
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _audioPlayer.dispose();
+    super.dispose();
+  }
+
   void _resetTimer() {
     _timer?.cancel();
+    _audioPlayer.stop();
     setState(() {
       _isActive = false;
       _remainingSeconds = _durations[_mode]!;
     });
-  }
-
-  void _toggleTimer() {
-    if (_isActive) {
-      _timer?.cancel();
-      setState(() => _isActive = false);
-    } else {
-      setState(() => _isActive = true);
-      _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        if (_remainingSeconds > 0) {
-          setState(() => _remainingSeconds--);
-        } else {
-          _timer?.cancel();
-          setState(() => _isActive = false);
-          HapticFeedback.heavyImpact();
-          _showCompletionDialog();
-        }
-      });
-    }
   }
 
   void _setMode(int mode) {
@@ -71,15 +67,53 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
     });
   }
 
+  Future<void> _toggleTimer() async {
+    if (_isActive) {
+      // Pause
+      _timer?.cancel();
+      await _audioPlayer.stop();
+      setState(() => _isActive = false);
+    } else {
+      // Start
+      setState(() => _isActive = true);
+
+      // Start Audio if not silent
+      if (_selectedSound != 'Silencio' &&
+          _soundUrls.containsKey(_selectedSound)) {
+        try {
+          if (_soundUrls[_selectedSound]!.isNotEmpty) {
+            await _audioPlayer.setUrl(_soundUrls[_selectedSound]!);
+            await _audioPlayer.setLoopMode(LoopMode.one);
+            await _audioPlayer.play();
+          }
+        } catch (e) {
+          print("Error playing audio: $e");
+        }
+      }
+
+      _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (_remainingSeconds > 0) {
+          setState(() => _remainingSeconds--);
+        } else {
+          _timer?.cancel();
+          _audioPlayer.stop();
+          setState(() => _isActive = false);
+          HapticFeedback.heavyImpact();
+          _showCompletionDialog();
+        }
+      });
+    }
+  }
+
   void _showCompletionDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(
-          '¡Tiempo Terminado!',
+          'SESIÓN COMPLETADA',
           style: GoogleFonts.spaceMono(fontWeight: FontWeight.bold),
         ),
-        content: const Text('Has completado tu sesión.'),
+        content: const Text('Has ganado XP de Intelecto.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -97,20 +131,13 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
   }
 
   @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final color = _modeColors[_mode]!;
     final maxSeconds = _durations[_mode]!;
     final progress = _remainingSeconds / maxSeconds;
 
     return Scaffold(
-      backgroundColor: Colors.black, // Cyber dark background
+      backgroundColor: Colors.black,
       appBar: AppBar(
         title: Text(
           'MODO ENFOQUE',
@@ -131,62 +158,99 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _buildModeButton(0, 'FOCUS'),
-              const SizedBox(width: 16),
+              const SizedBox(width: 10),
               _buildModeButton(1, 'SHORT'),
-              const SizedBox(width: 16),
+              const SizedBox(width: 10),
               _buildModeButton(2, 'LONG'),
             ],
           ),
-          const SizedBox(height: 48),
+          const SizedBox(height: 40),
 
           // Timer
           Stack(
             alignment: Alignment.center,
             children: [
               SizedBox(
-                width: 300,
-                height: 300,
+                width: 280,
+                height: 280,
                 child: CircularProgressIndicator(
                   value: progress,
-                  strokeWidth: 20,
+                  strokeWidth: 15,
                   backgroundColor: Colors.grey[900],
                   valueColor: AlwaysStoppedAnimation<Color>(color),
                 ),
               ),
               Column(
-                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     _formatTime(_remainingSeconds),
                     style: GoogleFonts.spaceMono(
-                      fontSize: 64,
+                      fontSize: 60,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
                   Text(
-                    _isActive ? 'EN PROGRESO' : 'PAUSADO',
+                    _isActive ? 'CONCENTRACIÓN' : 'PAUSADO',
                     style: GoogleFonts.spaceMono(
-                      fontSize: 16,
-                      color: Colors.grey,
-                      letterSpacing: 2.0,
+                      color: color,
+                      letterSpacing: 2,
                     ),
                   ),
                 ],
               ),
             ],
           ),
-          const SizedBox(height: 48),
+          const SizedBox(height: 40),
+
+          // Sound Selector
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.grey[900],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.white24),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: _selectedSound,
+                dropdownColor: Colors.grey[900],
+                style: GoogleFonts.spaceMono(color: Colors.white),
+                icon: Icon(Icons.headphones, color: color),
+                items: _soundUrls.keys.map((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
+                onChanged: (newValue) async {
+                  setState(() {
+                    _selectedSound = newValue!;
+                  });
+                  if (_isActive) {
+                    // Restart audio with new track if running
+                    await _audioPlayer.stop();
+                    if (_selectedSound != 'Silencio') {
+                      await _audioPlayer.setUrl(_soundUrls[_selectedSound]!);
+                      await _audioPlayer.play();
+                    }
+                  }
+                },
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 30),
 
           // Controls
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconButton(
+                icon: const Icon(Icons.refresh, color: Colors.grey, size: 40),
                 onPressed: _resetTimer,
-                icon: const Icon(Icons.refresh, size: 48, color: Colors.grey),
               ),
-              const SizedBox(width: 32),
+              const SizedBox(width: 30),
               GestureDetector(
                 onTap: () {
                   HapticFeedback.lightImpact();
@@ -200,11 +264,7 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
                     shape: BoxShape.circle,
                     border: Border.all(color: color, width: 2),
                     boxShadow: [
-                      BoxShadow(
-                        color: color.withOpacity(0.4),
-                        blurRadius: 20,
-                        spreadRadius: 2,
-                      ),
+                      BoxShadow(color: color.withOpacity(0.4), blurRadius: 20),
                     ],
                   ),
                   child: Icon(
@@ -214,7 +274,7 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
                   ),
                 ),
               ),
-              const SizedBox(width: 80), // Balance spacing
+              const SizedBox(width: 70), // Spacer balance
             ],
           ),
         ],

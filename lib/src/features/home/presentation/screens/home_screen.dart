@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
-import '../../../finance/presentation/screens/finance_screen.dart';
-import '../../../habits/presentation/screens/habits_screen.dart';
-import '../../../tasks/presentation/screens/tasks_screen.dart';
-import 'dashboard_screen.dart';
 import 'package:provider/provider.dart';
-import '../../../../core/providers/habit_provider.dart';
-import '../../../../core/utils/level_up_manager.dart';
-import '../../../settings/presentation/screens/settings_screen.dart';
-import 'apps_menu_screen.dart';
+import 'package:mens_lifestyle_app/src/features/finance/presentation/screens/finance_screen.dart';
+import 'package:mens_lifestyle_app/src/features/habits/presentation/screens/habits_screen.dart';
+import 'package:mens_lifestyle_app/src/features/tasks/presentation/screens/tasks_screen.dart';
+import 'package:mens_lifestyle_app/src/features/home/presentation/screens/dashboard_screen.dart';
+import 'package:mens_lifestyle_app/src/features/home/presentation/screens/apps_menu_screen.dart';
+import 'package:mens_lifestyle_app/src/features/settings/presentation/screens/settings_screen.dart';
+import 'package:mens_lifestyle_app/src/core/providers/habit_provider.dart';
+import 'package:mens_lifestyle_app/src/core/utils/level_up_manager.dart';
+import 'package:mens_lifestyle_app/src/core/services/home_widget_service.dart';
+import 'package:mens_lifestyle_app/src/features/tasks/providers/task_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -38,9 +40,23 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // Listen for Level Up events
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final habitProvider = Provider.of<HabitProvider>(context, listen: false);
+      final taskProvider = Provider.of<TaskProvider>(context, listen: false);
+      final stats = habitProvider.userStats;
+
+      final topTask =
+          taskProvider.tasksForToday.where((t) => !t.isCompleted).isNotEmpty
+          ? taskProvider.tasksForToday.where((t) => !t.isCompleted).first.title
+          : "Sistemas Estables";
+
+      HomeWidgetService.updateData(
+        level: stats.currentLevel,
+        xp: stats.totalXp,
+        maxXp: habitProvider.xpForNextLevel,
+        topTask: topTask,
+      );
+      // Listen for Level Up events
       habitProvider.onLevelUp.listen((newLevel) {
         if (mounted) {
           LevelUpManager.showLevelUpDialog(context, newLevel);
