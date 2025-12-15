@@ -307,4 +307,35 @@ class NotificationService {
     );
     debugPrint('Test notification sent');
   }
+
+  /// Show an immediate notification
+  Future<void> showNotification({
+    required int id,
+    required String title,
+    required String body,
+  }) async {
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'mens_lifestyle_channel_v3',
+          'Recordatorios de Hábitos',
+          channelDescription:
+              'Notificaciones para recordar tus hábitos diarios',
+          importance: Importance.max,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
+          largeIcon: DrawableResourceAndroidBitmap('app_icon'),
+          styleInformation: BigPictureStyleInformation(
+            DrawableResourceAndroidBitmap('app_icon'),
+            largeIcon: DrawableResourceAndroidBitmap('app_icon'),
+          ),
+          playSound: true,
+          enableVibration: true,
+        );
+
+    const NotificationDetails notificationDetails = NotificationDetails(
+      android: androidDetails,
+    );
+
+    await _notifications.show(id, title, body, notificationDetails);
+  }
 }

@@ -26,13 +26,15 @@ class UserStatsModelAdapter extends TypeAdapter<UserStatsModel> {
       userName: fields[6] == null ? 'Guerrero' : fields[6] as String,
       avatarPath:
           fields[7] == null ? 'assets/avatars/hero_1.jpg' : fields[7] as String,
+      age: fields[8] as int?,
+      gender: fields[9] == null ? 'male' : fields[9] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, UserStatsModel obj) {
     writer
-      ..writeByte(8)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.totalXp)
       ..writeByte(1)
@@ -48,7 +50,11 @@ class UserStatsModelAdapter extends TypeAdapter<UserStatsModel> {
       ..writeByte(6)
       ..write(obj.userName)
       ..writeByte(7)
-      ..write(obj.avatarPath);
+      ..write(obj.avatarPath)
+      ..writeByte(8)
+      ..write(obj.age)
+      ..writeByte(9)
+      ..write(obj.gender);
   }
 
   @override

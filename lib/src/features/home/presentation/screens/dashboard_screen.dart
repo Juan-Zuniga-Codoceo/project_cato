@@ -68,6 +68,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void _showWelcomeDialog(HabitProvider provider) {
     final nameController = TextEditingController();
     final ageController = TextEditingController();
+    String selectedGender = 'male';
     final formKey = GlobalKey<FormState>();
 
     showDialog(
@@ -98,6 +99,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     value == null || value.isEmpty ? 'Requerido' : null,
               ),
               const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                value: selectedGender,
+                decoration: const InputDecoration(
+                  labelText: 'Identidad',
+                  prefixIcon: Icon(Icons.wc),
+                ),
+                items: const [
+                  DropdownMenuItem(
+                    value: 'male',
+                    child: Text('Operador (Masculino)'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'female',
+                    child: Text('Operadora (Femenino)'),
+                  ),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    selectedGender = value;
+                  }
+                },
+              ),
+              const SizedBox(height: 12),
               TextFormField(
                 controller: ageController,
                 decoration: const InputDecoration(
@@ -121,6 +145,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 provider.updateUserProfile(
                   name: nameController.text,
                   age: int.parse(ageController.text),
+                  gender: selectedGender,
                 );
                 Navigator.pop(context);
               }

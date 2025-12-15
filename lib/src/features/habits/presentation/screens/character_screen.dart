@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/providers/habit_provider.dart';
+
 import '../widgets/radar_chart_widget.dart';
+import '../../../gamification/presentation/screens/achievements_screen.dart';
 
 class CharacterScreen extends StatelessWidget {
   const CharacterScreen({super.key});
@@ -174,6 +176,26 @@ class CharacterScreen extends StatelessWidget {
                           stats.rankTitle,
                           style: theme.textTheme.titleMedium?.copyWith(
                             color: theme.colorScheme.onSurface.withOpacity(0.6),
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
+                        // Achievements Button
+                        OutlinedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AchievementsScreen(),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.emoji_events, size: 18),
+                          label: Text(
+                            'MEDALLAS',
+                            style: GoogleFonts.spaceMono(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -441,16 +463,24 @@ class _AttributeCard extends StatelessWidget {
 }
 
 // Available avatar options
-const List<String> _availableAvatars = [
+const List<String> _maleAvatars = [
   'assets/avatars/hero_1.jpg',
   'assets/avatars/hero_2.jpg',
-  'assets/avatars/hero_3.jpg',
   'assets/avatars/hero_4.jpg',
   'assets/avatars/hero_5.jpg',
-  'assets/avatars/hero_mechanic.png',
-  'assets/avatars/hero_valkyrie.png',
-  'assets/avatars/hero_ghost.png',
   'assets/avatars/hero_diplomat.png',
+];
+
+const List<String> _femaleAvatars = [
+  'assets/avatars/hero_valkyrie.png',
+  'assets/avatars/hero_3.jpg', // Hacker (Neutral/Female leaning)
+  'assets/avatars/hero_ghost.png',
+  'assets/avatars/hero_mechanic.png',
+];
+
+const List<String> _neutralAvatars = [
+  'assets/avatars/hero_3.jpg',
+  'assets/avatars/hero_ghost.png',
 ];
 
 // Show Avatar Selector Modal
@@ -458,6 +488,15 @@ void _showAvatarSelector(BuildContext context, HabitProvider provider) {
   showModalBottomSheet(
     context: context,
     builder: (context) {
+      List<String> avatars;
+      if (provider.userStats.gender == 'female') {
+        avatars = _femaleAvatars;
+      } else if (provider.userStats.gender == 'male') {
+        avatars = _maleAvatars;
+      } else {
+        avatars = _neutralAvatars;
+      }
+
       return Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -475,9 +514,9 @@ void _showAvatarSelector(BuildContext context, HabitProvider provider) {
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
               ),
-              itemCount: _availableAvatars.length,
+              itemCount: avatars.length,
               itemBuilder: (context, index) {
-                final avatarPath = _availableAvatars[index];
+                final avatarPath = avatars[index];
                 return GestureDetector(
                   onTap: () {
                     provider.updateAvatar(avatarPath);

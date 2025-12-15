@@ -18,6 +18,9 @@ import 'src/features/lifestyle/providers/lifestyle_provider.dart';
 import 'src/features/responsibility/providers/responsibility_provider.dart';
 import 'src/features/social/providers/social_provider.dart';
 import 'src/features/academic/providers/academic_provider.dart';
+import 'src/features/social/providers/social_provider.dart';
+import 'src/features/academic/providers/academic_provider.dart';
+import 'src/features/gamification/providers/achievement_provider.dart';
 import 'src/core/theme/app_theme.dart';
 
 // Screens
@@ -26,21 +29,47 @@ import 'src/features/home/presentation/screens/home_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await initializeDateFormatting('es');
-  Intl.defaultLocale = 'es';
+  try {
+    print("🚀 INICIANDO SISTEMA CATO...");
+    await initializeDateFormatting('es');
+    Intl.defaultLocale = 'es';
 
-  final storageService = StorageService();
-  await storageService.init();
+    final storageService = StorageService();
+    print("📦 Inicializando Storage...");
+    await storageService.init();
+    print("✅ Storage OK");
 
-  final notificationService = NotificationService();
-  await notificationService.init();
+    final notificationService = NotificationService();
+    await notificationService.init();
+    print("🔔 Notificaciones OK");
 
-  runApp(
-    MyApp(
-      storageService: storageService,
-      notificationService: notificationService,
-    ),
-  );
+    runApp(
+      MyApp(
+        storageService: storageService,
+        notificationService: notificationService,
+      ),
+    );
+  } catch (e, stack) {
+    print("🔥 ERROR CRÍTICO AL INICIAR: $e");
+    print(stack);
+    runApp(
+      MaterialApp(
+        home: Scaffold(
+          backgroundColor: Colors.red,
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Text(
+                "ERROR DE INICIO:\n$e\n\nIntenta reinstalar la app.",
+                style: const TextStyle(color: Colors.white),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -76,6 +105,11 @@ class MyApp extends StatelessWidget {
           create: (_) => SocialProvider(storageService, notificationService),
         ),
         ChangeNotifierProvider(create: (_) => AcademicProvider(storageService)),
+
+        ChangeNotifierProvider(
+          create: (_) =>
+              AchievementProvider(storageService, notificationService),
+        ),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {

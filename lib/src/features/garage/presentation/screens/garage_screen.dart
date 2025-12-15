@@ -667,7 +667,7 @@ class _GarageScreenState extends State<GarageScreen> {
                 ),
               ),
               SizedBox(
-                height: 260,
+                height: 310,
                 child: ListView.builder(
                   controller: _scrollController,
                   scrollDirection: Axis.horizontal,
@@ -708,7 +708,7 @@ class _GarageScreenState extends State<GarageScreen> {
                             children: [
                               // CONTENIDO PRINCIPAL
                               Padding(
-                                padding: const EdgeInsets.all(24),
+                                padding: const EdgeInsets.all(16),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [

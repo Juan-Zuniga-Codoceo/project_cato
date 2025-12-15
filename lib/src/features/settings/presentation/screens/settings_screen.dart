@@ -6,6 +6,8 @@ import '../../../../core/providers/habit_provider.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../academic/providers/academic_provider.dart';
 import '../../../../core/utils/data_seeder.dart';
+import '../../../../core/providers/finance_provider.dart';
+import 'manifest_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -124,6 +126,44 @@ class SettingsScreen extends StatelessWidget {
             trailing: const Icon(Icons.edit),
             onTap: () {
               _showEditNameDialog(context, habitProvider);
+            },
+          ),
+
+          const Divider(),
+          const SizedBox(height: 16),
+
+          // Data & System Section
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text(
+              'DATOS Y SISTEMA',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.download),
+            title: const Text('Exportar Finanzas (CSV)'),
+            onTap: () async {
+              final financeProvider = Provider.of<FinanceProvider>(
+                context,
+                listen: false,
+              );
+              await financeProvider.exportTransactionsToCSV();
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.menu_book),
+            title: const Text('Manual de Operaciones'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ManifestScreen()),
+              );
             },
           ),
 
@@ -253,23 +293,40 @@ class SettingsScreen extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: () async {
-              // Clear all Hive boxes
-              await Hive.box(StorageService.vehicleBoxName).clear();
-              await Hive.box(StorageService.maintenanceBoxName).clear();
-              await Hive.box(StorageService.transactionBoxName).clear();
-              await Hive.box(StorageService.categoryBoxName).clear();
-              await Hive.box(StorageService.taskBoxName).clear();
-              await Hive.box(StorageService.habitBoxName).clear();
-              await Hive.box(StorageService.userStatsBoxName).clear();
-              await Hive.box(StorageService.settingsBoxName).clear();
+              final navigator = Navigator.of(context);
+              final scaffoldMessenger = ScaffoldMessenger.of(context);
+              final habitProvider = Provider.of<HabitProvider>(
+                context,
+                listen: false,
+              );
 
-              if (context.mounted) {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('🗑️ Todos los datos han sido eliminados'),
-                  ),
-                );
+              try {
+                // Ejecutar el reset centralizado
+                await habitProvider.factoryReset();
+
+                if (context.mounted) {
+                  navigator.pop(); // Cerrar diálogo
+                  scaffoldMessenger.showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        '☢️ SISTEMA FORMATEADO. Reiniciando protocolos...',
+                      ),
+                      backgroundColor: Colors.redAccent,
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                }
+              } catch (e) {
+                print("Error al borrar datos: $e");
+                if (context.mounted) {
+                  navigator.pop();
+                  scaffoldMessenger.showSnackBar(
+                    SnackBar(
+                      content: Text('Error: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               }
             },
             style: ElevatedButton.styleFrom(

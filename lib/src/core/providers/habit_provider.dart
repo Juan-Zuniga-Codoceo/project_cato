@@ -5,6 +5,7 @@ import '../../features/habits/domain/models/user_stats_model.dart';
 import '../services/storage_service.dart';
 import '../services/notification_service.dart';
 import 'package:flutter/material.dart';
+import '../services/home_widget_service.dart';
 
 class HabitProvider extends ChangeNotifier {
   final StorageService _storageService;
@@ -216,6 +217,15 @@ class HabitProvider extends ChangeNotifier {
 
       updateHabit(updatedHabit);
       // notifyListeners() is called inside updateHabit
+
+      // Update Home Widget
+      HomeWidgetService.updateData(
+        level: stats.currentLevel,
+        xp: stats.totalXp,
+        maxXp: xpForNextLevel,
+        topTask:
+            'Tu Mejor Versión', // Default or fetch from TaskProvider if possible
+      );
     }
   }
 
@@ -269,11 +279,20 @@ class HabitProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Update user's profile (name and age)
-  void updateUserProfile({String? name, int? age}) {
+  /// Update user's profile (name, age, gender)
+  void updateUserProfile({String? name, int? age, String? gender}) {
     final stats = userStats;
     if (name != null) stats.userName = name;
     if (age != null) stats.age = age;
+    if (gender != null) stats.gender = gender;
+    stats.save();
+    notifyListeners();
+  }
+
+  /// Update user's gender
+  void updateUserGender(String gender) {
+    final stats = userStats;
+    stats.gender = gender;
     stats.save();
     notifyListeners();
   }
@@ -314,7 +333,18 @@ class HabitProvider extends ChangeNotifier {
     if (stats.avatarPath != newAvatar) {
       stats.avatarPath = newAvatar;
       stats.save();
+      stats.save();
       // No need to call notifyListeners() here as it will be called by updateHabit
     }
+  }
+
+  Future<void> factoryReset() async {
+    await _storageService.clearAllData();
+    // Reiniciar stats básicos para evitar errores de null en la UI inmediata
+    _storageService.userStatsBox.put(
+      'current',
+      UserStatsModel(totalXp: 0, currentLevel: 1),
+    );
+    notifyListeners();
   }
 }

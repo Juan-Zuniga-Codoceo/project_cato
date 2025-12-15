@@ -51,4 +51,16 @@ class SubjectModel {
     this.examWeight = 0.3,
     this.exemptionGrade = 5.0,
   });
+
+  double get averageGrade {
+    if (evaluations.isEmpty) return 0.0;
+    double totalWeight = 0;
+    double weightedSum = 0;
+    for (var eval in evaluations) {
+      weightedSum += eval.grade * eval.weight;
+      totalWeight += eval.weight;
+    }
+    if (totalWeight == 0) return 0.0;
+    return weightedSum / totalWeight;
+  }
 }

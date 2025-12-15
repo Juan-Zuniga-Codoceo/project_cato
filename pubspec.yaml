@@ -53,6 +53,9 @@ dependencies:
   flutter_timezone: ^3.0.0
   confetti: ^0.8.0
   url_launcher: ^6.3.2
+  csv: ^6.0.0
+  share_plus: ^10.0.0
+  home_widget: ^0.8.1
 
 
 dev_dependencies:
@@ -84,6 +87,7 @@ flutter:
     - assets/avatars/
     - assets/images/
     - assets/icons/
+    - assets/badges/
 
 
   # An image asset can refer to one or more resolution-specific "variants", see

@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../features/finance/domain/models/transaction.dart';
 import '../../features/finance/domain/models/category.dart';
+import '../../features/finance/domain/models/category.dart';
 import '../services/storage_service.dart';
+import 'package:csv/csv.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'dart:io';
 
 class FinanceProvider extends ChangeNotifier {
   final StorageService _storageService;
@@ -172,5 +177,32 @@ class FinanceProvider extends ChangeNotifier {
 
   double get totalMonthlySubscriptions {
     return _subscriptions.fold(0.0, (sum, item) => sum + item.amount);
+  }
+
+  Future<void> exportTransactionsToCSV() async {
+    List<List<dynamic>> rows = [];
+    // Header
+    rows.add(["Fecha", "Título", "Categoría", "Tipo", "Monto"]);
+
+    // Data
+    for (var tx in transactions) {
+      rows.add([
+        tx.date.toIso8601String().split('T')[0],
+        tx.title,
+        tx.category.name,
+        tx.isExpense ? "Gasto" : "Ingreso",
+        tx.amount,
+      ]);
+    }
+
+    String csv = const ListToCsvConverter().convert(rows);
+    final dir = await getApplicationDocumentsDirectory();
+    final file = File('${dir.path}/cato_finanzas_export.csv');
+    await file.writeAsString(csv);
+
+    // Share
+    await Share.shareXFiles([
+      XFile(file.path),
+    ], text: 'Reporte Financiero CATO OS');
   }
 }

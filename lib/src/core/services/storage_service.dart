@@ -11,7 +11,9 @@ import '../../features/academic/domain/models/subject_model.dart';
 import '../../features/academic/domain/models/evaluation_model.dart';
 import '../../features/academic/domain/models/academic_event_model.dart';
 import '../../features/habits/domain/models/habit_model.dart';
+import '../../features/habits/domain/models/habit_model.dart';
 import '../../features/habits/domain/models/user_stats_model.dart';
+import '../../features/gamification/domain/models/badge_model.dart';
 
 class StorageService {
   static const String vehicleBoxName = 'vehicles';
@@ -27,7 +29,9 @@ class StorageService {
 
   static const String socialBoxName = 'social';
   static const String academicBoxName = 'academic';
+
   static const String academicEventsBoxName = 'academic_events';
+  static const String achievementsBoxName = 'achievements';
 
   Future<void> init() async {
     await Hive.initFlutter();
@@ -45,7 +49,9 @@ class StorageService {
     Hive.registerAdapter(PersonModelAdapter());
     Hive.registerAdapter(EvaluationModelAdapter());
     Hive.registerAdapter(SubjectModelAdapter());
+
     Hive.registerAdapter(AcademicEventModelAdapter());
+    Hive.registerAdapter(BadgeModelAdapter());
 
     await Hive.openBox<Vehicle>(vehicleBoxName);
     await Hive.openBox<Maintenance>(maintenanceBoxName);
@@ -60,7 +66,9 @@ class StorageService {
 
     await Hive.openBox<PersonModel>(socialBoxName);
     await Hive.openBox<SubjectModel>(academicBoxName);
+
     await Hive.openBox<AcademicEventModel>(academicEventsBoxName);
+    await Hive.openBox<BadgeModel>(achievementsBoxName);
   }
 
   Box<Vehicle> get vehicleBox => Hive.box<Vehicle>(vehicleBoxName);
@@ -83,6 +91,8 @@ class StorageService {
   Box<SubjectModel> get academicBox => Hive.box<SubjectModel>(academicBoxName);
   Box<AcademicEventModel> get academicEventsBox =>
       Hive.box<AcademicEventModel>(academicEventsBoxName);
+  Box<BadgeModel> get achievementsBox =>
+      Hive.box<BadgeModel>(achievementsBoxName);
 
   Future<void> clearAllData() async {
     await vehicleBox.clear();
@@ -92,8 +102,16 @@ class StorageService {
     await taskBox.clear();
     await habitBox.clear();
     await userStatsBox.clear();
-
     await settingsBox.clear();
+
+    // Nuevas cajas agregadas recientemente
+    await lifestyleBox.clear();
+    await protocolsBox.clear();
+    await socialBox.clear();
     await academicBox.clear();
+    await socialBox.clear();
+    await academicBox.clear();
+    await academicEventsBox.clear();
+    await achievementsBox.clear();
   }
 }

@@ -8,6 +8,10 @@ import '../../features/finance/domain/models/transaction.dart';
 import '../../features/finance/domain/models/category.dart';
 import '../../features/garage/domain/models/vehicle.dart';
 import '../../features/garage/domain/models/maintenance.dart';
+import '../../features/gamification/providers/achievement_provider.dart';
+import '../../features/academic/providers/academic_provider.dart';
+import '../../features/academic/domain/models/subject_model.dart';
+import '../../features/academic/domain/models/evaluation_model.dart';
 
 class DataSeeder {
   static const Uuid _uuid = Uuid();
@@ -21,6 +25,14 @@ class DataSeeder {
       listen: false,
     );
     final garageProvider = Provider.of<GarageProvider>(context, listen: false);
+    final achievementProvider = Provider.of<AchievementProvider>(
+      context,
+      listen: false,
+    );
+    final academicProvider = Provider.of<AcademicProvider>(
+      context,
+      listen: false,
+    );
 
     // 1. RPG Stats (Level 5)
     print('🎮 Inyectando datos RPG...');
@@ -169,5 +181,41 @@ class DataSeeder {
     garageProvider.addMaintenance(maintenance);
 
     print('✅ Datos inyectados correctamente.');
+
+    // 5. Academic (Scholar Badge)
+    print('🎓 Inyectando datos Académicos...');
+    // 5. Academic (Scholar Badge)
+    print('🎓 Inyectando datos Académicos...');
+    if (academicProvider.subjects.isEmpty) {
+      await academicProvider.addSubject(
+        'Inteligencia Artificial',
+        passingGrade: 4.0,
+        targetGrade: 7.0,
+        gradingScale: 0,
+        examWeight: 0.3,
+        exemptionGrade: 5.5,
+      );
+
+      // Add a good grade to the newly created subject
+      // We need to find it first since addSubject doesn't return the ID
+      try {
+        final subject = academicProvider.subjects.firstWhere(
+          (s) => s.name == 'Inteligencia Artificial',
+        );
+        await academicProvider.addEvaluation(subject.id, 'Parcial 1', 7.0, 0.5);
+      } catch (e) {
+        print('Error adding evaluation: $e');
+      }
+    }
+
+    // 6. Check Achievements
+    print('🏆 Verificando Logros...');
+    achievementProvider.checkAchievements(
+      userStats: habitProvider.userStats,
+      balance: financeProvider.totalBalance,
+      maxStreak: 5, // Based on seeded data
+      academicAverage: 7.0,
+      maintenanceCount: 1,
+    );
   }
 }
