@@ -23,7 +23,9 @@ import 'src/features/gamification/providers/reward_provider.dart'; // [NUEVO IMP
 import 'src/core/theme/app_theme.dart';
 
 // Screens
+// Screens
 import 'src/features/home/presentation/screens/home_screen.dart';
+import 'src/features/auth/presentation/screens/auth_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -115,6 +117,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Verificar configuración de seguridad
+    final bool isBiometricEnabled = storageService.settingsBox.get(
+      'isBiometricEnabled',
+      defaultValue: false,
+    );
+
     return MultiProvider(
       providers: [
         Provider<StorageService>.value(value: storageService),
@@ -154,7 +162,8 @@ class MyApp extends StatelessWidget {
                 : ThemeMode.light,
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
-            home: const HomeScreen(),
+            // Lógica de Inicio:
+            home: isBiometricEnabled ? const AuthScreen() : const HomeScreen(),
           );
         },
       ),

@@ -252,6 +252,37 @@ class SettingsScreen extends StatelessWidget {
             },
           ),
 
+          // Biometric Security Toggle
+          ValueListenableBuilder(
+            valueListenable: Hive.box(
+              StorageService.settingsBoxName,
+            ).listenable(keys: ['isBiometricEnabled']),
+            builder: (context, box, _) {
+              final isEnabled = box.get(
+                'isBiometricEnabled',
+                defaultValue: false,
+              );
+              return SwitchListTile(
+                title: const Text('🔒 Bloqueo Biométrico'),
+                subtitle: const Text('Solicitar huella/rostro al iniciar'),
+                value: isEnabled,
+                activeColor: Colors.green,
+                onChanged: (value) {
+                  box.put('isBiometricEnabled', value);
+                  if (value) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          '✅ Seguridad activada para el próximo inicio',
+                        ),
+                      ),
+                    );
+                  }
+                },
+              );
+            },
+          ),
+
           const Divider(),
 
           // Grading Scale Selector
