@@ -48,6 +48,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
     "Revisar presupuesto semanal",
   ];
 
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour >= 6 && hour < 12) {
+      return 'BUENOS DÍAS, OPERADOR';
+    } else if (hour >= 12 && hour < 20) {
+      return 'BUENAS TARDES, OPERADOR';
+    } else {
+      return 'BUENAS NOCHES, OPERADOR';
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -213,7 +224,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'BUENOS DÍAS, OPERADOR',
+                        _getGreeting(),
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           color: theme.colorScheme.onSurface.withOpacity(0.6),

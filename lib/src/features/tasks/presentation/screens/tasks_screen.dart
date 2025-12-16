@@ -95,7 +95,7 @@ class TasksScreen extends StatelessWidget {
             Provider.of<TaskProvider>(
               context,
               listen: false,
-            ).deleteTask(task.id);
+            ).deleteTask(task.id, context);
           },
           child: Card(
             margin: const EdgeInsets.only(bottom: 12),

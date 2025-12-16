@@ -6,7 +6,6 @@ import '../../finance/domain/models/transaction.dart';
 import '../../finance/domain/models/category.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../core/services/home_widget_service.dart';
-import '../../../core/services/home_widget_service.dart';
 
 class TaskProvider extends ChangeNotifier {
   final StorageService _storageService;
@@ -138,6 +137,8 @@ class TaskProvider extends ChangeNotifier {
           ),
         );
       }
+
+      if (context.mounted) HomeWidgetService.syncAll(context);
     } finally {
       _isSaving = false;
       notifyListeners();
@@ -159,10 +160,11 @@ class TaskProvider extends ChangeNotifier {
     }
   }
 
-  void deleteTask(String id) {
+  void deleteTask(String id, BuildContext context) {
     _tasks.removeWhere((t) => t.id == id);
     _storageService.taskBox.delete(id);
     notifyListeners();
+    if (context.mounted) HomeWidgetService.syncAll(context);
   }
 
   Future<void> toggleTaskCompletion(String id, BuildContext context) async {
@@ -275,6 +277,8 @@ class TaskProvider extends ChangeNotifier {
       _tasks[index] = updatedTask;
       _storageService.taskBox.put(updatedTask.id, updatedTask);
       notifyListeners();
+
+      if (context.mounted) HomeWidgetService.syncAll(context);
     } finally {
       _isSaving = false;
       notifyListeners();

@@ -1,52 +1,90 @@
-<?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#1E1E1E"
-    android:padding="16dp">
+    android:background="@drawable/widget_background"
+    android:padding="12dp">
 
-    <TextView
-        android:id="@+id/widget_level"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="NIVEL 1"
-        android:textColor="#FFC107"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true" />
-
-    <ProgressBar
-        android:id="@+id/widget_xp_bar"
-        style="?android:attr/progressBarStyleHorizontal"
+    <LinearLayout
+        android:id="@+id/header_section"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/widget_level"
-        android:layout_marginTop="8dp"
-        android:max="100"
-        android:progress="50"
-        android:progressTint="#FFC107" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="8dp">
+        
+        <TextView
+            android:id="@+id/widget_level"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#FFC107"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="2dp"
+            android:text="LVL 5"
+            android:textColor="#000000"
+            android:textSize="12sp"
+            android:textStyle="bold" />
 
-    <TextView
-        android:id="@+id/widget_top_task"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/widget_xp_bar"
-        android:layout_marginTop="12dp"
-        android:text="Tu Mejor Versión"
-        android:textColor="#FFFFFF"
-        android:textSize="16sp"
-        android:maxLines="2"
-        android:ellipsize="end" />
+        <ProgressBar
+            android:id="@+id/widget_xp_bar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_height="6dp"
+            android:layout_weight="1"
+            android:layout_marginStart="8dp"
+            android:progressDrawable="@android:drawable/progress_horizontal"
+            android:progressTint="#FFC107"
+            android:max="100"
+            android:progress="50" />
+    </LinearLayout>
 
-    <ImageView
+    <LinearLayout
         android:id="@+id/widget_open_button"
-        android:layout_width="24dp"
-        android:layout_height="24dp"
-        android:src="@android:drawable/ic_input_add"
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
         android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true"
-        android:contentDescription="Open App"
-        android:tint="#FFC107" />
+        android:background="#33FFC107"
+        android:gravity="center">
+        
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ACCEDER A TERMINAL"
+            android:textColor="#FFC107"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.1"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/header_section"
+        android:layout_above="@id/widget_open_button"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/widget_screen_bg"
+        android:orientation="vertical"
+        android:padding="12dp"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="OBJETIVO ACTUAL:"
+            android:textColor="#80FFFFFF"
+            android:textSize="10sp"
+            android:letterSpacing="0.1" />
+
+        <TextView
+            android:id="@+id/widget_top_task"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Sincronizando..."
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:layout_marginTop="2dp"/>
+    </LinearLayout>
 
 </RelativeLayout>

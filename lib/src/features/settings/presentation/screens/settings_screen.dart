@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/services/backup_service.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../../../core/providers/theme_provider.dart';
@@ -154,6 +155,18 @@ class SettingsScreen extends StatelessWidget {
               );
               await financeProvider.exportTransactionsToCSV();
             },
+          ),
+          ListTile(
+            leading: const Icon(Icons.save),
+            title: const Text('💾 Crear Copia de Seguridad'),
+            subtitle: const Text('Guarda todo tu progreso en un archivo'),
+            onTap: () => BackupService.createBackup(context),
+          ),
+          ListTile(
+            leading: const Icon(Icons.restore),
+            title: const Text('📥 Restaurar Copia de Seguridad'),
+            subtitle: const Text('Recupera datos desde un archivo'),
+            onTap: () => BackupService.restoreBackup(context),
           ),
           ListTile(
             leading: const Icon(Icons.menu_book),

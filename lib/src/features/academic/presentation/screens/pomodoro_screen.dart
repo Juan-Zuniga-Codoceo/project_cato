@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:just_audio/just_audio.dart'; // Asegúrate de tener esta librería
+import 'package:just_audio/just_audio.dart';
 
 class PomodoroScreen extends StatefulWidget {
   const PomodoroScreen({super.key});
@@ -16,12 +16,12 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
   final AudioPlayer _audioPlayer = AudioPlayer();
   String _selectedSound = 'Silencio';
 
-  // URLs de Sonidos Ambientales (Cyberpunk/Focus)
-  final Map<String, String> _soundUrls = {
+  // Mapa de Assets Locales
+  final Map<String, String> _soundAssets = {
     'Silencio': '',
-    'Lluvia': 'https://luan.xyz/files/audio/ambient_c_motion.mp3',
-    'White Noise': 'https://luan.xyz/files/audio/nasa_on_a_beam.mp3',
-    'Drone': 'https://luan.xyz/files/audio/coins_on_table.mp3',
+    'Lluvia': 'assets/audio/rain.mp3',
+    'White Noise': 'assets/audio/white_noise.mp3',
+    'Drone': 'assets/audio/cyber_drone.mp3',
   };
 
   // Timer Logic
@@ -33,9 +33,9 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
   final Map<int, int> _durations = {0: 25 * 60, 1: 5 * 60, 2: 15 * 60};
 
   final Map<int, Color> _modeColors = {
-    0: Colors.cyanAccent,
-    1: Colors.amberAccent,
-    2: Colors.purpleAccent,
+    0: Colors.cyan,
+    1: Colors.amber,
+    2: Colors.purple,
   };
 
   @override
@@ -77,17 +77,26 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
       // Start
       setState(() => _isActive = true);
 
-      // Start Audio if not silent
+      // Reproducir Audio Local
       if (_selectedSound != 'Silencio' &&
-          _soundUrls.containsKey(_selectedSound)) {
+          _soundAssets.containsKey(_selectedSound)) {
         try {
-          if (_soundUrls[_selectedSound]!.isNotEmpty) {
-            await _audioPlayer.setUrl(_soundUrls[_selectedSound]!);
+          final assetPath = _soundAssets[_selectedSound];
+          if (assetPath != null && assetPath.isNotEmpty) {
+            // Usamos setAsset para archivos locales
+            await _audioPlayer.setAsset(assetPath);
             await _audioPlayer.setLoopMode(LoopMode.one);
             await _audioPlayer.play();
           }
         } catch (e) {
-          print("Error playing audio: $e");
+          print("Error playing asset audio: $e");
+          // Fallback visual si falla el audio
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error de audio: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
         }
       }
 
@@ -132,22 +141,27 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Detectar tema actual
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     final color = _modeColors[_mode]!;
     final maxSeconds = _durations[_mode]!;
     final progress = _remainingSeconds / maxSeconds;
 
+    // Colores dinámicos
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final backgroundColor = theme.scaffoldBackgroundColor;
+    final surfaceColor = theme.cardColor;
+
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: backgroundColor,
       appBar: AppBar(
         title: Text(
           'MODO ENFOQUE',
-          style: GoogleFonts.spaceMono(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
+          style: GoogleFonts.spaceMono(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.transparent,
-        iconTheme: const IconThemeData(color: Colors.white),
         centerTitle: true,
       ),
       body: Column(
@@ -157,16 +171,16 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildModeButton(0, 'FOCUS'),
+              _buildModeButton(0, 'FOCUS', color, isDark),
               const SizedBox(width: 10),
-              _buildModeButton(1, 'SHORT'),
+              _buildModeButton(1, 'SHORT', color, isDark),
               const SizedBox(width: 10),
-              _buildModeButton(2, 'LONG'),
+              _buildModeButton(2, 'LONG', color, isDark),
             ],
           ),
           const SizedBox(height: 40),
 
-          // Timer
+          // Timer Circular
           Stack(
             alignment: Alignment.center,
             children: [
@@ -176,7 +190,8 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
                 child: CircularProgressIndicator(
                   value: progress,
                   strokeWidth: 15,
-                  backgroundColor: Colors.grey[900],
+                  // Color de fondo del círculo más suave
+                  backgroundColor: isDark ? Colors.grey[800] : Colors.grey[200],
                   valueColor: AlwaysStoppedAnimation<Color>(color),
                 ),
               ),
@@ -187,7 +202,7 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
                     style: GoogleFonts.spaceMono(
                       fontSize: 60,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: textColor, // Color dinámico
                     ),
                   ),
                   Text(
@@ -207,17 +222,26 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.grey[900],
+              color: surfaceColor, // Color de tarjeta del tema
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.white24),
+              border: Border.all(
+                color: isDark ? Colors.white24 : Colors.grey.shade300,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: _selectedSound,
-                dropdownColor: Colors.grey[900],
-                style: GoogleFonts.spaceMono(color: Colors.white),
+                dropdownColor: surfaceColor,
+                style: GoogleFonts.spaceMono(color: textColor),
                 icon: Icon(Icons.headphones, color: color),
-                items: _soundUrls.keys.map((String value) {
+                items: _soundAssets.keys.map((String value) {
                   return DropdownMenuItem<String>(
                     value: value,
                     child: Text(value),
@@ -228,11 +252,14 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
                     _selectedSound = newValue!;
                   });
                   if (_isActive) {
-                    // Restart audio with new track if running
                     await _audioPlayer.stop();
-                    if (_selectedSound != 'Silencio') {
-                      await _audioPlayer.setUrl(_soundUrls[_selectedSound]!);
-                      await _audioPlayer.play();
+                    if (_selectedSound != 'Silencio' &&
+                        _soundAssets.containsKey(_selectedSound)) {
+                      final path = _soundAssets[_selectedSound];
+                      if (path != null && path.isNotEmpty) {
+                        await _audioPlayer.setAsset(path);
+                        await _audioPlayer.play();
+                      }
                     }
                   }
                 },
@@ -247,7 +274,11 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconButton(
-                icon: const Icon(Icons.refresh, color: Colors.grey, size: 40),
+                icon: Icon(
+                  Icons.refresh,
+                  color: isDark ? Colors.grey : Colors.grey[600],
+                  size: 40,
+                ),
                 onPressed: _resetTimer,
               ),
               const SizedBox(width: 30),
@@ -282,9 +313,8 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
     );
   }
 
-  Widget _buildModeButton(int mode, String label) {
+  Widget _buildModeButton(int mode, String label, Color color, bool isDark) {
     final isSelected = _mode == mode;
-    final color = _modeColors[mode]!;
     return GestureDetector(
       onTap: () => _setMode(mode),
       child: Container(
@@ -292,12 +322,18 @@ class _PomodoroScreenState extends State<PomodoroScreen> {
         decoration: BoxDecoration(
           color: isSelected ? color.withOpacity(0.2) : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSelected ? color : Colors.grey[800]!),
+          border: Border.all(
+            color: isSelected
+                ? color
+                : (isDark ? Colors.grey[800]! : Colors.grey[300]!),
+          ),
         ),
         child: Text(
           label,
           style: GoogleFonts.spaceMono(
-            color: isSelected ? color : Colors.grey,
+            color: isSelected
+                ? color
+                : (isDark ? Colors.grey : Colors.grey[600]),
             fontWeight: FontWeight.bold,
           ),
         ),
