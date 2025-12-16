@@ -1,8 +1,22 @@
-class SavingGoal {
+import 'package:hive/hive.dart';
+
+part 'saving_goal.g.dart';
+
+@HiveType(typeId: 13)
+class SavingGoal extends HiveObject {
+  @HiveField(0)
   final String id;
+
+  @HiveField(1)
   final String name;
+
+  @HiveField(2)
   final double targetAmount;
-  double currentAmount; // No es final, para poder actualizarla
+
+  @HiveField(3)
+  double currentAmount;
+
+  @HiveField(4)
   final DateTime? deadline;
 
   SavingGoal({

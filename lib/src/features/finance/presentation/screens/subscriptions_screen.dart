@@ -80,6 +80,7 @@ class SubscriptionsScreen extends StatelessWidget {
                     final price = double.tryParse(priceController.text) ?? 0;
                     final day = int.tryParse(dayController.text) ?? 1;
 
+                    // [FIX] Usamos .codePoint y .value para guardar en Hive
                     final newSub = Subscription(
                       id: isEditing
                           ? provider.subscriptions[index].id
@@ -87,8 +88,9 @@ class SubscriptionsScreen extends StatelessWidget {
                       name: name,
                       price: price,
                       paymentDay: day,
-                      icon: Icons.credit_card,
-                      color: Colors.blue,
+                      iconCode:
+                          Icons.credit_card.codePoint, // Default icon code
+                      colorValue: Colors.blue.value, // Default color value
                     );
 
                     if (isEditing) {
@@ -117,7 +119,6 @@ class SubscriptionsScreen extends StatelessWidget {
       appBar: AppBar(title: const Text('Suscripciones')),
       body: Column(
         children: [
-          // Header - Total Monthly Expense
           // Header - Hero Image
           Stack(
             children: [
@@ -202,7 +203,7 @@ class SubscriptionsScreen extends StatelessWidget {
                       }
 
                       return Dismissible(
-                        key: Key('${sub.name}_$index'),
+                        key: Key(sub.id),
                         direction: DismissDirection.endToStart,
                         background: Container(
                           alignment: Alignment.centerRight,
@@ -233,7 +234,8 @@ class SubscriptionsScreen extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12),
                             border: Border(
                               left: BorderSide(
-                                color: sub.color ?? Colors.blueAccent,
+                                // [FIX] Usamos el getter .color
+                                color: sub.color,
                                 width: 4,
                               ),
                             ),
@@ -299,7 +301,8 @@ class SubscriptionsScreen extends StatelessWidget {
                                         child: LinearProgressIndicator(
                                           value: progress,
                                           backgroundColor: Colors.grey[800],
-                                          color: sub.color ?? Colors.blueAccent,
+                                          // [FIX] Usamos el getter .color
+                                          color: sub.color,
                                           minHeight: 4,
                                           borderRadius: BorderRadius.circular(
                                             2,

@@ -35,7 +35,6 @@ class _TransactionsScreenState extends State<TransactionsScreen>
   }) {
     final provider = Provider.of<FinanceProvider>(context, listen: false);
     final isExpenseTab = _tabController.index == 0;
-
     final titleController = TextEditingController(
       text: transactionToEdit?.title,
     );
@@ -47,7 +46,6 @@ class _TransactionsScreenState extends State<TransactionsScreen>
     if (transactionToEdit != null) {
       selectedCategory = transactionToEdit.category;
     } else {
-      // Default category logic
       if (provider.categories.isNotEmpty) {
         selectedCategory = provider.categories.first;
       }
@@ -65,7 +63,6 @@ class _TransactionsScreenState extends State<TransactionsScreen>
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            // Refresh categories list in case it changed
             final categories = provider.categories;
             if (selectedCategory == null && categories.isNotEmpty) {
               selectedCategory = categories.first;
@@ -93,6 +90,7 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+                      // Botón de configuración de categorías
                       IconButton(
                         icon: const Icon(Icons.settings),
                         onPressed: () async {
@@ -103,7 +101,6 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                                   const ManageCategoriesScreen(),
                             ),
                           );
-                          // Refresh state to show new categories
                           setModalState(() {
                             if (provider.categories.isNotEmpty &&
                                 selectedCategory == null) {
@@ -140,13 +137,14 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<CategoryModel>(
-                          initialValue: selectedCategory,
+                          value:
+                              selectedCategory, // Usamos value en lugar de initialValue para reactividad
                           decoration: const InputDecoration(
                             labelText: 'Categoría',
                             border: OutlineInputBorder(),
                             prefixIcon: Icon(Icons.category),
                           ),
-                          items: provider.categories.map((category) {
+                          items: categories.map((category) {
                             return DropdownMenuItem(
                               value: category,
                               child: Row(
@@ -219,8 +217,7 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                           title: title,
                           amount: amount,
                           date: selectedDate,
-                          isExpense:
-                              isExpense, // Keep original type or current tab
+                          isExpense: isExpense,
                           category: selectedCategory!,
                         );
 
@@ -241,6 +238,48 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                       transactionToEdit == null ? 'Guardar' : 'Guardar Cambios',
                     ),
                   ),
+                  // [NUEVO] Botón de Eliminar solo si estamos editando
+                  if (transactionToEdit != null) ...[
+                    const SizedBox(height: 12),
+                    TextButton.icon(
+                      onPressed: () {
+                        // Confirmación opcional
+                        showDialog(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: const Text('¿Eliminar?'),
+                            content: const Text(
+                              'Esta acción no se puede deshacer.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx),
+                                child: const Text('CANCELAR'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  provider.deleteTransaction(
+                                    transactionToEdit.id,
+                                  );
+                                  Navigator.pop(ctx); // Cerrar alerta
+                                  Navigator.pop(context); // Cerrar modal
+                                },
+                                style: TextButton.styleFrom(
+                                  foregroundColor: Colors.red,
+                                ),
+                                child: const Text('ELIMINAR'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.delete_outline, color: Colors.red),
+                      label: const Text(
+                        'ELIMINAR TRANSACCIÓN',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 20),
                 ],
               ),

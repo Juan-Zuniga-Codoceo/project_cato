@@ -10,7 +10,6 @@ import 'package:hive/hive.dart';
 
 // Services
 import 'storage_service.dart';
-import '../providers/habit_provider.dart';
 
 // Models
 import '../../features/habits/domain/models/user_stats_model.dart';
@@ -18,6 +17,9 @@ import '../../features/habits/domain/models/habit_model.dart';
 import '../../features/tasks/domain/models/task_model.dart';
 import '../../features/finance/domain/models/transaction.dart';
 import '../../features/finance/domain/models/category.dart';
+import '../../features/finance/domain/models/budget.dart'; // Nuevo
+import '../../features/finance/domain/models/saving_goal.dart'; // Nuevo
+import '../../features/finance/domain/models/subscription.dart'; // Nuevo
 import '../../features/garage/domain/models/vehicle.dart';
 import '../../features/garage/domain/models/maintenance.dart';
 import '../../features/garage/domain/models/vehicle_document.dart';
@@ -38,12 +40,20 @@ class BackupService {
 
       // 1. Collect Data
       final backupData = <String, dynamic>{
-        'version': 1,
+        'version': 2, // Incrementamos versión por nuevos campos
         'timestamp': DateTime.now().toIso8601String(),
         'user_stats': _serializeUserStats(storageService.userStatsBox),
         'habits': _serializeHabits(storageService.habitBox),
         'tasks': _serializeTasks(storageService.taskBox),
+        // Finance V2
         'transactions': _serializeTransactions(storageService.transactionBox),
+        'categories': _serializeCategories(storageService.categoryBox),
+        'budgets': _serializeBudgets(storageService.budgetBox),
+        'savings': _serializeSavings(storageService.savingBox),
+        'subscriptions': _serializeSubscriptions(
+          storageService.subscriptionBox,
+        ),
+        // Other modules
         'vehicles': _serializeVehicles(storageService.vehicleBox),
         'maintenance': _serializeMaintenance(storageService.maintenanceBox),
         'social': _serializeSocial(storageService.socialBox),
@@ -70,12 +80,14 @@ class BackupService {
       ], text: 'Copia de Seguridad CATO - $dateStr');
     } catch (e) {
       print('Backup Error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al crear respaldo: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al crear respaldo: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -98,38 +110,41 @@ class BackupService {
         throw Exception('Archivo de respaldo inválido o corrupto.');
       }
 
-      // 3. Confirm Action (Optional but good practice, assuming user already clicked "Restore")
-      // For now, we proceed as the button is explicit.
-
-      // 4. Clear Current Data
+      // 3. Clear Current Data
       final storageService = Provider.of<StorageService>(
         context,
         listen: false,
       );
       await storageService.clearAllData();
 
-      // 5. Rehydrate Data
+      // 4. Rehydrate Data
       await _restoreUserStats(storageService.userStatsBox, data['user_stats']);
       await _restoreHabits(storageService.habitBox, data['habits']);
       await _restoreTasks(storageService.taskBox, data['tasks']);
-      await _restoreTransactions(
-        storageService.transactionBox,
-        data['transactions'],
-        storageService.categoryBox,
-      ); // Pass category box if needed for lookup or restore categories first?
-      // Note: Transactions embed CategoryModel. We should probably rely on the embedded one or restore categories first.
-      // Since CategoryModel is simple, we can restore from the embedded data or if we had a separate category list.
-      // The backup plan didn't explicitly list categories separate from transactions, but StorageService has categoryBox.
-      // Let's assume we restore categories if we back them up, or use defaults.
-      // Wait, I missed backing up categories in createBackup! I should add it.
-      // Actually, transactions store the CategoryModel object.
-      // But we also have a categoryBox for custom categories.
 
-      // Let's add categories to backup/restore.
+      // Finance V2 Restore
       if (data.containsKey('categories')) {
         await _restoreCategories(
           storageService.categoryBox,
           data['categories'],
+        );
+      }
+      // Transactions depend on categories being loaded or embedded logic
+      await _restoreTransactions(
+        storageService.transactionBox,
+        data['transactions'],
+        storageService.categoryBox,
+      );
+      if (data.containsKey('budgets')) {
+        await _restoreBudgets(storageService.budgetBox, data['budgets']);
+      }
+      if (data.containsKey('savings')) {
+        await _restoreSavings(storageService.savingBox, data['savings']);
+      }
+      if (data.containsKey('subscriptions')) {
+        await _restoreSubscriptions(
+          storageService.subscriptionBox,
+          data['subscriptions'],
         );
       }
 
@@ -156,31 +171,11 @@ class BackupService {
         data['achievements'],
       );
 
-      // 6. Notify Success
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Respaldo restaurado con éxito. Reiniciando...'),
-          backgroundColor: Colors.green,
-        ),
-      );
-
-      // Force UI refresh (HabitProvider factoryReset does notifyListeners, but others might need it)
-      // Since we cleared data via storageService directly, providers might not know unless we tell them.
-      // HabitProvider.factoryReset() was a good idea because it notifies.
-      // But we are doing it manually here.
-      // We should probably trigger a rebuild or ask user to restart.
-      // Ideally, we call init() on providers or notify them.
-      // Force UI refresh
-      // Provider.of<HabitProvider>(context, listen: false).notifyListeners();
-      // Others...
+      // Success handled by calling widget (SnackBar + Soft Restart)
     } catch (e) {
       print('Restore Error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al restaurar: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      // Re-throw to let UI handle the error state
+      throw Exception('Error al procesar el archivo: $e');
     }
   }
 
@@ -247,6 +242,7 @@ class BackupService {
         .toList();
   }
 
+  // Finance Serialization
   static List<Map<String, dynamic>> _serializeTransactions(
     Box<Transaction> box,
   ) {
@@ -259,7 +255,6 @@ class BackupService {
             'isExpense': t.isExpense,
             'date': t.date.toIso8601String(),
             'category': {
-              // Serialize embedded category
               'id': t.category.id,
               'name': t.category.name,
               'iconCode': t.category.iconCode,
@@ -271,18 +266,66 @@ class BackupService {
         .toList();
   }
 
+  static List<Map<String, dynamic>> _serializeCategories(
+    Box<CategoryModel> box,
+  ) {
+    return box.values
+        .map(
+          (c) => {
+            'id': c.id,
+            'name': c.name,
+            'iconCode': c.iconCode,
+            'colorValue': c.colorValue,
+            'isDefault': c.isDefault,
+          },
+        )
+        .toList();
+  }
+
+  static List<Map<String, dynamic>> _serializeBudgets(Box<Budget> box) {
+    return box.values
+        .map(
+          (b) => {
+            'id': b.id,
+            'categoryId': b.categoryId,
+            'limitAmount': b.limitAmount,
+          },
+        )
+        .toList();
+  }
+
+  static List<Map<String, dynamic>> _serializeSavings(Box<SavingGoal> box) {
+    return box.values
+        .map(
+          (s) => {
+            'id': s.id,
+            'name': s.name,
+            'targetAmount': s.targetAmount,
+            'currentAmount': s.currentAmount,
+            'deadline': s.deadline?.toIso8601String(),
+          },
+        )
+        .toList();
+  }
+
+  static List<Map<String, dynamic>> _serializeSubscriptions(
+    Box<Subscription> box,
+  ) {
+    return box.values
+        .map(
+          (s) => {
+            'id': s.id,
+            'name': s.name,
+            'price': s.price,
+            'paymentDay': s.paymentDay,
+            'iconCode': s.iconCode,
+            'colorValue': s.colorValue,
+          },
+        )
+        .toList();
+  }
+
   static List<Map<String, dynamic>> _serializeVehicles(Box<Vehicle> box) {
-    // Assuming Vehicle has toJson or similar fields.
-    // Since I can't see Vehicle model right now, I'll assume standard fields based on context or skip if unsure.
-    // Wait, I should have checked Vehicle model.
-    // I'll assume basic fields for now based on typical vehicle apps.
-    // If I get it wrong, I can fix it.
-    // Actually, let's look at what I can see. I listed the dir but didn't read Vehicle.
-    // I'll try to be generic or read it if I can.
-    // I'll use dynamic access if possible or just guess standard fields.
-    // Better to be safe: I will read Vehicle model in a separate step if I want to be 100% sure.
-    // But I am in the middle of writing the file.
-    // I will use a best-effort approach and if it fails compilation I will fix it.
     return box.values
         .map(
           (v) => {
@@ -496,6 +539,7 @@ class BackupService {
     }
   }
 
+  // Finance Restore Helpers
   static Future<void> _restoreCategories(
     Box<CategoryModel> box,
     List<dynamic>? list,
@@ -520,7 +564,6 @@ class BackupService {
   ) async {
     if (list == null) return;
     for (var item in list) {
-      // Reconstruct category
       final catMap = item['category'];
       final category = CategoryModel(
         id: catMap['id'],
@@ -529,8 +572,7 @@ class BackupService {
         colorValue: catMap['colorValue'],
         isDefault: catMap['isDefault'],
       );
-
-      // Ensure category exists in category box too (optional but safe)
+      // Ensure category exists
       if (!catBox.containsKey(category.id)) {
         await catBox.put(category.id, category);
       }
@@ -544,6 +586,58 @@ class BackupService {
         category: category,
       );
       await box.put(transaction.id, transaction);
+    }
+  }
+
+  static Future<void> _restoreBudgets(
+    Box<Budget> box,
+    List<dynamic>? list,
+  ) async {
+    if (list == null) return;
+    for (var item in list) {
+      final budget = Budget(
+        id: item['id'],
+        categoryId: item['categoryId'],
+        limitAmount: item['limitAmount'],
+      );
+      await box.put(budget.id, budget);
+    }
+  }
+
+  static Future<void> _restoreSavings(
+    Box<SavingGoal> box,
+    List<dynamic>? list,
+  ) async {
+    if (list == null) return;
+    for (var item in list) {
+      final saving = SavingGoal(
+        id: item['id'],
+        name: item['name'],
+        targetAmount: item['targetAmount'],
+        currentAmount: item['currentAmount'],
+        deadline: item['deadline'] != null
+            ? DateTime.parse(item['deadline'])
+            : null,
+      );
+      await box.put(saving.id, saving);
+    }
+  }
+
+  static Future<void> _restoreSubscriptions(
+    Box<Subscription> box,
+    List<dynamic>? list,
+  ) async {
+    if (list == null) return;
+    for (var item in list) {
+      final sub = Subscription(
+        id: item['id'],
+        name: item['name'],
+        price: item['price'],
+        paymentDay: item['paymentDay'],
+        iconCode: item['iconCode'],
+        colorValue: item['colorValue'],
+      );
+      await box.put(sub.id, sub);
     }
   }
 

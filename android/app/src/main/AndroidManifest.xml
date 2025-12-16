@@ -15,7 +15,7 @@
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
-        android:label="mens_lifestyle_app"
+        android:label="CATO: LIFE OS"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         

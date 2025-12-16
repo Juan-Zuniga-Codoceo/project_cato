@@ -18,9 +18,8 @@ import 'src/features/lifestyle/providers/lifestyle_provider.dart';
 import 'src/features/responsibility/providers/responsibility_provider.dart';
 import 'src/features/social/providers/social_provider.dart';
 import 'src/features/academic/providers/academic_provider.dart';
-import 'src/features/social/providers/social_provider.dart';
-import 'src/features/academic/providers/academic_provider.dart';
 import 'src/features/gamification/providers/achievement_provider.dart';
+import 'src/features/gamification/providers/reward_provider.dart'; // [NUEVO IMPORT]
 import 'src/core/theme/app_theme.dart';
 
 // Screens
@@ -44,9 +43,12 @@ void main() async {
     print("🔔 Notificaciones OK");
 
     runApp(
-      MyApp(
-        storageService: storageService,
-        notificationService: notificationService,
+      // Envolvemos la app en RestartWidget para permitir reinicio en caliente
+      RestartWidget(
+        child: MyApp(
+          storageService: storageService,
+          notificationService: notificationService,
+        ),
       ),
     );
   } catch (e, stack) {
@@ -69,6 +71,35 @@ void main() async {
         ),
       ),
     );
+  }
+}
+
+/// Widget utilitario para reiniciar la aplicación completamente.
+class RestartWidget extends StatefulWidget {
+  final Widget child;
+
+  const RestartWidget({super.key, required this.child});
+
+  static void restartApp(BuildContext context) {
+    context.findAncestorStateOfType<_RestartWidgetState>()?.restartApp();
+  }
+
+  @override
+  State<RestartWidget> createState() => _RestartWidgetState();
+}
+
+class _RestartWidgetState extends State<RestartWidget> {
+  Key key = UniqueKey();
+
+  void restartApp() {
+    setState(() {
+      key = UniqueKey();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return KeyedSubtree(key: key, child: widget.child);
   }
 }
 
@@ -106,11 +137,12 @@ class MyApp extends StatelessWidget {
           create: (_) => SocialProvider(storageService, notificationService),
         ),
         ChangeNotifierProvider(create: (_) => AcademicProvider(storageService)),
-
         ChangeNotifierProvider(
           create: (_) =>
               AchievementProvider(storageService, notificationService),
         ),
+        // [NUEVO PROVIDER]
+        ChangeNotifierProvider(create: (_) => RewardProvider(storageService)),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {

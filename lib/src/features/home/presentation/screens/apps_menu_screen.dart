@@ -5,6 +5,8 @@ import '../../../tools/presentation/screens/tools_screen.dart';
 import '../../../responsibility/presentation/screens/adult_mode_screen.dart';
 import '../../../social/presentation/screens/social_screen.dart';
 import '../../../academic/presentation/screens/academic_screen.dart';
+// [NUEVO IMPORT]
+import '../../../gamification/presentation/screens/marketplace_screen.dart';
 
 class AppsMenuScreen extends StatelessWidget {
   const AppsMenuScreen({super.key});
@@ -19,6 +21,18 @@ class AppsMenuScreen extends StatelessWidget {
         crossAxisSpacing: 16,
         childAspectRatio: 1.1,
         children: [
+          // [NUEVA TARJETA: TIENDA]
+          _AppCard(
+            title: 'TIENDA',
+            icon: Icons.storefront,
+            color: Colors.amber,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const MarketplaceScreen(),
+              ),
+            ),
+          ),
           _AppCard(
             title: 'GARAJE',
             icon: Icons.directions_car,
@@ -67,7 +81,7 @@ class AppsMenuScreen extends StatelessWidget {
           _AppCard(
             title: 'ACADEMIA',
             icon: Icons.school,
-            color: Colors.indigo,
+            color: Colors.deepPurple,
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const AcademicScreen()),
@@ -97,7 +111,6 @@ class _AppCard extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Card(
-      // Inherits AppTheme CardTheme
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
