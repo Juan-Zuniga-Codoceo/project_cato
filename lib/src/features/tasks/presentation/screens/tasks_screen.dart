@@ -150,6 +150,7 @@ class _TaskModalContentState extends State<_TaskModalContent> {
   late bool _isExpense;
   late bool _linkToFinance;
   bool _isSaving = false;
+  String _selectedAttribute = 'Disciplina';
 
   @override
   void initState() {
@@ -166,6 +167,7 @@ class _TaskModalContentState extends State<_TaskModalContent> {
     _linkToFinance =
         (widget.taskToEdit?.associatedCost != null &&
         widget.taskToEdit!.associatedCost! > 0);
+    _selectedAttribute = widget.taskToEdit?.attribute ?? 'Disciplina';
   }
 
   @override
@@ -240,6 +242,24 @@ class _TaskModalContentState extends State<_TaskModalContent> {
             textCapitalization: TextCapitalization.sentences,
             maxLines: 2,
             enabled: !_isSaving,
+          ),
+          const SizedBox(height: 16),
+          DropdownButtonFormField<String>(
+            value: _selectedAttribute,
+            decoration: const InputDecoration(
+              labelText: 'Atributo RPG',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.stars),
+            ),
+            items: ['Disciplina', 'Fuerza', 'Intelecto', 'Vitalidad']
+                .map((attr) => DropdownMenuItem(value: attr, child: Text(attr)))
+                .toList(),
+            onChanged: _isSaving
+                ? null
+                : (value) {
+                    if (value != null)
+                      setState(() => _selectedAttribute = value);
+                  },
           ),
           const SizedBox(height: 16),
           Row(
@@ -425,6 +445,7 @@ class _TaskModalContentState extends State<_TaskModalContent> {
                             ? _selectedCategory?.id
                             : null,
                         isCompleted: widget.taskToEdit?.isCompleted ?? false,
+                        attribute: _selectedAttribute,
                       );
 
                       if (widget.taskToEdit != null) {

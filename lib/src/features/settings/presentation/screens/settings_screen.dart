@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 // Importamos main.dart para acceder a RestartWidget
 import '../../../../../../main.dart';
 import '../../../../core/services/backup_service.dart';
@@ -16,15 +17,13 @@ import 'about_screen.dart';
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
-  /// [SPRINT 131] Maneja el flujo completo de restauración y reinicio suave
   Future<void> _handleRestore(BuildContext context) async {
-    // 1. Confirmación de seguridad
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('⚠️ ¿Restaurar copia?'),
         content: const Text(
-          'Esto sobrescribirá todos los datos actuales con los del archivo de respaldo. La aplicación se reiniciará automáticamente para aplicar los cambios.',
+          'Esto sobrescribirá todos los datos actuales. La app se reiniciará.',
         ),
         actions: [
           TextButton(
@@ -40,10 +39,8 @@ class SettingsScreen extends StatelessWidget {
       ),
     );
 
-    if (confirm != true) return;
-    if (!context.mounted) return;
+    if (confirm != true || !context.mounted) return;
 
-    // 2. Mostrar indicador de carga
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -52,64 +49,37 @@ class SettingsScreen extends StatelessWidget {
     );
 
     try {
-      // 3. Ejecutar restauración (BackupService abre el selector de archivos)
       await BackupService.restoreBackup(context);
-
       if (context.mounted) {
-        // Cerrar indicador de carga
         Navigator.of(context, rootNavigator: true).pop();
-
-        // 4. Feedback de éxito
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text(
-              '✅ DATOS RESTAURADOS. Reiniciando sistema...',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
+            content: Text('✅ DATOS RESTAURADOS.'),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
           ),
         );
-
-        // Pequeña pausa para UX
         await Future.delayed(const Duration(seconds: 1));
-
-        // 5. [HOT FIX] Soft Restart para recargar Providers y UI
-        if (context.mounted) {
-          RestartWidget.restartApp(context);
-        }
+        if (context.mounted) RestartWidget.restartApp(context);
       }
     } catch (e) {
-      // Manejo de errores
       if (context.mounted) {
-        Navigator.of(context, rootNavigator: true).pop(); // Cerrar carga
+        Navigator.of(context, rootNavigator: true).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error en restauración: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     }
   }
 
   void _showEditNameDialog(BuildContext context, HabitProvider habitProvider) {
-    final TextEditingController controller = TextEditingController(
+    final controller = TextEditingController(
       text: habitProvider.userStats.userName,
     );
-
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('✏️ Editar Nombre'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            labelText: 'Nombre',
-            hintText: 'Ingresa tu nombre',
-          ),
-          autofocus: true,
-        ),
+        content: TextField(controller: controller, autofocus: true),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -120,9 +90,6 @@ class SettingsScreen extends StatelessWidget {
               if (controller.text.isNotEmpty) {
                 habitProvider.updateUserName(controller.text);
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('✅ Nombre actualizado')),
-                );
               }
             },
             child: const Text('Guardar'),
@@ -136,9 +103,9 @@ class SettingsScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('⚠️ ¿Estás seguro?'),
+        title: const Text('⚠️ BORRADO TOTAL'),
         content: const Text(
-          'Esta acción eliminará TODOS tus datos, incluyendo hábitos, tareas, finanzas y vehículos. Esta acción NO se puede deshacer.',
+          'Esta acción eliminará TODOS tus datos y es irreversible.',
         ),
         actions: [
           TextButton(
@@ -147,52 +114,14 @@ class SettingsScreen extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: () async {
-              final navigator = Navigator.of(context);
-              final scaffoldMessenger = ScaffoldMessenger.of(context);
-              final habitProvider = Provider.of<HabitProvider>(
+              await Provider.of<HabitProvider>(
                 context,
                 listen: false,
-              );
-
-              try {
-                await habitProvider.factoryReset();
-
-                if (context.mounted) {
-                  navigator.pop(); // Cerrar diálogo
-                  scaffoldMessenger.showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        '☢️ SISTEMA FORMATEADO. Reiniciando protocolos...',
-                      ),
-                      backgroundColor: Colors.redAccent,
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-
-                  // Reinicio automático tras borrado total
-                  await Future.delayed(const Duration(seconds: 2));
-                  if (context.mounted) {
-                    RestartWidget.restartApp(context);
-                  }
-                }
-              } catch (e) {
-                print("Error al borrar datos: $e");
-                if (context.mounted) {
-                  navigator.pop();
-                  scaffoldMessenger.showSnackBar(
-                    SnackBar(
-                      content: Text('Error: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
+              ).factoryReset();
+              if (context.mounted) RestartWidget.restartApp(context);
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Borrar todo'),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('BORRAR TODO'),
           ),
         ],
       ),
@@ -201,290 +130,399 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final habitProvider = Provider.of<HabitProvider>(context);
+    final userStats = habitProvider.userStats;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('⚙️ Configuración'), centerTitle: true),
-      body: ListView(
-        children: [
-          const SizedBox(height: 16),
-
-          // Dark Mode Toggle
-          SwitchListTile(
-            title: const Text('🌙 Modo Oscuro'),
-            subtitle: const Text('Cambia entre tema claro y oscuro'),
-            value: themeProvider.isDarkMode,
-            onChanged: (value) {
-              themeProvider.toggleTheme(value);
-            },
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: AppBar(
+        title: Text(
+          'CONFIGURACIÓN',
+          style: GoogleFonts.spaceMono(
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.5,
           ),
-
-          const Divider(),
-
-          // Reminder Time
-          ListTile(
-            leading: const Icon(Icons.alarm),
-            title: const Text('⏰ Hora de Recordatorio'),
-            subtitle: const Text('Configura la hora de notificaciones diarias'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () async {
-              final TimeOfDay? picked = await showTimePicker(
-                context: context,
-                initialTime: const TimeOfDay(hour: 9, minute: 0),
-              );
-
-              if (picked != null) {
-                final settingsBox = Hive.box(StorageService.settingsBoxName);
-                settingsBox.put('defaultReminderHour', picked.hour);
-                settingsBox.put('defaultReminderMinute', picked.minute);
-
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        '✅ Hora configurada: ${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}',
-                      ),
-                    ),
-                  );
-                }
-              }
-            },
-          ),
-
-          // Biometric Security Toggle
-          ValueListenableBuilder(
-            valueListenable: Hive.box(
-              StorageService.settingsBoxName,
-            ).listenable(keys: ['isBiometricEnabled']),
-            builder: (context, box, _) {
-              final isEnabled = box.get(
-                'isBiometricEnabled',
-                defaultValue: false,
-              );
-              return SwitchListTile(
-                title: const Text('🔒 Bloqueo Biométrico'),
-                subtitle: const Text('Solicitar huella/rostro al iniciar'),
-                value: isEnabled,
-                activeColor: Colors.green,
-                onChanged: (value) {
-                  box.put('isBiometricEnabled', value);
-                  if (value) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          '✅ Seguridad activada para el próximo inicio',
+        ),
+        centerTitle: true,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            // 1. TARJETA DE PERFIL (Header)
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: isDark
+                      ? [const Color(0xFF2C2C2C), const Color(0xFF1A1A1A)]
+                      : [Colors.white, Colors.grey.shade50],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: theme.dividerColor.withOpacity(0.1)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundColor: theme.colorScheme.primary.withOpacity(0.2),
+                    child: ClipOval(
+                      child: Image.asset(
+                        userStats.avatarPath,
+                        width: 60,
+                        height: 60,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Icon(
+                          Icons.person,
+                          color: theme.colorScheme.primary,
                         ),
                       ),
-                    );
-                  }
-                },
-              );
-            },
-          ),
-
-          const Divider(),
-
-          // Grading Scale Selector
-          ValueListenableBuilder(
-            valueListenable: Hive.box(
-              StorageService.settingsBoxName,
-            ).listenable(keys: ['gradingScale']),
-            builder: (context, box, _) {
-              return ListTile(
-                leading: const Icon(Icons.school),
-                title: const Text('🎓 Escala de Notas'),
-                subtitle: const Text('Define el sistema de evaluación'),
-                trailing: DropdownButton<int>(
-                  value: box.get('gradingScale', defaultValue: 0),
-                  underline: const SizedBox(),
-                  items: const [
-                    DropdownMenuItem(
-                      value: 0,
-                      child: Text('Chile (1.0 - 7.0)'),
                     ),
-                    DropdownMenuItem(
-                      value: 1,
-                      child: Text('Latam (0.0 - 10.0)'),
-                    ),
-                    DropdownMenuItem(
-                      value: 2,
-                      child: Text('Porcentaje (0 - 100)'),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) {
-                      box.put('gradingScale', value);
-                      context.read<AcademicProvider>().refresh();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('✅ Escala de notas actualizada'),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          userStats.userName.toUpperCase(),
+                          style: GoogleFonts.spaceMono(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFC107).withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                              color: const Color(0xFFFFC107).withOpacity(0.5),
+                            ),
+                          ),
+                          child: Text(
+                            'OPERADOR FUNDADOR',
+                            style: GoogleFonts.spaceMono(
+                              fontSize: 10,
+                              color: const Color(0xFFFFC107), // Always Gold
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.edit_outlined),
+                    onPressed: () =>
+                        _showEditNameDialog(context, habitProvider),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // 2. SECCIÓN SISTEMA
+            _SectionHeader(title: 'SISTEMA OPERATIVO'),
+            _SettingsGroup(
+              children: [
+                SwitchListTile(
+                  secondary: const Icon(Icons.dark_mode_outlined),
+                  title: const Text('Modo Oscuro'),
+                  value: Provider.of<ThemeProvider>(context).isDarkMode,
+                  activeColor: theme.colorScheme.primary,
+                  onChanged: (val) => Provider.of<ThemeProvider>(
+                    context,
+                    listen: false,
+                  ).toggleTheme(val),
+                ),
+                _SettingsTile(
+                  icon: Icons.fingerprint,
+                  title: 'Seguridad Biométrica',
+                  trailing: ValueListenableBuilder(
+                    valueListenable: Hive.box(
+                      StorageService.settingsBoxName,
+                    ).listenable(keys: ['isBiometricEnabled']),
+                    builder: (context, box, _) {
+                      return Switch(
+                        value: box.get(
+                          'isBiometricEnabled',
+                          defaultValue: false,
+                        ),
+                        activeColor: Colors.green,
+                        onChanged: (val) => box.put('isBiometricEnabled', val),
                       );
+                    },
+                  ),
+                ),
+                _SettingsTile(
+                  icon: Icons.notifications_outlined,
+                  title: 'Hora Recordatorio',
+                  onTap: () async {
+                    final picked = await showTimePicker(
+                      context: context,
+                      initialTime: const TimeOfDay(hour: 9, minute: 0),
+                    );
+                    if (picked != null) {
+                      Hive.box(
+                        StorageService.settingsBoxName,
+                      ).put('defaultReminderHour', picked.hour);
+                      Hive.box(
+                        StorageService.settingsBoxName,
+                      ).put('defaultReminderMinute', picked.minute);
                     }
                   },
                 ),
-              );
-            },
-          ),
-
-          const Divider(),
-
-          // User Name
-          ListTile(
-            leading: const Icon(Icons.person),
-            title: const Text('👤 Nombre de Usuario'),
-            subtitle: Text(
-              habitProvider.userStats.userName.isEmpty
-                  ? 'Sin nombre'
-                  : habitProvider.userStats.userName,
+              ],
             ),
-            trailing: const Icon(Icons.edit),
-            onTap: () {
-              _showEditNameDialog(context, habitProvider);
-            },
-          ),
 
-          const Divider(),
-          const SizedBox(height: 16),
+            const SizedBox(height: 24),
 
-          // Data & System Section
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text(
-              'DATOS Y SISTEMA',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
-              ),
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.download),
-            title: const Text('Exportar Finanzas (CSV)'),
-            onTap: () async {
-              final financeProvider = Provider.of<FinanceProvider>(
-                context,
-                listen: false,
-              );
-              await financeProvider.exportTransactionsToCSV();
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.save),
-            title: const Text('💾 Crear Copia de Seguridad'),
-            subtitle: const Text('Guarda todo tu progreso en un archivo'),
-            onTap: () => BackupService.createBackup(context),
-          ),
-          // [SPRINT 131] Método actualizado
-          ListTile(
-            leading: const Icon(Icons.restore),
-            title: const Text('📥 Restaurar Copia de Seguridad'),
-            subtitle: const Text('Recupera datos desde un archivo'),
-            onTap: () => _handleRestore(context),
-          ),
-          ListTile(
-            leading: const Icon(Icons.menu_book),
-            title: const Text('Manual de Operaciones'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ManifestScreen()),
-              );
-            },
-          ),
-          // [NUEVO] Enlace a Acerca de
-          ListTile(
-            leading: const Icon(Icons.info_outline),
-            title: const Text('Acerca de CATO'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AboutScreen()),
-              );
-            },
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.delete_forever, color: Colors.red),
-            title: const Text(
-              'Zona de Peligro',
-              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-            ),
-            onTap: () => _showDeleteConfirmationDialog(context),
-          ),
-          const SizedBox(height: 32),
-
-          // Danger Zone
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            // 3. SECCIÓN DATOS
+            _SectionHeader(title: 'GESTIÓN DE DATOS'),
+            _SettingsGroup(
               children: [
-                const Text(
-                  '⚠️ Zona de Peligro',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.red,
+                _SettingsTile(
+                  icon: Icons.cloud_upload_outlined,
+                  title: 'Crear Respaldo',
+                  subtitle: 'Exportar archivo JSON',
+                  onTap: () => BackupService.createBackup(context),
+                ),
+                _SettingsTile(
+                  icon: Icons.cloud_download_outlined,
+                  title: 'Restaurar Datos',
+                  subtitle: 'Importar archivo JSON',
+                  onTap: () => _handleRestore(context),
+                ),
+                _SettingsTile(
+                  icon: Icons.table_chart_outlined,
+                  title: 'Exportar Finanzas',
+                  subtitle: 'Generar CSV para Excel',
+                  onTap: () => Provider.of<FinanceProvider>(
+                    context,
+                    listen: false,
+                  ).exportTransactionsToCSV(),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            // 4. SECCIÓN INFORMACIÓN
+            _SectionHeader(title: 'INFORMACIÓN'),
+            _SettingsGroup(
+              children: [
+                _SettingsTile(
+                  icon: Icons.school_outlined,
+                  title: 'Escala de Notas',
+                  onTap: () {
+                    // Lógica simple para cambiar escala (puedes expandirla)
+                    final box = Hive.box(StorageService.settingsBoxName);
+                    int current = box.get('gradingScale', defaultValue: 0);
+                    box.put('gradingScale', (current + 1) % 3);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Escala cambiada (Reinicia para aplicar en todas partes)',
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                _SettingsTile(
+                  icon: Icons.menu_book_outlined,
+                  title: 'Manual de Operaciones',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ManifestScreen()),
                   ),
                 ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Esta acción es irreversible y eliminará todos tus datos.',
-                  style: TextStyle(color: Colors.grey),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () async {
-                      await DataSeeder.seedData(context);
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              '✅ Datos inyectados. Reinicia la app si es necesario.',
-                            ),
-                          ),
-                        );
-                        // Opcional: Reiniciar también aquí para ver los datos inmediatamente
-                        RestartWidget.restartApp(context);
-                      }
-                    },
-                    icon: const Icon(Icons.science),
-                    label: const Text('Inyectar Datos de Prueba'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.teal,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      _showDeleteConfirmationDialog(context);
-                    },
-                    icon: const Icon(Icons.delete_forever),
-                    label: const Text('Borrar todos los datos'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
+                _SettingsTile(
+                  icon: Icons.info_outline,
+                  title: 'Acerca de CATO',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const AboutScreen()),
                   ),
                 ),
               ],
             ),
+
+            const SizedBox(height: 32),
+
+            // 5. ZONA DE PELIGRO
+            Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.red.withOpacity(0.3)),
+                borderRadius: BorderRadius.circular(12),
+                color: Colors.red.withOpacity(0.05),
+              ),
+              child: ListTile(
+                leading: const Icon(Icons.delete_forever, color: Colors.red),
+                title: const Text(
+                  'ZONA DE PELIGRO',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                subtitle: const Text('Borrar todos los datos o inyectar demo'),
+                onTap: () {
+                  showModalBottomSheet(
+                    context: context,
+                    builder: (ctx) => Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ListTile(
+                          leading: const Icon(
+                            Icons.science,
+                            color: Colors.blue,
+                          ),
+                          title: const Text('Inyectar Datos Demo'),
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            DataSeeder.seedData(context);
+                          },
+                        ),
+                        ListTile(
+                          leading: const Icon(
+                            Icons.delete_forever,
+                            color: Colors.red,
+                          ),
+                          title: const Text('Formatear Sistema (Borrar Todo)'),
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            _showDeleteConfirmationDialog(context);
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 40),
+            Text(
+              "CATO OS v1.0.0",
+              style: GoogleFonts.spaceMono(color: Colors.grey, fontSize: 10),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// --- WIDGETS AUXILIARES PARA EL DISEÑO ---
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  const _SectionHeader({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.only(left: 8, bottom: 8),
+      child: Text(
+        title,
+        style: GoogleFonts.spaceMono(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.primary,
+          letterSpacing: 1.2,
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsGroup extends StatelessWidget {
+  final List<Widget> children;
+  const _SettingsGroup({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
+      child: Column(children: children),
+    );
+  }
+}
+
+class _SettingsTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final VoidCallback? onTap;
+  final Widget? trailing;
+
+  const _SettingsTile({
+    required this.icon,
+    required this.title,
+    this.subtitle,
+    this.onTap,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return ListTile(
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(
+          icon,
+          size: 20,
+          color: theme.iconTheme.color?.withOpacity(0.8),
+        ),
+      ),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
+      subtitle: subtitle != null
+          ? Text(
+              subtitle!,
+              style: TextStyle(
+                fontSize: 12,
+                color: theme.textTheme.bodySmall?.color,
+              ),
+            )
+          : null,
+      trailing:
+          trailing ??
+          const Icon(Icons.chevron_right, size: 20, color: Colors.grey),
+      onTap: onTap,
     );
   }
 }

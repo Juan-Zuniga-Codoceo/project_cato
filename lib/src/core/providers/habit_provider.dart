@@ -321,18 +321,17 @@ class HabitProvider extends ChangeNotifier {
 
     if (stats.intellectXp > maxXp) {
       maxXp = stats.intellectXp;
-      newAvatar = 'assets/avatars/hero_3.jpg'; // Intelecto (Hacker/Futurista)
+      newAvatar = 'assets/avatars/hero_3.png'; // [FIX] Intelecto es PNG
     }
 
     if (stats.vitalityXp > maxXp) {
       maxXp = stats.vitalityXp;
-      newAvatar = 'assets/avatars/hero_5.jpg'; // Vitalidad (Monje)
+      newAvatar = 'assets/avatars/hero_5.png'; // [FIX] Vitalidad es PNG
     }
 
     // Only update if the avatar has changed
     if (stats.avatarPath != newAvatar) {
       stats.avatarPath = newAvatar;
-      stats.save();
       stats.save();
       // No need to call notifyListeners() here as it will be called by updateHabit
     }

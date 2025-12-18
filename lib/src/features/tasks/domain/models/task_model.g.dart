@@ -27,13 +27,14 @@ class TaskModelAdapter extends TypeAdapter<TaskModel> {
       isIncome: fields[7] as bool,
       categoryId: fields[8] as String?,
       relatedTransactionId: fields[9] as String?,
+      attribute: fields[10] == null ? 'Disciplina' : fields[10] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, TaskModel obj) {
     writer
-      ..writeByte(10)
+      ..writeByte(11)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -53,7 +54,9 @@ class TaskModelAdapter extends TypeAdapter<TaskModel> {
       ..writeByte(8)
       ..write(obj.categoryId)
       ..writeByte(9)
-      ..write(obj.relatedTransactionId);
+      ..write(obj.relatedTransactionId)
+      ..writeByte(10)
+      ..write(obj.attribute);
   }
 
   @override

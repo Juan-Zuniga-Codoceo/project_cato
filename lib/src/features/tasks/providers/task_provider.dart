@@ -6,6 +6,7 @@ import '../../finance/domain/models/transaction.dart';
 import '../../finance/domain/models/category.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../core/services/home_widget_service.dart';
+import '../../../core/providers/habit_provider.dart';
 
 class TaskProvider extends ChangeNotifier {
   final StorageService _storageService;
@@ -185,6 +186,66 @@ class TaskProvider extends ChangeNotifier {
       String? relatedTxId = task.relatedTransactionId;
 
       if (newStatus) {
+        // [RPG LOGIC START]
+        try {
+          // Obtener HabitProvider del contexto (listen: false)
+          final habitProvider = Provider.of<HabitProvider>(
+            context,
+            listen: false,
+          );
+          final stats = habitProvider.userStats;
+
+          int xpGain = 15; // XP base por tarea
+
+          // Sumar XP global y específica
+          stats.totalXp += xpGain;
+          switch (task.attribute) {
+            case 'Fuerza':
+              stats.strengthXp += xpGain;
+              break;
+            case 'Intelecto':
+              stats.intellectXp += xpGain;
+              break;
+            case 'Vitalidad':
+              stats.vitalityXp += xpGain;
+              break;
+            case 'Disciplina':
+              stats.disciplineXp += xpGain;
+              break;
+            default:
+              stats.disciplineXp += xpGain;
+              break;
+          }
+
+          // Verificar Level Up
+          if (stats.totalXp >= habitProvider.xpForNextLevel) {
+            stats.currentLevel++;
+            // Notificar UI de nivel si es necesario
+          }
+
+          stats.save();
+          // Notificar cambios en HabitProvider para actualizar UI
+          // Nota: Como habitProvider es externo, idealmente llamamos un método de actualización allí,
+          // pero stats.save() persiste el dato. Para refrescar UI usamos:
+          // habitProvider.notifyListeners(); // (Si el linter lo permite, si no, se actualizará al recargar)
+
+          // Feedback Visual
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'COMPLETADO: +$xpGain XP ${task.attribute.toUpperCase()}',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                backgroundColor: Colors.amber[700],
+                duration: const Duration(seconds: 1),
+              ),
+            );
+          }
+        } catch (e) {
+          print("Error RPG Task: $e");
+        }
+        // [RPG LOGIC END]
         // Transitioning to COMPLETED
         if (task.associatedCost != null && task.associatedCost! > 0) {
           // Hard Link Check: DO NOT create transaction if already has ID

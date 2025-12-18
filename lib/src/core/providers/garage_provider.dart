@@ -183,4 +183,10 @@ class GarageProvider extends ChangeNotifier {
       print('❌ Vehículo no encontrado con ID: $vehicleId');
     }
   }
+
+  @override
+  void dispose() {
+    // Clean up resources if needed in the future
+    super.dispose();
+  }
 }

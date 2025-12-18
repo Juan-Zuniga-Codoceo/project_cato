@@ -243,8 +243,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   CircleAvatar(
                     radius: 24,
-                    backgroundImage: AssetImage(userStats.avatarPath),
                     backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                    // [FIX] Usar child con Image.asset para manejar errores de carga
+                    child: ClipOval(
+                      child: Image.asset(
+                        userStats.avatarPath,
+                        width: 48,
+                        height: 48,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(
+                            Icons.person,
+                            color: theme.colorScheme.onSurface,
+                          );
+                        },
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -410,10 +424,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     // Default: Side Mission
     final randomMission = _sideMissions[now.day % _sideMissions.length];
+
+    // [FIX] Buscar en TODAS las tareas del provider, no solo las pendientes
+    final missionAlreadyAccepted = taskProvider.tasks.any((t) {
+      final isSameDay =
+          t.dueDate.year == now.year &&
+          t.dueDate.month == now.month &&
+          t.dueDate.day == now.day;
+      return t.title == randomMission && isSameDay;
+    });
+
+    if (missionAlreadyAccepted) {
+      // Si ya la aceptó, mostrar estado de "Guardia" en lugar de ofrecerla de nuevo
+      return PriorityCard(
+        title: 'SISTEMAS NOMINALES',
+        subtitle: 'Misión diaria en curso o finalizada. Mantén la disciplina.',
+        icon: Icons.shield,
+        color: Colors.grey, // Color neutro
+        actionLabel: 'VER TAREAS',
+        onAction: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const TasksScreen()),
+          );
+        },
+      );
+    }
+
+    // Si NO la ha aceptado, mostrar la oferta
     return PriorityCard(
       title: 'SISTEMAS ESTABLES',
       subtitle: 'MISIÓN SECUNDARIA: $randomMission',
-      icon: Icons.shield,
+      icon: Icons.add_task, // Icono cambiado para diferenciar
       color: Colors.green,
       actionLabel: 'ACEPTAR MISIÓN',
       onAction: () {
@@ -502,7 +544,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               icon: Icons.attach_money,
               label: 'BALANCE',
               value: '\$${financeProvider.totalBalance.toInt()}',
-              color: Colors.cyan,
+              color: financeProvider.totalBalance >= 0
+                  ? Colors.greenAccent
+                  : Colors.redAccent,
             ),
           ),
         ),
@@ -643,8 +687,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'SIN ACTIVIDAD PROGRAMADA',
+              'SIN MISIONES ACTIVAS. MANTÉN LA GUARDIA ALTA.',
               style: GoogleFonts.spaceMono(color: theme.disabledColor),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
             Row(

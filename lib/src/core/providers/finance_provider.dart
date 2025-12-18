@@ -174,26 +174,38 @@ class FinanceProvider extends ChangeNotifier {
 
   // --- CSV Export ---
   Future<void> exportTransactionsToCSV() async {
-    List<List<dynamic>> rows = [];
-    rows.add(["Fecha", "Título", "Categoría", "Tipo", "Monto"]);
+    try {
+      List<List<dynamic>> rows = [];
+      rows.add(["Fecha", "Título", "Categoría", "Tipo", "Monto"]);
 
-    for (var tx in transactions) {
-      rows.add([
-        tx.date.toIso8601String().split('T')[0],
-        tx.title,
-        tx.category.name,
-        tx.isExpense ? "Gasto" : "Ingreso",
-        tx.amount,
-      ]);
+      for (var tx in transactions) {
+        rows.add([
+          tx.date.toIso8601String().split('T')[0],
+          tx.title,
+          tx.category.name,
+          tx.isExpense ? "Gasto" : "Ingreso",
+          tx.amount,
+        ]);
+      }
+
+      String csv = const ListToCsvConverter().convert(rows);
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/cato_finanzas_export.csv');
+      await file.writeAsString(csv);
+
+      await Share.shareXFiles([
+        XFile(file.path),
+      ], text: 'Reporte Financiero CATO OS');
+    } catch (e) {
+      // [FIX] Error handling - Log and rethrow for UI feedback
+      debugPrint('Error al exportar CSV: $e');
+      rethrow;
     }
+  }
 
-    String csv = const ListToCsvConverter().convert(rows);
-    final dir = await getApplicationDocumentsDirectory();
-    final file = File('${dir.path}/cato_finanzas_export.csv');
-    await file.writeAsString(csv);
-
-    await Share.shareXFiles([
-      XFile(file.path),
-    ], text: 'Reporte Financiero CATO OS');
+  @override
+  void dispose() {
+    // Clean up resources if needed in the future
+    super.dispose();
   }
 }

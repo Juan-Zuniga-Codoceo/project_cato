@@ -6,6 +6,7 @@ import 'package:intl/date_symbol_data_local.dart';
 // Services
 import 'src/core/services/storage_service.dart';
 import 'src/core/services/notification_service.dart';
+import 'src/core/utils/avatar_migration.dart';
 
 // Providers
 import 'src/core/providers/theme_provider.dart';
@@ -20,6 +21,7 @@ import 'src/features/social/providers/social_provider.dart';
 import 'src/features/academic/providers/academic_provider.dart';
 import 'src/features/gamification/providers/achievement_provider.dart';
 import 'src/features/gamification/providers/reward_provider.dart'; // [NUEVO IMPORT]
+import 'src/core/providers/subscription_provider.dart';
 import 'src/core/theme/app_theme.dart';
 
 // Screens
@@ -39,6 +41,9 @@ void main() async {
     print("📦 Inicializando Storage...");
     await storageService.init();
     print("✅ Storage OK");
+
+    // [MIGRATION] Actualizar avatares de .jpg a .png (ONE-TIME)
+    await AvatarMigration.migrateAvatarPaths();
 
     final notificationService = NotificationService();
     await notificationService.init();
@@ -151,6 +156,7 @@ class MyApp extends StatelessWidget {
         ),
         // [NUEVO PROVIDER]
         ChangeNotifierProvider(create: (_) => RewardProvider(storageService)),
+        ChangeNotifierProvider(create: (_) => SubscriptionProvider()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {

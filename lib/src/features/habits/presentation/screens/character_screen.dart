@@ -466,20 +466,20 @@ class _AttributeCard extends StatelessWidget {
 const List<String> _maleAvatars = [
   'assets/avatars/hero_1.jpg',
   'assets/avatars/hero_2.jpg',
-  'assets/avatars/hero_4.jpg',
-  'assets/avatars/hero_5.jpg',
+  'assets/avatars/hero_4.png', // [FIX] PNG
+  'assets/avatars/hero_5.png', // [FIX] PNG
   'assets/avatars/hero_diplomat.png',
 ];
 
 const List<String> _femaleAvatars = [
   'assets/avatars/hero_valkyrie.png',
-  'assets/avatars/hero_3.jpg', // Hacker (Neutral/Female leaning)
+  'assets/avatars/hero_3.png', // [FIX] PNG
   'assets/avatars/hero_ghost.png',
   'assets/avatars/hero_mechanic.png',
 ];
 
 const List<String> _neutralAvatars = [
-  'assets/avatars/hero_3.jpg',
+  'assets/avatars/hero_3.png', // [FIX] PNG
   'assets/avatars/hero_ghost.png',
 ];
 

@@ -24,4 +24,10 @@ class ThemeProvider extends ChangeNotifier {
     _storageService.settingsBox.put('isDarkMode', isDark);
     notifyListeners();
   }
+
+  @override
+  void dispose() {
+    // Clean up resources if needed in the future
+    super.dispose();
+  }
 }

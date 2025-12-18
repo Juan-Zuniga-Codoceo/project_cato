@@ -24,6 +24,8 @@ class TaskModel {
   final String? categoryId;
   @HiveField(9)
   final String? relatedTransactionId;
+  @HiveField(10, defaultValue: 'Disciplina') // [NUEVO]
+  final String attribute;
 
   TaskModel({
     required this.id,
@@ -36,6 +38,7 @@ class TaskModel {
     this.isIncome = false,
     this.categoryId,
     this.relatedTransactionId,
+    this.attribute = 'Disciplina', // Valor por defecto
   });
 
   TaskModel copyWith({
@@ -49,6 +52,7 @@ class TaskModel {
     bool? isIncome,
     String? categoryId,
     String? relatedTransactionId,
+    String? attribute,
   }) {
     return TaskModel(
       id: id ?? this.id,
@@ -61,6 +65,7 @@ class TaskModel {
       isIncome: isIncome ?? this.isIncome,
       categoryId: categoryId ?? this.categoryId,
       relatedTransactionId: relatedTransactionId ?? this.relatedTransactionId,
+      attribute: attribute ?? this.attribute,
     );
   }
 }

@@ -35,10 +35,12 @@ class _AuthScreenState extends State<AuthScreen> {
       // SINTAXIS CORRECTA V3.0.0:
       // En local_auth 3.0.0+ NO se usa ninguna clase de opciones
       // Los parámetros se pasan directamente como argumentos nombrados
+      // [FIX] Permitir PIN/Patrón si la huella falla
       authenticated = await auth.authenticate(
         localizedReason: 'Identifícate para acceder a CATO OS',
-        biometricOnly: true,
-        sensitiveTransaction: true,
+        // Permitimos métodos alternativos (PIN/Patrón)
+        biometricOnly: false,
+        // sensitiveTransaction: true, // Comentado para evitar bloqueos
       );
 
       setState(() {
@@ -156,7 +158,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       onPressed: _authenticate,
                       icon: const Icon(Icons.lock_open),
                       label: Text(
-                        'AUTENTICAR MANUALMENTE',
+                        'ACCESO DE EMERGENCIA',
                         style: GoogleFonts.spaceMono(
                           fontWeight: FontWeight.bold,
                         ),

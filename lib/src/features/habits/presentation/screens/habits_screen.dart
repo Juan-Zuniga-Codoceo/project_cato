@@ -641,17 +641,24 @@ class MiniRpgStatsWidget extends StatelessWidget {
                         children: [
                           CircleAvatar(
                             radius: 30,
-                            backgroundImage: AssetImage(stats.avatarPath),
                             backgroundColor: theme.colorScheme.primary,
-                            child: null,
-                          ),
-                          // Fallback if image fails to load
-                          if (stats.avatarPath.isEmpty)
-                            Icon(
-                              Icons.shield,
-                              color: theme.colorScheme.onPrimary,
-                              size: 20,
+                            // [FIX] Renderizado seguro de imagen
+                            child: ClipOval(
+                              child: Image.asset(
+                                stats.avatarPath,
+                                width: 60,
+                                height: 60,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Icon(
+                                    Icons.shield,
+                                    color: theme.colorScheme.onPrimary,
+                                    size: 30,
+                                  );
+                                },
+                              ),
                             ),
+                          ),
                           // Level badge overlay
                           Positioned(
                             bottom: 0,
