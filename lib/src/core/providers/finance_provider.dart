@@ -272,6 +272,96 @@ class FinanceProvider extends ChangeNotifier {
     return transaction.id;
   }
 
+  // [NUEVO] Método para registrar gasto en cuotas (genera N transacciones mensuales)
+  Future<void> addInstallmentTransaction({
+    required String title,
+    required double totalAmount,
+    required DateTime date,
+    required CategoryModel category,
+    required String paymentMethod,
+    required int installments,
+  }) async {
+    final double installmentAmount = totalAmount / installments;
+
+    // Generar N transacciones (una por mes)
+    for (int i = 0; i < installments; i++) {
+      // Calcular fecha: Mes actual + i
+      final installmentDate = DateTime(
+        date.year,
+        date.month + i,
+        date.day,
+        date.hour,
+        date.minute,
+      );
+
+      final newTx = Transaction(
+        id: "${DateTime.now().millisecondsSinceEpoch}_$i",
+        title: installments > 1 ? "$title (${i + 1}/$installments)" : title,
+        amount: installmentAmount,
+        date: installmentDate,
+        isExpense: true,
+        category: category,
+        paymentMethod: paymentMethod,
+        installments: installments,
+      );
+
+      await _storageService.transactionBox.put(newTx.id, newTx);
+    }
+    notifyListeners();
+  }
+
+  // [NUEVO] Método centralizado para pagar TC (dual transaction)
+  Future<void> processCreditCardPayment({
+    required String cardName,
+    required double amount,
+    required String sourceMethod,
+  }) async {
+    // Buscar categoría "Pago" o usar la primera
+    CategoryModel? paymentCategory;
+    try {
+      paymentCategory = categories.firstWhere(
+        (c) =>
+            c.name.toLowerCase().contains('pago') ||
+            c.name.toLowerCase().contains('financ'),
+      );
+    } catch (_) {
+      // Fallback a primera categoría disponible
+      if (categories.isNotEmpty) {
+        paymentCategory = categories.first;
+      } else {
+        return; // No se puede procesar sin categorías
+      }
+    }
+
+    // 1. Gasto en Origen (Baja Liquidez)
+    final expenseTx = Transaction(
+      id: "${DateTime.now().millisecondsSinceEpoch}_out",
+      title: "PAGO TARJETA $cardName",
+      amount: amount,
+      date: DateTime.now(),
+      isExpense: true,
+      category: paymentCategory,
+      paymentMethod: sourceMethod,
+      installments: 1,
+    );
+    await _storageService.transactionBox.put(expenseTx.id, expenseTx);
+
+    // 2. Ingreso en Destino (Baja Deuda TC)
+    final incomeTx = Transaction(
+      id: "${DateTime.now().millisecondsSinceEpoch}_in",
+      title: "ABONO/PAGO",
+      amount: amount,
+      date: DateTime.now(),
+      isExpense: false,
+      category: paymentCategory,
+      paymentMethod: cardName,
+      installments: 1,
+    );
+    await _storageService.transactionBox.put(incomeTx.id, incomeTx);
+
+    notifyListeners(); // Actualizar toda la UI
+  }
+
   void updateTransaction(Transaction transaction) {
     _storageService.transactionBox.put(transaction.id, transaction);
     notifyListeners();

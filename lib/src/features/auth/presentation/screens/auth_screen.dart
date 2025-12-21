@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:local_auth/local_auth.dart'; // Importación estándar
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/services/auth_service.dart';
 import '../../../home/presentation/screens/home_screen.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -11,50 +11,38 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  final LocalAuthentication auth = LocalAuthentication();
+  final AuthService _authService = AuthService();
   bool _isAuthenticating = false;
   String _statusMessage = 'Inicializando protocolos de seguridad...';
 
   @override
   void initState() {
     super.initState();
-    // [RESTAURADO] Versión original que funcionaba - sin delays
-    _authenticate();
+    // Retraso para asegurar que el contexto esté listo (como en commit 2392bc7)
+    Future.delayed(const Duration(seconds: 1), _authenticate);
   }
 
+  /// Autenticar usando el servicio
   Future<void> _authenticate() async {
     if (!mounted) return;
 
-    bool authenticated = false;
-    try {
-      setState(() {
-        _isAuthenticating = true;
-        _statusMessage = 'Escaneando biometría...';
-      });
+    setState(() {
+      _isAuthenticating = true;
+      _statusMessage = 'Escaneando biometría...';
+    });
 
-      // SINTAXIS CORRECTA local_auth 3.0
-      authenticated = await auth.authenticate(
-        localizedReason: 'Identifícate para acceder a CATO OS',
-        biometricOnly: false,
-      );
-
-      setState(() {
-        _isAuthenticating = false;
-      });
-    } catch (e) {
-      debugPrint("Error Auth: $e");
-      if (mounted) {
-        setState(() {
-          _isAuthenticating = false;
-          _statusMessage = 'Error de lectura: Reintentar';
-        });
-      }
-      return;
-    }
+    final result = await _authService.authenticate(
+      localizedReason: 'Identifícate para acceder a CATO OS',
+      biometricOnly: true, // Restaurado a true como en versión anterior
+    );
 
     if (!mounted) return;
 
-    if (authenticated) {
+    setState(() {
+      _isAuthenticating = false;
+    });
+
+    if (result.success) {
       setState(() => _statusMessage = 'ACCESO CONCEDIDO');
       await Future.delayed(const Duration(milliseconds: 500));
       if (mounted) {
@@ -63,7 +51,29 @@ class _AuthScreenState extends State<AuthScreen> {
         );
       }
     } else {
-      setState(() => _statusMessage = 'ACCESO DENEGADO');
+      // Manejar diferentes tipos de error
+      String errorMessage;
+      switch (result.errorCode) {
+        case AuthErrorCode.notSupported:
+          errorMessage = 'DISPOSITIVO NO COMPATIBLE';
+          break;
+        case AuthErrorCode.notEnrolled:
+          errorMessage = 'SIN BIOMETRÍA CONFIGURADA';
+          break;
+        case AuthErrorCode.lockedOut:
+          errorMessage = 'BIOMETRÍA BLOQUEADA';
+          break;
+        case AuthErrorCode.userCanceled:
+          errorMessage = 'AUTENTICACIÓN CANCELADA';
+          break;
+        case AuthErrorCode.authInProgress:
+          errorMessage = 'AUTENTICACIÓN EN CURSO';
+          break;
+        default:
+          errorMessage = 'ACCESO DENEGADO';
+      }
+
+      setState(() => _statusMessage = errorMessage);
     }
   }
 
@@ -153,7 +163,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       onPressed: _authenticate,
                       icon: const Icon(Icons.lock_open),
                       label: Text(
-                        'ACCESO DE EMERGENCIA',
+                        'AUTENTICAR MANUALMENTE',
                         style: GoogleFonts.spaceMono(
                           fontWeight: FontWeight.bold,
                         ),

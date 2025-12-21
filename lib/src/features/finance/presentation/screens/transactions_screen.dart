@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/providers/finance_provider.dart';
 import '../../domain/models/transaction.dart';
 import '../../domain/models/category.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({super.key});
@@ -29,50 +30,57 @@ class _TransactionsScreenState extends State<TransactionsScreen>
     super.dispose();
   }
 
-  // --- MÉTODO PARA AGREGAR TRANSACCIÓN ---
+  // --- MODAL DE AGREGAR TRANSACCIÓN ---
   void _showAddTransactionDialog(BuildContext context) {
     final finance = Provider.of<FinanceProvider>(context, listen: false);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     // Colores dinámicos
-    final textColor = isDark ? Colors.white : Colors.black87;
-    final hintColor = isDark ? Colors.grey : Colors.grey.shade600;
+    final textColor = theme.colorScheme.onSurface;
+    final hintColor = theme.hintColor;
     final inputFillColor = isDark ? Colors.black26 : Colors.grey.shade100;
+    final cardColor = theme.cardColor;
 
+    // Datos
     final cards = finance.getAvailablePaymentMethods();
     final categories = finance.categories;
+
+    // Validación inicial
+    if (categories.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("⚠️ Primero debes crear una categoría.")),
+      );
+      return;
+    }
 
     // Controladores
     final titleController = TextEditingController();
     final amountController = TextEditingController();
-    CategoryModel? selectedCategory = categories.isNotEmpty
-        ? categories.first
-        : null;
+
+    // Estado inicial
+    CategoryModel selectedCategory = categories.first;
     String selectedCard = cards.isNotEmpty ? cards.first : 'Efectivo';
     bool isExpense = true;
     DateTime selectedDate = DateTime.now();
-    int selectedInstallments = 1; // [NUEVO] Variable para cuotas
+    int selectedInstallments = 1;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      backgroundColor: theme.scaffoldBackgroundColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
-          // Verificar si la tarjeta seleccionada es de CRÉDITO
-          bool isCreditSelected = false;
-          try {
-            final cardObj = finance.myCards.firstWhere(
-              (c) => c.name == selectedCard,
-            );
-            isCreditSelected = cardObj.isCredit;
-          } catch (_) {
-            isCreditSelected = false;
+          // [FIX] Protección contra Dropdown Crash: Si la categoría seleccionada no existe en la lista, resetear.
+          if (!categories.contains(selectedCategory)) {
+            if (categories.isNotEmpty) selectedCategory = categories.first;
           }
+
+          // Verificar si es Crédito para mostrar slider de cuotas
+          bool isCreditSelected = finance.isCreditMethod(selectedCard);
 
           return Padding(
             padding: EdgeInsets.fromLTRB(
@@ -87,86 +95,41 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    "NUEVA OPERACIÓN",
+                    "REGISTRAR OPERACIÓN",
                     style: GoogleFonts.spaceMono(
-                      color: textColor,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
+                      color: textColor,
                     ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24),
 
-                  // Toggle Ingreso/Gasto
+                  // Toggle Gasto/Ingreso
                   Row(
                     children: [
                       Expanded(
-                        child: GestureDetector(
-                          onTap: () => setModalState(() => isExpense = true),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              color: isExpense
-                                  ? Colors.redAccent.withOpacity(0.2)
-                                  : Colors.transparent,
-                              border: Border.all(
-                                color: isExpense
-                                    ? Colors.redAccent
-                                    : (isDark
-                                          ? Colors.grey.shade800
-                                          : Colors.grey.shade300),
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Center(
-                              child: Text(
-                                "GASTO",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: isExpense
-                                      ? Colors.redAccent
-                                      : hintColor,
-                                ),
-                              ),
-                            ),
-                          ),
+                        child: _buildToggleBtn(
+                          "GASTO",
+                          isExpense,
+                          Colors.redAccent,
+                          () => setModalState(() => isExpense = true),
                         ),
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 12),
                       Expanded(
-                        child: GestureDetector(
-                          onTap: () => setModalState(() => isExpense = false),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              color: !isExpense
-                                  ? Colors.green.withOpacity(0.2)
-                                  : Colors.transparent,
-                              border: Border.all(
-                                color: !isExpense
-                                    ? Colors.green
-                                    : (isDark
-                                          ? Colors.grey.shade800
-                                          : Colors.grey.shade300),
-                              ),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Center(
-                              child: Text(
-                                "INGRESO",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: !isExpense ? Colors.green : hintColor,
-                                ),
-                              ),
-                            ),
-                          ),
+                        child: _buildToggleBtn(
+                          "INGRESO",
+                          !isExpense,
+                          Colors.green,
+                          () => setModalState(() => isExpense = false),
                         ),
                       ),
                     ],
                   ),
+                  const SizedBox(height: 24),
 
-                  const SizedBox(height: 20),
+                  // Inputs de Texto
                   _buildInput(
                     titleController,
                     'Concepto',
@@ -187,231 +150,96 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                   ),
                   const SizedBox(height: 16),
 
-                  // Selector de Categoría con botón de agregar
-                  if (selectedCategory != null)
-                    Row(
-                      children: [
-                        Expanded(
-                          child: DropdownButtonFormField<CategoryModel>(
-                            value: selectedCategory,
-                            dropdownColor: isDark
-                                ? Colors.grey[850]
-                                : Colors.white,
-                            style: TextStyle(color: textColor, fontSize: 16),
-                            decoration: InputDecoration(
-                              labelText: 'Categoría',
-                              labelStyle: TextStyle(color: hintColor),
-                              prefixIcon: Icon(
-                                Icons.category,
-                                color: hintColor,
-                              ),
-                              filled: true,
-                              fillColor: inputFillColor,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide.none,
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 16,
-                              ),
-                            ),
-                            items: categories
-                                .map(
-                                  (cat) => DropdownMenuItem(
-                                    value: cat,
-                                    child: Text(
-                                      cat.name,
-                                      style: TextStyle(color: textColor),
-                                    ),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (val) =>
-                                setModalState(() => selectedCategory = val),
+                  // Selector de Categoría + Botón Crear
+                  Row(
+                    children: [
+                      Expanded(
+                        child: DropdownButtonFormField<CategoryModel>(
+                          value: selectedCategory,
+                          dropdownColor: cardColor,
+                          style: TextStyle(color: textColor, fontSize: 16),
+                          decoration: _inputDecoration(
+                            'Categoría',
+                            Icons.category,
+                            hintColor,
+                            inputFillColor,
                           ),
-                        ),
-                        // [NUEVO] Botón para crear categoría
-                        IconButton(
-                          icon: const Icon(
-                            Icons.add_circle,
-                            color: Colors.cyanAccent,
-                            size: 28,
-                          ),
-                          tooltip: 'Nueva Categoría',
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (ctx) {
-                                final catController = TextEditingController();
-                                final colorNotifier = ValueNotifier<Color>(
-                                  Colors.blue,
-                                );
-
-                                return AlertDialog(
-                                  backgroundColor: isDark
-                                      ? Colors.grey[900]
-                                      : Colors.white,
-                                  title: Text(
-                                    "Nueva Categoría",
-                                    style: GoogleFonts.spaceMono(
-                                      color: textColor,
-                                    ),
-                                  ),
-                                  content: Column(
-                                    mainAxisSize: MainAxisSize.min,
+                          items: categories
+                              .map(
+                                (cat) => DropdownMenuItem(
+                                  value: cat,
+                                  child: Row(
                                     children: [
-                                      TextField(
-                                        controller: catController,
-                                        style: TextStyle(color: textColor),
-                                        decoration: InputDecoration(
-                                          labelText: 'Nombre',
-                                          labelStyle: TextStyle(
-                                            color: hintColor,
-                                          ),
-                                          filled: true,
-                                          fillColor: inputFillColor,
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                          ),
-                                        ),
+                                      Icon(
+                                        cat.icon,
+                                        color: cat.color,
+                                        size: 18,
                                       ),
-                                      const SizedBox(height: 16),
-                                      ValueListenableBuilder<Color>(
-                                        valueListenable: colorNotifier,
-                                        builder: (context, selectedColor, _) {
-                                          return Wrap(
-                                            spacing: 8,
-                                            children:
-                                                [
-                                                  Colors.blue,
-                                                  Colors.red,
-                                                  Colors.green,
-                                                  Colors.orange,
-                                                  Colors.purple,
-                                                  Colors.pink,
-                                                ].map((color) {
-                                                  return GestureDetector(
-                                                    onTap: () =>
-                                                        colorNotifier.value =
-                                                            color,
-                                                    child: Container(
-                                                      width: 40,
-                                                      height: 40,
-                                                      decoration: BoxDecoration(
-                                                        color: color,
-                                                        shape: BoxShape.circle,
-                                                        border:
-                                                            selectedColor ==
-                                                                color
-                                                            ? Border.all(
-                                                                color: Colors
-                                                                    .white,
-                                                                width: 3,
-                                                              )
-                                                            : null,
-                                                      ),
-                                                    ),
-                                                  );
-                                                }).toList(),
-                                          );
-                                        },
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        cat.name,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ],
                                   ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(ctx),
-                                      child: const Text("CANCELAR"),
-                                    ),
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.cyanAccent,
-                                        foregroundColor: Colors.black,
-                                      ),
-                                      onPressed: () async {
-                                        if (catController.text.isNotEmpty) {
-                                          await finance.addCategory(
-                                            catController.text,
-                                            colorNotifier.value.value,
-                                            Icons.category.codePoint,
-                                          );
-                                          Navigator.pop(ctx);
-
-                                          setModalState(() {
-                                            selectedCategory =
-                                                finance.categories.last;
-                                          });
-
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: Text(
-                                                'Categoría creada: ${catController.text}',
-                                              ),
-                                              backgroundColor: Colors.green,
-                                            ),
-                                          );
-                                        }
-                                      },
-                                      child: const Text("CREAR"),
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (val) {
+                            if (val != null)
+                              setModalState(() => selectedCategory = val);
                           },
                         ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: inputFillColor,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.add, color: Colors.cyan),
+                          onPressed: () {
+                            // Diálogo rápido para crear categoría
+                            _showQuickAddCategoryDialog(context, finance, (
+                              newCat,
+                            ) {
+                              setModalState(() {
+                                // Al volver, seleccionar la nueva
+                                if (finance.categories.contains(newCat)) {
+                                  selectedCategory = newCat;
+                                }
+                              });
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 16),
 
-                  // Selector de Tarjeta
+                  // Selector Medio de Pago
                   DropdownButtonFormField<String>(
                     value: selectedCard,
-                    dropdownColor: isDark ? Colors.grey[850] : Colors.white,
+                    dropdownColor: cardColor,
                     style: TextStyle(color: textColor, fontSize: 16),
-                    decoration: InputDecoration(
-                      labelText: 'Cuenta / Medio de Pago',
-                      labelStyle: TextStyle(color: hintColor),
-                      prefixIcon: Icon(
-                        Icons.credit_card,
-                        color: isExpense ? Colors.redAccent : Colors.green,
-                      ),
-                      filled: true,
-                      fillColor: inputFillColor,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
+                    decoration: _inputDecoration(
+                      'Medio de Pago',
+                      Icons.credit_card,
+                      hintColor,
+                      inputFillColor,
                     ),
                     items: cards
-                        .map(
-                          (card) => DropdownMenuItem(
-                            value: card,
-                            child: Text(
-                              card,
-                              style: TextStyle(color: textColor),
-                            ),
-                          ),
-                        )
+                        .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                         .toList(),
-                    onChanged: (val) {
-                      setModalState(() {
-                        selectedCard = val!;
-                        selectedInstallments = 1; // Resetear cuotas
-                      });
-                    },
+                    onChanged: (val) => setModalState(() {
+                      selectedCard = val!;
+                      selectedInstallments =
+                          1; // Resetear cuotas al cambiar tarjeta
+                    }),
                   ),
 
-                  // [NUEVO] SELECTOR DE CUOTAS
+                  // Slider de Cuotas (Solo si es Gasto + Tarjeta de Crédito)
                   if (isExpense && isCreditSelected) ...[
                     const SizedBox(height: 20),
                     Container(
@@ -419,10 +247,9 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                       decoration: BoxDecoration(
                         color: inputFillColor,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.cyan.withOpacity(0.3)),
+                        border: Border.all(color: Colors.cyan.withOpacity(0.5)),
                       ),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -436,10 +263,10 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                               ),
                               Text(
                                 selectedInstallments == 1
-                                    ? "Sin interés"
+                                    ? "Contado"
                                     : "Mensuales",
                                 style: TextStyle(
-                                  fontSize: 10,
+                                  fontSize: 12,
                                   color: hintColor,
                                 ),
                               ),
@@ -448,8 +275,8 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                           Slider(
                             value: selectedInstallments.toDouble(),
                             min: 1,
-                            max: 48,
-                            divisions: 47,
+                            max: 36, // Hasta 36 cuotas
+                            divisions: 35,
                             activeColor: Colors.cyan,
                             onChanged: (val) => setModalState(
                               () => selectedInstallments = val.toInt(),
@@ -460,16 +287,18 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                     ),
                   ],
 
-                  const SizedBox(height: 16),
-
+                  const SizedBox(height: 20),
                   // Selector de Fecha
                   ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: Icon(Icons.calendar_today, color: hintColor),
                     title: Text(
-                      DateFormat('dd/MM/yyyy').format(selectedDate),
-                      style: TextStyle(color: textColor),
+                      "Fecha: ${DateFormat('dd/MM/yyyy').format(selectedDate)}",
+                      style: TextStyle(
+                        color: textColor,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
+                    leading: Icon(Icons.calendar_today, color: hintColor),
                     onTap: () async {
                       final picked = await showDatePicker(
                         context: context,
@@ -482,36 +311,54 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                     },
                   ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: isExpense
                           ? Colors.redAccent
                           : Colors.green,
                       padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     onPressed: () {
                       if (titleController.text.isEmpty ||
-                          amountController.text.isEmpty ||
-                          selectedCategory == null)
+                          amountController.text.isEmpty)
                         return;
 
-                      final newTx = Transaction(
-                        id: DateTime.now().toString(),
-                        title: titleController.text,
-                        amount: double.tryParse(amountController.text) ?? 0,
-                        date: selectedDate,
-                        isExpense: isExpense,
-                        category: selectedCategory!,
-                        paymentMethod: selectedCard,
-                        installments: selectedInstallments,
-                      );
+                      // LÓGICA DE GUARDADO
+                      if (selectedInstallments > 1 &&
+                          isCreditSelected &&
+                          isExpense) {
+                        // Caso Cuotas: Usar el método especial que genera N transacciones
+                        finance.addInstallmentTransaction(
+                          title: titleController.text,
+                          totalAmount: double.parse(amountController.text),
+                          date: selectedDate,
+                          category: selectedCategory,
+                          paymentMethod: selectedCard,
+                          installments: selectedInstallments,
+                        );
+                      } else {
+                        // Caso Normal (1 cuota o ingreso)
+                        final newTx = Transaction(
+                          id: DateTime.now().toString(),
+                          title: titleController.text,
+                          amount: double.parse(amountController.text),
+                          date: selectedDate,
+                          isExpense: isExpense,
+                          category: selectedCategory,
+                          paymentMethod: selectedCard,
+                          installments: 1,
+                        );
+                        finance.addTransaction(newTx);
+                      }
 
-                      finance.addTransaction(newTx);
                       Navigator.pop(context);
                     },
                     child: Text(
-                      "REGISTRAR OPERACIÓN",
+                      "GUARDAR",
                       style: GoogleFonts.spaceMono(
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -527,58 +374,147 @@ class _TransactionsScreenState extends State<TransactionsScreen>
     );
   }
 
-  // Helper para inputs
-  Widget _buildInput(
-    TextEditingController ctrl,
-    String label,
-    IconData icon,
-    Color textColor,
-    Color hintColor,
-    Color fillColor, {
-    bool isNumber = false,
-  }) {
-    return TextField(
-      controller: ctrl,
-      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-      style: TextStyle(color: textColor),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(color: hintColor),
-        prefixIcon: Icon(icon, color: hintColor),
-        filled: true,
-        fillColor: fillColor,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+  // --- WIDGETS AUXILIARES DEL MODAL ---
+
+  void _showQuickAddCategoryDialog(
+    BuildContext context,
+    FinanceProvider finance,
+    Function(CategoryModel) onCreated,
+  ) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Nueva Categoría"),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(hintText: "Nombre"),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("CANCELAR"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (controller.text.isNotEmpty) {
+                // Crear categoría con color/icono por defecto por rapidez
+                finance
+                    .addCategory(
+                      controller.text,
+                      Colors.blue.value,
+                      Icons.label.codePoint,
+                    )
+                    .then((_) {
+                      // Buscar la categoría recién creada para seleccionarla
+                      final newCat = finance.categories.last;
+                      onCreated(newCat);
+                      Navigator.pop(ctx);
+                    });
+              }
+            },
+            child: const Text("CREAR"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToggleBtn(
+    String text,
+    bool isSelected,
+    Color color,
+    VoidCallback onTap,
+  ) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? color.withOpacity(0.2) : null,
+          border: Border.all(color: isSelected ? color : Colors.grey),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Center(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: isSelected ? color : Colors.grey,
+            ),
+          ),
         ),
       ),
     );
   }
 
+  InputDecoration _inputDecoration(
+    String label,
+    IconData icon,
+    Color hintColor,
+    Color fillColor,
+  ) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(color: hintColor),
+      prefixIcon: Icon(icon, color: hintColor),
+      filled: true,
+      fillColor: fillColor,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    );
+  }
+
+  Widget _buildInput(
+    TextEditingController ctrl,
+    String label,
+    IconData icon,
+    Color text,
+    Color hint,
+    Color fill, {
+    bool isNumber = false,
+  }) {
+    return TextField(
+      controller: ctrl,
+      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      style: TextStyle(color: text),
+      decoration: _inputDecoration(label, icon, hint, fill),
+    );
+  }
+
+  // --- BUILD PRINCIPAL ---
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final textColor = isDark ? Colors.white : Colors.black87;
+
+    // Colores de alto contraste para Light Mode
+    final bgColor = isDark
+        ? theme.scaffoldBackgroundColor
+        : const Color(0xFFF5F5F5);
 
     return Scaffold(
-      backgroundColor: isDark
-          ? theme.scaffoldBackgroundColor
-          : const Color(0xFFF5F5F5),
+      backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: isDark
-            ? theme.scaffoldBackgroundColor
-            : const Color(0xFFF5F5F5),
+        backgroundColor: bgColor,
         elevation: 0,
         title: Text(
           "REGISTRO TÁCTICO",
-          style: GoogleFonts.spaceMono(fontWeight: FontWeight.bold),
+          style: GoogleFonts.spaceMono(
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.onSurface,
+          ),
         ),
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: Colors.cyanAccent,
-          labelColor: Colors.cyanAccent,
-          unselectedLabelColor: textColor.withOpacity(0.6),
+          indicatorColor: Colors.cyan,
+          labelColor: Colors.cyan,
+          unselectedLabelColor: Colors.grey,
           labelStyle: GoogleFonts.spaceMono(fontWeight: FontWeight.bold),
           tabs: const [
             Tab(text: "EJECUTADO"),
@@ -587,16 +523,21 @@ class _TransactionsScreenState extends State<TransactionsScreen>
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.cyanAccent,
+        backgroundColor: Colors.cyan,
         child: const Icon(Icons.add, color: Colors.black),
         onPressed: () => _showAddTransactionDialog(context),
       ),
       body: Consumer<FinanceProvider>(
         builder: (context, finance, child) {
           final transactions = finance.transactions;
+          if (transactions.isEmpty)
+            return const Center(child: Text("Sin registros."));
+
+          // Separación de fechas
           final now = DateTime.now();
           final endOfToday = DateTime(now.year, now.month, now.day, 23, 59, 59);
 
+          // Filtros
           final futureTxs = transactions
               .where((tx) => tx.date.isAfter(endOfToday))
               .toList();
@@ -608,8 +549,13 @@ class _TransactionsScreenState extends State<TransactionsScreen>
               )
               .toList();
 
-          futureTxs.sort((a, b) => a.date.compareTo(b.date));
-          historyTxs.sort((a, b) => b.date.compareTo(a.date));
+          // Ordenamiento
+          futureTxs.sort(
+            (a, b) => a.date.compareTo(b.date),
+          ); // Futuro: Ascendente (Próximo primero)
+          historyTxs.sort(
+            (a, b) => b.date.compareTo(a.date),
+          ); // Pasado: Descendente (Reciente primero)
 
           return TabBarView(
             controller: _tabController,
@@ -653,27 +599,22 @@ class _TransactionsScreenState extends State<TransactionsScreen>
       padding: const EdgeInsets.all(16),
       itemCount: txs.length,
       itemBuilder: (context, index) {
-        final tx = txs[index];
-        return _buildTransactionItem(context, tx, isFuture: isFuture);
+        return _buildDismissibleTransaction(
+          context,
+          txs[index],
+          isFuture: isFuture,
+        );
       },
     );
   }
 
-  Widget _buildTransactionItem(
+  Widget _buildDismissibleTransaction(
     BuildContext context,
     Transaction tx, {
     required bool isFuture,
   }) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final dateStr = DateFormat(
-      'EEE d MMM',
-      'es_ES',
-    ).format(tx.date).toUpperCase();
-    final isExpense = tx.isExpense;
     final finance = Provider.of<FinanceProvider>(context, listen: false);
 
-    // [NUEVO] Envolver en Dismissible para swipe-to-delete
     return Dismissible(
       key: Key(tx.id),
       direction: DismissDirection.endToStart,
@@ -689,7 +630,7 @@ class _TransactionsScreenState extends State<TransactionsScreen>
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Text(
-              "ELIMINAR OPERACIÓN",
+              "ELIMINAR",
               style: GoogleFonts.spaceMono(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -703,14 +644,15 @@ class _TransactionsScreenState extends State<TransactionsScreen>
       onDismissed: (_) {
         final deletedTx = tx;
         finance.deleteTransaction(tx.id);
+
+        // [FIX] Limpiar SnackBars acumulados para que el botón Deshacer sea visible
+        ScaffoldMessenger.of(context).clearSnackBars();
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              "${tx.title} eliminado.",
-              style: GoogleFonts.spaceMono(),
-            ),
-            backgroundColor: Colors.grey[900],
+            content: Text("${tx.title} eliminado."),
             behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
             action: SnackBarAction(
               label: 'DESHACER',
               textColor: Colors.cyanAccent,
@@ -719,128 +661,134 @@ class _TransactionsScreenState extends State<TransactionsScreen>
           ),
         );
       },
-      child: Card(
-        elevation: 0,
-        color: isFuture
-            ? (isDark ? const Color(0xFF102027) : Colors.blue.shade50)
-            : theme.cardColor,
-        margin: const EdgeInsets.only(bottom: 8),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: isFuture
-              ? BorderSide(color: Colors.cyanAccent.withOpacity(0.3), width: 1)
-              : BorderSide.none,
+      child: _TransactionCard(tx: tx, isFuture: isFuture),
+    );
+  }
+}
+
+class _TransactionCard extends StatelessWidget {
+  final Transaction tx;
+  final bool isFuture;
+
+  const _TransactionCard({required this.tx, required this.isFuture});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // Formato
+    final dateStr = DateFormat(
+      'EEE d MMM',
+      'es_ES',
+    ).format(tx.date).toUpperCase();
+    final isExpense = tx.isExpense;
+
+    return Card(
+      elevation: 0,
+      // Alto Contraste para Light Mode (Blanco) y Dark Mode (Oscuro con tinte)
+      color: isFuture
+          ? (isDark ? const Color(0xFF102027) : Colors.blue.shade50)
+          : theme.cardColor,
+      margin: const EdgeInsets.only(bottom: 8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: isFuture
+            ? BorderSide(color: Colors.cyan.withOpacity(0.3))
+            : BorderSide.none,
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        leading: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              dateStr.split(' ')[0],
+              style: GoogleFonts.blackOpsOne(fontSize: 10, color: Colors.grey),
+            ),
+            Text(
+              dateStr.split(' ')[1],
+              style: GoogleFonts.blackOpsOne(
+                fontSize: 18,
+                color: isFuture ? Colors.cyan : theme.colorScheme.onSurface,
+              ),
+            ),
+          ],
         ),
-        child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 4,
+        title: Text(
+          tx.title,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 15,
+            color: theme.colorScheme.onSurface,
           ),
-          leading: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                dateStr.split(' ')[0],
-                style: GoogleFonts.blackOpsOne(
-                  fontSize: 10,
-                  color: Colors.grey,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        subtitle: Row(
+          children: [
+            // Badge Medio de Pago
+            if (tx.paymentMethod != null)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  tx.paymentMethod!.toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface.withOpacity(0.7),
+                  ),
                 ),
               ),
-              Text(
-                dateStr.split(' ')[1],
-                style: GoogleFonts.blackOpsOne(
-                  fontSize: 18,
-                  color: isFuture
-                      ? Colors.cyanAccent
-                      : theme.colorScheme.onSurface,
+            // Badge Cuotas
+            if (tx.installments > 1) ...[
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: Colors.orange.withOpacity(0.5)),
+                ),
+                child: Text(
+                  '${tx.installments}x CUOTAS',
+                  style: const TextStyle(
+                    fontSize: 8,
+                    color: Colors.orange,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
-          ),
-          title: Text(
-            tx.title,
-            style: TextStyle(
-              color: theme.colorScheme.onSurface,
-              fontWeight: FontWeight.w600,
-              fontSize: 15,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          subtitle: Row(
-            children: [
-              if (tx.paymentMethod != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    tx.paymentMethod!.toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 9,
-                      color: theme.colorScheme.onSurface.withOpacity(0.7),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+            // Badge Pendiente
+            if (isFuture) ...[
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                decoration: BoxDecoration(
+                  color: Colors.cyan.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(3),
                 ),
-              if (tx.installments > 1) ...[
-                const SizedBox(width: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(
-                      color: Colors.orange.withOpacity(0.5),
-                      width: 0.5,
-                    ),
-                  ),
-                  child: Text(
-                    '${tx.installments}x CUOTAS',
-                    style: const TextStyle(
-                      fontSize: 8,
-                      color: Colors.orange,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                child: const Text(
+                  "PENDIENTE",
+                  style: TextStyle(fontSize: 8, color: Colors.cyan),
                 ),
-              ],
-              if (isFuture) ...[
-                const SizedBox(width: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 1,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.cyan.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                  child: const Text(
-                    "PENDIENTE",
-                    style: TextStyle(fontSize: 8, color: Colors.cyanAccent),
-                  ),
-                ),
-              ],
+              ),
             ],
-          ),
-          trailing: Text(
-            '\$${tx.amount.toStringAsFixed(0)}',
-            style: GoogleFonts.spaceMono(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: isExpense
-                  ? (isFuture ? Colors.orangeAccent : Colors.redAccent)
-                  : Colors.greenAccent,
-            ),
+          ],
+        ),
+        trailing: Text(
+          '\$${tx.amount.toStringAsFixed(0)}',
+          style: GoogleFonts.spaceMono(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: isExpense
+                ? (isFuture ? Colors.orange : Colors.red)
+                : Colors.green,
           ),
         ),
       ),

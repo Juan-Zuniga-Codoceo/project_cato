@@ -4,8 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/providers/finance_provider.dart';
 import '../../domain/models/wallet_card.dart';
-import '../../domain/models/transaction.dart';
-import '../../domain/models/category.dart';
 
 class CardDetailScreen extends StatelessWidget {
   final WalletCard card;
@@ -93,49 +91,12 @@ class CardDetailScreen extends StatelessWidget {
                 if (amountController.text.isNotEmpty) {
                   final amount = double.parse(amountController.text);
 
-                  // Buscar o crear categoría de pago
-                  CategoryModel? paymentCategory;
-                  try {
-                    paymentCategory = finance.categories.firstWhere(
-                      (c) => c.name.toLowerCase().contains('pago'),
-                    );
-                  } catch (_) {
-                    // Si no existe, usar la primera disponible
-                    paymentCategory = finance.categories.isNotEmpty
-                        ? finance.categories.first
-                        : null;
-                  }
-
-                  if (paymentCategory != null) {
-                    // 1. Registrar el GASTO en la cuenta de origen (baja liquidez)
-                    finance.addTransaction(
-                      Transaction(
-                        id: "${DateTime.now().millisecondsSinceEpoch}_out",
-                        title: "PAGO TARJETA ${card.name}",
-                        amount: amount,
-                        date: DateTime.now(),
-                        isExpense: true, // Gasto
-                        category: paymentCategory,
-                        paymentMethod:
-                            selectedSource, // Sale de Débito/Efectivo
-                        installments: 1,
-                      ),
-                    );
-
-                    // 2. Registrar el INGRESO en la TC (baja deuda)
-                    finance.addTransaction(
-                      Transaction(
-                        id: "${DateTime.now().millisecondsSinceEpoch}_in",
-                        title: "ABONO/PAGO",
-                        amount: amount,
-                        date: DateTime.now(),
-                        isExpense: false, // Ingreso a la TC
-                        category: paymentCategory,
-                        paymentMethod: card.name, // Entra a la TC
-                        installments: 1,
-                      ),
-                    );
-                  }
+                  // [FIX] Usar método centralizado del Provider
+                  finance.processCreditCardPayment(
+                    cardName: card.name,
+                    amount: amount,
+                    sourceMethod: selectedSource,
+                  );
 
                   Navigator.pop(context);
 
