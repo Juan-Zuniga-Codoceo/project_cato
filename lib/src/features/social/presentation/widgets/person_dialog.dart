@@ -134,7 +134,7 @@ class _PersonDialogState extends State<PersonDialog> {
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<int>(
-              value: _frequency,
+              initialValue: _frequency,
               decoration: const InputDecoration(
                 contentPadding: EdgeInsets.symmetric(
                   horizontal: 12,

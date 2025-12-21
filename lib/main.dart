@@ -122,10 +122,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Verificar configuración de seguridad
-    final bool isBiometricEnabled = storageService.settingsBox.get(
-      'isBiometricEnabled',
-      defaultValue: false,
+    // [FIX] Leer configuración biométrica desde Hive
+    final isBiometricEnabled = storageService.settingsBox.get(
+      'biometricAuth',
+      defaultValue: true, // Por defecto activado
     );
 
     return MultiProvider(

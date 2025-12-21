@@ -5,7 +5,6 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import '../../providers/academic_provider.dart';
 import '../../domain/models/academic_event_model.dart';
-import '../../domain/models/subject_model.dart';
 
 class AcademicCalendarScreen extends StatefulWidget {
   const AcademicCalendarScreen({super.key});
@@ -179,7 +178,7 @@ class _AcademicCalendarScreenState extends State<AcademicCalendarScreen> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    value: selectedType,
+                    initialValue: selectedType,
                     decoration: const InputDecoration(labelText: 'Tipo'),
                     items: const [
                       DropdownMenuItem(value: 'Examen', child: Text('Examen')),
@@ -197,7 +196,7 @@ class _AcademicCalendarScreenState extends State<AcademicCalendarScreen> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
-                    value: selectedSubjectId,
+                    initialValue: selectedSubjectId,
                     decoration: const InputDecoration(
                       labelText: 'Ramo (Opcional)',
                     ),

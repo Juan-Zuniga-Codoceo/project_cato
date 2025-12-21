@@ -18,8 +18,8 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   void initState() {
     super.initState();
-    // Retraso para asegurar que el contexto esté listo
-    Future.delayed(const Duration(seconds: 1), _authenticate);
+    // [RESTAURADO] Versión original que funcionaba - sin delays
+    _authenticate();
   }
 
   Future<void> _authenticate() async {
@@ -32,15 +32,10 @@ class _AuthScreenState extends State<AuthScreen> {
         _statusMessage = 'Escaneando biometría...';
       });
 
-      // SINTAXIS CORRECTA V3.0.0:
-      // En local_auth 3.0.0+ NO se usa ninguna clase de opciones
-      // Los parámetros se pasan directamente como argumentos nombrados
-      // [FIX] Permitir PIN/Patrón si la huella falla
+      // SINTAXIS CORRECTA local_auth 3.0
       authenticated = await auth.authenticate(
         localizedReason: 'Identifícate para acceder a CATO OS',
-        // Permitimos métodos alternativos (PIN/Patrón)
         biometricOnly: false,
-        // sensitiveTransaction: true, // Comentado para evitar bloqueos
       );
 
       setState(() {

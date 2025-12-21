@@ -78,7 +78,7 @@ class _CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _fromCurrency,
+                    initialValue: _fromCurrency,
                     decoration: const InputDecoration(labelText: 'De'),
                     items: _rates.keys.map((String currency) {
                       return DropdownMenuItem<String>(
@@ -98,7 +98,7 @@ class _CurrencyConverterScreenState extends State<CurrencyConverterScreen> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _toCurrency,
+                    initialValue: _toCurrency,
                     decoration: const InputDecoration(labelText: 'A'),
                     items: _rates.keys.map((String currency) {
                       return DropdownMenuItem<String>(

@@ -245,7 +245,7 @@ class _TaskModalContentState extends State<_TaskModalContent> {
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
-            value: _selectedAttribute,
+            initialValue: _selectedAttribute,
             decoration: const InputDecoration(
               labelText: 'Atributo RPG',
               border: OutlineInputBorder(),
@@ -257,8 +257,9 @@ class _TaskModalContentState extends State<_TaskModalContent> {
             onChanged: _isSaving
                 ? null
                 : (value) {
-                    if (value != null)
+                    if (value != null) {
                       setState(() => _selectedAttribute = value);
+                    }
                   },
           ),
           const SizedBox(height: 16),
@@ -327,7 +328,7 @@ class _TaskModalContentState extends State<_TaskModalContent> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<CategoryModel>(
-                    value: _selectedCategory,
+                    initialValue: _selectedCategory,
                     decoration: const InputDecoration(
                       labelText: 'Categoría',
                       border: OutlineInputBorder(),

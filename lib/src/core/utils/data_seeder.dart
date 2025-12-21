@@ -10,11 +10,8 @@ import '../../features/garage/domain/models/vehicle.dart';
 import '../../features/garage/domain/models/maintenance.dart';
 import '../../features/gamification/providers/achievement_provider.dart';
 import '../../features/academic/providers/academic_provider.dart';
-import '../../features/academic/domain/models/subject_model.dart';
-import '../../features/academic/domain/models/evaluation_model.dart';
 import '../services/home_widget_service.dart';
 import '../../features/tasks/providers/task_provider.dart';
-import '../../features/tasks/domain/models/task_model.dart';
 
 class DataSeeder {
   static const Uuid _uuid = Uuid();

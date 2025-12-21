@@ -1,0 +1,84 @@
+  // [NUEVO] Deuda Total Acumulada (Solo TC)
+  // Suma todos los gastos hechos con TC que aún no se han "pagado" explícitamente
+  // (En este modelo simple, asumimos que todo gasto TC es deuda hasta que se pague la tarjeta)
+  double get totalCreditDebt {
+    return transactions
+        .where(
+          (tx) =>
+              tx.isExpense &&
+              tx.paymentMethod != null &&
+              tx.paymentMethod!.startsWith('TC'),
+        )
+        .fold(0.0, (sum, tx) => sum + tx.amount);
+  }
+
+  // --- WALLET MANAGEMENT ---
+  Box<WalletCard> get _walletBox => _storageService.walletBox;
+  List<WalletCard> get myCards => _walletBox.values.toList();
+
+  void addCard(WalletCard card) {
+    _walletBox.put(card.id, card);
+    notifyListeners();
+  }
+
+  void deleteCard(String id) {
+    _walletBox.delete(id);
+    notifyListeners();
+  }
+
+  // Lista de Bancos Chilenos para el Dropdown
+  final List<String> chileanBanks = [
+    'Banco Estado', 'Banco de Chile', 'Banco Santander', 'Banco BCI',
+    'Scotiabank', 'Itaú', 'Banco Falabella', 'Banco Ripley',
+    'Mercado Pago', 'Tenpo', 'Mach', 'Coopeuch', 'Banco Security', 'Banco Consorcio', 'Otro'
+  ];
+
+  // Modificar getActivePaymentMethods para usar las tarjetas reales + Efectivo
+  List<String> getAvailablePaymentMethods() {
+    List<String> methods = ['Efectivo']; // Siempre disponible
+    for (var card in myCards) {
+      methods.add(card.name);
+    }
+    return methods;
+  }
+
+  // Verificar si un método de pago es Crédito (Deuda)
+  bool isCreditMethod(String methodName) {
+    if (methodName == 'Efectivo') return false;
+    try {
+      final card = myCards.firstWhere((c) => c.name == methodName);
+      return card.isCredit;
+    } catch (_) {
+      // Si no encuentra la tarjeta, revisamos si empieza con TC (legacy)
+      return methodName.startsWith('TC');
+    }
+  }
+
+  // --- ALERTAS DE PAGO ---
+  List<String> getPaymentAlerts() {
+    final alerts = <String>[];
+    final now = DateTime.now();
+    
+    for (var card in myCards) {
+      if (card.isCredit) {
+        // Calcular días para el pago
+        var nextPayment = DateTime(now.year, now.month, card.paymentDay);
+        if (nextPayment.isBefore(now)) {
+          nextPayment = DateTime(now.year, now.month + 1, card.paymentDay);
+        }
+        
+        final diff = nextPayment.difference(now).inDays;
+        
+        // Alerta si faltan 5 días o menos
+        if (diff <= 5 && diff >= 0) {
+          final debt = getMonthlyPaymentForCard(card.name);
+          if (debt > 0) {
+            alerts.add('Pagar ${card.name}: \$${debt.toStringAsFixed(0)} en $diff días');
+          }
+        }
+      }
+    }
+    return alerts;
+  }
+
+  double get totalExpenses {

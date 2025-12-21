@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../../../../core/providers/finance_provider.dart';
 import '../../domain/models/budget.dart';
 import '../../domain/models/category.dart';
@@ -56,7 +55,7 @@ class BudgetsScreen extends StatelessWidget {
                     children: [
                       Expanded(
                         child: DropdownButtonFormField<CategoryModel>(
-                          value: selectedCategory,
+                          initialValue: selectedCategory,
                           decoration: const InputDecoration(
                             labelText: 'Categoría',
                             border: OutlineInputBorder(),

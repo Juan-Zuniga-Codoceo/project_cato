@@ -449,25 +449,22 @@ class _AddRewardFormState extends State<_AddRewardForm> {
             child: const Text('CANCELAR'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               if (nameController.text.isNotEmpty) {
                 final provider = Provider.of<FinanceProvider>(
                   context,
                   listen: false,
                 );
-                // Creamos una categoría básica (Icono y color por defecto o aleatorios si quisieras mejorar)
-                final newCategory = CategoryModel(
-                  id: DateTime.now().toString(),
-                  name: nameController.text.trim(),
-                  iconCode: Icons.local_offer.codePoint, // Icono genérico
-                  colorValue: Colors.purpleAccent.value, // Color genérico
-                  isDefault: false,
-                );
-                provider.addCategory(newCategory);
 
-                // Actualizar selección
+                await provider.addCategory(
+                  nameController.text.trim(),
+                  Colors.purpleAccent.value,
+                  Icons.local_offer.codePoint,
+                );
+
+                // Actualizar selección con la última categoría creada
                 setState(() {
-                  _selectedCategory = newCategory;
+                  _selectedCategory = provider.categories.last;
                 });
 
                 Navigator.pop(context);
@@ -532,7 +529,7 @@ class _AddRewardFormState extends State<_AddRewardForm> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<CategoryModel>(
-                    value: _selectedCategory,
+                    initialValue: _selectedCategory,
                     decoration: const InputDecoration(
                       labelText: 'Categoría Financiera',
                       prefixIcon: Icon(Icons.category),

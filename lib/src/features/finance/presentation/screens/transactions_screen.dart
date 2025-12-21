@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/providers/finance_provider.dart';
 import '../../domain/models/transaction.dart';
 import '../../domain/models/category.dart';
-import 'manage_categories_screen.dart';
 
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({super.key});
@@ -29,319 +29,620 @@ class _TransactionsScreenState extends State<TransactionsScreen>
     super.dispose();
   }
 
-  void _showTransactionModal(
-    BuildContext context, {
-    Transaction? transactionToEdit,
-  }) {
-    final provider = Provider.of<FinanceProvider>(context, listen: false);
-    final isExpenseTab = _tabController.index == 0;
-    final titleController = TextEditingController(
-      text: transactionToEdit?.title,
-    );
-    final amountController = TextEditingController(
-      text: transactionToEdit?.amount.toStringAsFixed(0),
-    );
+  // --- MÉTODO PARA AGREGAR TRANSACCIÓN ---
+  void _showAddTransactionDialog(BuildContext context) {
+    final finance = Provider.of<FinanceProvider>(context, listen: false);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
-    CategoryModel? selectedCategory;
-    if (transactionToEdit != null) {
-      selectedCategory = transactionToEdit.category;
-    } else {
-      if (provider.categories.isNotEmpty) {
-        selectedCategory = provider.categories.first;
-      }
-    }
+    // Colores dinámicos
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final hintColor = isDark ? Colors.grey : Colors.grey.shade600;
+    final inputFillColor = isDark ? Colors.black26 : Colors.grey.shade100;
 
-    DateTime selectedDate = transactionToEdit?.date ?? DateTime.now();
-    bool isExpense = transactionToEdit?.isExpense ?? isExpenseTab;
+    final cards = finance.getAvailablePaymentMethods();
+    final categories = finance.categories;
+
+    // Controladores
+    final titleController = TextEditingController();
+    final amountController = TextEditingController();
+    CategoryModel? selectedCategory = categories.isNotEmpty
+        ? categories.first
+        : null;
+    String selectedCard = cards.isNotEmpty ? cards.first : 'Efectivo';
+    bool isExpense = true;
+    DateTime selectedDate = DateTime.now();
+    int selectedInstallments = 1; // [NUEVO] Variable para cuotas
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            final categories = provider.categories;
-            if (selectedCategory == null && categories.isNotEmpty) {
-              selectedCategory = categories.first;
-            }
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          // Verificar si la tarjeta seleccionada es de CRÉDITO
+          bool isCreditSelected = false;
+          try {
+            final cardObj = finance.myCards.firstWhere(
+              (c) => c.name == selectedCard,
+            );
+            isCreditSelected = cardObj.isCredit;
+          } catch (_) {
+            isCreditSelected = false;
+          }
 
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-                left: 20,
-                right: 20,
-                top: 20,
-              ),
+          return Padding(
+            padding: EdgeInsets.fromLTRB(
+              24,
+              24,
+              24,
+              MediaQuery.of(context).viewInsets.bottom + 24,
+            ),
+            child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        transactionToEdit == null
-                            ? (isExpense ? 'Nuevo Gasto' : 'Nuevo Ingreso')
-                            : 'Editar Transacción',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      // Botón de configuración de categorías
-                      IconButton(
-                        icon: const Icon(Icons.settings),
-                        onPressed: () async {
-                          await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  const ManageCategoriesScreen(),
-                            ),
-                          );
-                          setModalState(() {
-                            if (provider.categories.isNotEmpty &&
-                                selectedCategory == null) {
-                              selectedCategory = provider.categories.first;
-                            }
-                          });
-                        },
-                        tooltip: 'Gestionar Categorías',
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  TextField(
-                    controller: titleController,
-                    decoration: const InputDecoration(
-                      labelText: 'Título',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.title),
+                  Text(
+                    "NUEVA OPERACIÓN",
+                    style: GoogleFonts.spaceMono(
+                      color: textColor,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
-                    textCapitalization: TextCapitalization.sentences,
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: amountController,
-                    decoration: const InputDecoration(
-                      labelText: 'Monto',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.attach_money),
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: DropdownButtonFormField<CategoryModel>(
-                          value:
-                              selectedCategory, // Usamos value en lugar de initialValue para reactividad
-                          decoration: const InputDecoration(
-                            labelText: 'Categoría',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.category),
-                          ),
-                          items: categories.map((category) {
-                            return DropdownMenuItem(
-                              value: category,
-                              child: Row(
-                                children: [
-                                  Icon(category.icon, color: category.color),
-                                  const SizedBox(width: 8),
-                                  Text(category.name),
-                                ],
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (value) {
-                            if (value != null) {
-                              setModalState(() {
-                                selectedCategory = value;
-                              });
-                            }
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: InkWell(
-                          onTap: () async {
-                            final picked = await showDatePicker(
-                              context: context,
-                              initialDate: selectedDate,
-                              firstDate: DateTime(2020),
-                              lastDate: DateTime.now(),
-                            );
-                            if (picked != null) {
-                              setModalState(() {
-                                selectedDate = picked;
-                              });
-                            }
-                          },
-                          child: InputDecorator(
-                            decoration: const InputDecoration(
-                              labelText: 'Fecha',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.calendar_today),
-                            ),
-                            child: Text(
-                              DateFormat('dd/MM/yyyy').format(selectedDate),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                    textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: () {
-                      final title = titleController.text.trim();
-                      final amount = double.tryParse(
-                        amountController.text.trim(),
-                      );
 
-                      if (title.isNotEmpty &&
-                          amount != null &&
-                          selectedCategory != null) {
-                        final newTransaction = Transaction(
-                          id:
-                              transactionToEdit?.id ??
-                              DateTime.now().toString(),
-                          title: title,
-                          amount: amount,
-                          date: selectedDate,
-                          isExpense: isExpense,
-                          category: selectedCategory!,
-                        );
-
-                        if (transactionToEdit != null) {
-                          provider.updateTransaction(newTransaction);
-                        } else {
-                          provider.addTransaction(newTransaction);
-                        }
-                        Navigator.pop(context);
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: isExpense ? Colors.red : Colors.green,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: Text(
-                      transactionToEdit == null ? 'Guardar' : 'Guardar Cambios',
-                    ),
-                  ),
-                  // [NUEVO] Botón de Eliminar solo si estamos editando
-                  if (transactionToEdit != null) ...[
-                    const SizedBox(height: 12),
-                    TextButton.icon(
-                      onPressed: () {
-                        // Confirmación opcional
-                        showDialog(
-                          context: context,
-                          builder: (ctx) => AlertDialog(
-                            title: const Text('¿Eliminar?'),
-                            content: const Text(
-                              'Esta acción no se puede deshacer.',
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(ctx),
-                                child: const Text('CANCELAR'),
+                  // Toggle Ingreso/Gasto
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setModalState(() => isExpense = true),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: isExpense
+                                  ? Colors.redAccent.withOpacity(0.2)
+                                  : Colors.transparent,
+                              border: Border.all(
+                                color: isExpense
+                                    ? Colors.redAccent
+                                    : (isDark
+                                          ? Colors.grey.shade800
+                                          : Colors.grey.shade300),
                               ),
-                              TextButton(
-                                onPressed: () {
-                                  provider.deleteTransaction(
-                                    transactionToEdit.id,
-                                  );
-                                  Navigator.pop(ctx); // Cerrar alerta
-                                  Navigator.pop(context); // Cerrar modal
-                                },
-                                style: TextButton.styleFrom(
-                                  foregroundColor: Colors.red,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Center(
+                              child: Text(
+                                "GASTO",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: isExpense
+                                      ? Colors.redAccent
+                                      : hintColor,
                                 ),
-                                child: const Text('ELIMINAR'),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setModalState(() => isExpense = false),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              color: !isExpense
+                                  ? Colors.green.withOpacity(0.2)
+                                  : Colors.transparent,
+                              border: Border.all(
+                                color: !isExpense
+                                    ? Colors.green
+                                    : (isDark
+                                          ? Colors.grey.shade800
+                                          : Colors.grey.shade300),
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Center(
+                              child: Text(
+                                "INGRESO",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: !isExpense ? Colors.green : hintColor,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+                  _buildInput(
+                    titleController,
+                    'Concepto',
+                    Icons.description,
+                    textColor,
+                    hintColor,
+                    inputFillColor,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildInput(
+                    amountController,
+                    'Monto',
+                    Icons.attach_money,
+                    textColor,
+                    hintColor,
+                    inputFillColor,
+                    isNumber: true,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Selector de Categoría con botón de agregar
+                  if (selectedCategory != null)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: DropdownButtonFormField<CategoryModel>(
+                            value: selectedCategory,
+                            dropdownColor: isDark
+                                ? Colors.grey[850]
+                                : Colors.white,
+                            style: TextStyle(color: textColor, fontSize: 16),
+                            decoration: InputDecoration(
+                              labelText: 'Categoría',
+                              labelStyle: TextStyle(color: hintColor),
+                              prefixIcon: Icon(
+                                Icons.category,
+                                color: hintColor,
+                              ),
+                              filled: true,
+                              fillColor: inputFillColor,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 16,
+                              ),
+                            ),
+                            items: categories
+                                .map(
+                                  (cat) => DropdownMenuItem(
+                                    value: cat,
+                                    child: Text(
+                                      cat.name,
+                                      style: TextStyle(color: textColor),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (val) =>
+                                setModalState(() => selectedCategory = val),
+                          ),
+                        ),
+                        // [NUEVO] Botón para crear categoría
+                        IconButton(
+                          icon: const Icon(
+                            Icons.add_circle,
+                            color: Colors.cyanAccent,
+                            size: 28,
+                          ),
+                          tooltip: 'Nueva Categoría',
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (ctx) {
+                                final catController = TextEditingController();
+                                final colorNotifier = ValueNotifier<Color>(
+                                  Colors.blue,
+                                );
+
+                                return AlertDialog(
+                                  backgroundColor: isDark
+                                      ? Colors.grey[900]
+                                      : Colors.white,
+                                  title: Text(
+                                    "Nueva Categoría",
+                                    style: GoogleFonts.spaceMono(
+                                      color: textColor,
+                                    ),
+                                  ),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      TextField(
+                                        controller: catController,
+                                        style: TextStyle(color: textColor),
+                                        decoration: InputDecoration(
+                                          labelText: 'Nombre',
+                                          labelStyle: TextStyle(
+                                            color: hintColor,
+                                          ),
+                                          filled: true,
+                                          fillColor: inputFillColor,
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      ValueListenableBuilder<Color>(
+                                        valueListenable: colorNotifier,
+                                        builder: (context, selectedColor, _) {
+                                          return Wrap(
+                                            spacing: 8,
+                                            children:
+                                                [
+                                                  Colors.blue,
+                                                  Colors.red,
+                                                  Colors.green,
+                                                  Colors.orange,
+                                                  Colors.purple,
+                                                  Colors.pink,
+                                                ].map((color) {
+                                                  return GestureDetector(
+                                                    onTap: () =>
+                                                        colorNotifier.value =
+                                                            color,
+                                                    child: Container(
+                                                      width: 40,
+                                                      height: 40,
+                                                      decoration: BoxDecoration(
+                                                        color: color,
+                                                        shape: BoxShape.circle,
+                                                        border:
+                                                            selectedColor ==
+                                                                color
+                                                            ? Border.all(
+                                                                color: Colors
+                                                                    .white,
+                                                                width: 3,
+                                                              )
+                                                            : null,
+                                                      ),
+                                                    ),
+                                                  );
+                                                }).toList(),
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx),
+                                      child: const Text("CANCELAR"),
+                                    ),
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.cyanAccent,
+                                        foregroundColor: Colors.black,
+                                      ),
+                                      onPressed: () async {
+                                        if (catController.text.isNotEmpty) {
+                                          await finance.addCategory(
+                                            catController.text,
+                                            colorNotifier.value.value,
+                                            Icons.category.codePoint,
+                                          );
+                                          Navigator.pop(ctx);
+
+                                          setModalState(() {
+                                            selectedCategory =
+                                                finance.categories.last;
+                                          });
+
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                'Categoría creada: ${catController.text}',
+                                              ),
+                                              backgroundColor: Colors.green,
+                                            ),
+                                          );
+                                        }
+                                      },
+                                      child: const Text("CREAR"),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  const SizedBox(height: 16),
+
+                  // Selector de Tarjeta
+                  DropdownButtonFormField<String>(
+                    value: selectedCard,
+                    dropdownColor: isDark ? Colors.grey[850] : Colors.white,
+                    style: TextStyle(color: textColor, fontSize: 16),
+                    decoration: InputDecoration(
+                      labelText: 'Cuenta / Medio de Pago',
+                      labelStyle: TextStyle(color: hintColor),
+                      prefixIcon: Icon(
+                        Icons.credit_card,
+                        color: isExpense ? Colors.redAccent : Colors.green,
+                      ),
+                      filled: true,
+                      fillColor: inputFillColor,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                    ),
+                    items: cards
+                        .map(
+                          (card) => DropdownMenuItem(
+                            value: card,
+                            child: Text(
+                              card,
+                              style: TextStyle(color: textColor),
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (val) {
+                      setModalState(() {
+                        selectedCard = val!;
+                        selectedInstallments = 1; // Resetear cuotas
+                      });
+                    },
+                  ),
+
+                  // [NUEVO] SELECTOR DE CUOTAS
+                  if (isExpense && isCreditSelected) ...[
+                    const SizedBox(height: 20),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: inputFillColor,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.cyan.withOpacity(0.3)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "CUOTAS: $selectedInstallments",
+                                style: GoogleFonts.spaceMono(
+                                  fontWeight: FontWeight.bold,
+                                  color: textColor,
+                                ),
+                              ),
+                              Text(
+                                selectedInstallments == 1
+                                    ? "Sin interés"
+                                    : "Mensuales",
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: hintColor,
+                                ),
                               ),
                             ],
                           ),
-                        );
-                      },
-                      icon: const Icon(Icons.delete_outline, color: Colors.red),
-                      label: const Text(
-                        'ELIMINAR TRANSACCIÓN',
-                        style: TextStyle(color: Colors.red),
+                          Slider(
+                            value: selectedInstallments.toDouble(),
+                            min: 1,
+                            max: 48,
+                            divisions: 47,
+                            activeColor: Colors.cyan,
+                            onChanged: (val) => setModalState(
+                              () => selectedInstallments = val.toInt(),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
+
+                  const SizedBox(height: 16),
+
+                  // Selector de Fecha
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.calendar_today, color: hintColor),
+                    title: Text(
+                      DateFormat('dd/MM/yyyy').format(selectedDate),
+                      style: TextStyle(color: textColor),
+                    ),
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: selectedDate,
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime(2030),
+                      );
+                      if (picked != null)
+                        setModalState(() => selectedDate = picked);
+                    },
+                  ),
+
                   const SizedBox(height: 20),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isExpense
+                          ? Colors.redAccent
+                          : Colors.green,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    onPressed: () {
+                      if (titleController.text.isEmpty ||
+                          amountController.text.isEmpty ||
+                          selectedCategory == null)
+                        return;
+
+                      final newTx = Transaction(
+                        id: DateTime.now().toString(),
+                        title: titleController.text,
+                        amount: double.tryParse(amountController.text) ?? 0,
+                        date: selectedDate,
+                        isExpense: isExpense,
+                        category: selectedCategory!,
+                        paymentMethod: selectedCard,
+                        installments: selectedInstallments,
+                      );
+
+                      finance.addTransaction(newTx);
+                      Navigator.pop(context);
+                    },
+                    child: Text(
+                      "REGISTRAR OPERACIÓN",
+                      style: GoogleFonts.spaceMono(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
                 ],
               ),
-            );
-          },
-        );
-      },
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // Helper para inputs
+  Widget _buildInput(
+    TextEditingController ctrl,
+    String label,
+    IconData icon,
+    Color textColor,
+    Color hintColor,
+    Color fillColor, {
+    bool isNumber = false,
+  }) {
+    return TextField(
+      controller: ctrl,
+      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      style: TextStyle(color: textColor),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: hintColor),
+        prefixIcon: Icon(icon, color: hintColor),
+        filled: true,
+        fillColor: fillColor,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<FinanceProvider>(context);
-    final expenses = provider.transactions.where((tx) => tx.isExpense).toList()
-      ..sort((a, b) => b.date.compareTo(a.date));
-    final income = provider.transactions.where((tx) => !tx.isExpense).toList()
-      ..sort((a, b) => b.date.compareTo(a.date));
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white : Colors.black87;
 
     return Scaffold(
+      backgroundColor: isDark
+          ? theme.scaffoldBackgroundColor
+          : const Color(0xFFF5F5F5),
       appBar: AppBar(
-        title: const Text('Registro Diario'),
+        backgroundColor: isDark
+            ? theme.scaffoldBackgroundColor
+            : const Color(0xFFF5F5F5),
+        elevation: 0,
+        title: Text(
+          "REGISTRO TÁCTICO",
+          style: GoogleFonts.spaceMono(fontWeight: FontWeight.bold),
+        ),
         bottom: TabBar(
           controller: _tabController,
+          indicatorColor: Colors.cyanAccent,
+          labelColor: Colors.cyanAccent,
+          unselectedLabelColor: textColor.withOpacity(0.6),
+          labelStyle: GoogleFonts.spaceMono(fontWeight: FontWeight.bold),
           tabs: const [
-            Tab(text: 'Gastos'),
-            Tab(text: 'Ingresos'),
+            Tab(text: "EJECUTADO"),
+            Tab(text: "PROYECCIONES"),
           ],
-          indicatorColor: _tabController.index == 0 ? Colors.red : Colors.green,
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildTransactionList(expenses, true),
-          _buildTransactionList(income, false),
-        ],
-      ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showTransactionModal(context),
-        backgroundColor: _tabController.index == 0 ? Colors.red : Colors.green,
-        child: const Icon(Icons.add, color: Colors.white),
+        backgroundColor: Colors.cyanAccent,
+        child: const Icon(Icons.add, color: Colors.black),
+        onPressed: () => _showAddTransactionDialog(context),
+      ),
+      body: Consumer<FinanceProvider>(
+        builder: (context, finance, child) {
+          final transactions = finance.transactions;
+          final now = DateTime.now();
+          final endOfToday = DateTime(now.year, now.month, now.day, 23, 59, 59);
+
+          final futureTxs = transactions
+              .where((tx) => tx.date.isAfter(endOfToday))
+              .toList();
+          final historyTxs = transactions
+              .where(
+                (tx) =>
+                    tx.date.isBefore(endOfToday) ||
+                    tx.date.isAtSameMomentAs(endOfToday),
+              )
+              .toList();
+
+          futureTxs.sort((a, b) => a.date.compareTo(b.date));
+          historyTxs.sort((a, b) => b.date.compareTo(a.date));
+
+          return TabBarView(
+            controller: _tabController,
+            children: [
+              _buildTransactionList(historyTxs, isFuture: false),
+              _buildTransactionList(futureTxs, isFuture: true),
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildTransactionList(List<Transaction> transactions, bool isExpense) {
-    if (transactions.isEmpty) {
+  Widget _buildTransactionList(
+    List<Transaction> txs, {
+    required bool isFuture,
+  }) {
+    if (txs.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              isExpense ? Icons.money_off : Icons.attach_money,
+              isFuture ? Icons.radar : Icons.history,
               size: 64,
-              color: Colors.grey,
+              color: Colors.grey.withOpacity(0.3),
             ),
             const SizedBox(height: 16),
             Text(
-              isExpense
-                  ? 'No hay gastos registrados'
-                  : 'No hay ingresos registrados',
-              style: const TextStyle(color: Colors.grey),
+              isFuture
+                  ? "Sin proyecciones futuras"
+                  : "Sin registros ejecutados",
+              style: GoogleFonts.spaceMono(color: Colors.grey),
             ),
           ],
         ),
@@ -350,63 +651,199 @@ class _TransactionsScreenState extends State<TransactionsScreen>
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: transactions.length,
+      itemCount: txs.length,
       itemBuilder: (context, index) {
-        final tx = transactions[index];
-        return Dismissible(
-          key: Key(tx.id),
-          direction: DismissDirection.endToStart,
-          background: Container(
-            alignment: Alignment.centerRight,
-            padding: const EdgeInsets.only(right: 20),
-            margin: const EdgeInsets.only(bottom: 12),
-            decoration: BoxDecoration(
-              color: Colors.red,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(Icons.delete, color: Colors.white),
-          ),
-          onDismissed: (_) {
-            Provider.of<FinanceProvider>(
-              context,
-              listen: false,
-            ).deleteTransaction(tx.id);
-          },
-          child: Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: InkWell(
-              onTap: () =>
-                  _showTransactionModal(context, transactionToEdit: tx),
-              borderRadius: BorderRadius.circular(12),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: tx.category.color,
-                  child: Icon(tx.category.icon, color: Colors.white),
-                ),
-                title: Text(
-                  tx.title,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text(
-                  '${tx.category.name} • ${DateFormat('dd/MM/yyyy').format(tx.date)}',
-                ),
-                trailing: Text(
-                  '\$${tx.amount.toStringAsFixed(0)}',
-                  style: TextStyle(
-                    color: isExpense ? Colors.red : Colors.green,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
+        final tx = txs[index];
+        return _buildTransactionItem(context, tx, isFuture: isFuture);
+      },
+    );
+  }
+
+  Widget _buildTransactionItem(
+    BuildContext context,
+    Transaction tx, {
+    required bool isFuture,
+  }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final dateStr = DateFormat(
+      'EEE d MMM',
+      'es_ES',
+    ).format(tx.date).toUpperCase();
+    final isExpense = tx.isExpense;
+    final finance = Provider.of<FinanceProvider>(context, listen: false);
+
+    // [NUEVO] Envolver en Dismissible para swipe-to-delete
+    return Dismissible(
+      key: Key(tx.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        decoration: BoxDecoration(
+          color: Colors.redAccent.shade700,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Text(
+              "ELIMINAR OPERACIÓN",
+              style: GoogleFonts.spaceMono(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
               ),
+            ),
+            const SizedBox(width: 10),
+            const Icon(Icons.delete_forever, color: Colors.white, size: 28),
+          ],
+        ),
+      ),
+      onDismissed: (_) {
+        final deletedTx = tx;
+        finance.deleteTransaction(tx.id);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              "${tx.title} eliminado.",
+              style: GoogleFonts.spaceMono(),
+            ),
+            backgroundColor: Colors.grey[900],
+            behavior: SnackBarBehavior.floating,
+            action: SnackBarAction(
+              label: 'DESHACER',
+              textColor: Colors.cyanAccent,
+              onPressed: () => finance.addTransaction(deletedTx),
             ),
           ),
         );
       },
+      child: Card(
+        elevation: 0,
+        color: isFuture
+            ? (isDark ? const Color(0xFF102027) : Colors.blue.shade50)
+            : theme.cardColor,
+        margin: const EdgeInsets.only(bottom: 8),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: isFuture
+              ? BorderSide(color: Colors.cyanAccent.withOpacity(0.3), width: 1)
+              : BorderSide.none,
+        ),
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
+          ),
+          leading: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                dateStr.split(' ')[0],
+                style: GoogleFonts.blackOpsOne(
+                  fontSize: 10,
+                  color: Colors.grey,
+                ),
+              ),
+              Text(
+                dateStr.split(' ')[1],
+                style: GoogleFonts.blackOpsOne(
+                  fontSize: 18,
+                  color: isFuture
+                      ? Colors.cyanAccent
+                      : theme.colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+          title: Text(
+            tx.title,
+            style: TextStyle(
+              color: theme.colorScheme.onSurface,
+              fontWeight: FontWeight.w600,
+              fontSize: 15,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          subtitle: Row(
+            children: [
+              if (tx.paymentMethod != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    tx.paymentMethod!.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 9,
+                      color: theme.colorScheme.onSurface.withOpacity(0.7),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              if (tx.installments > 1) ...[
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border.all(
+                      color: Colors.orange.withOpacity(0.5),
+                      width: 0.5,
+                    ),
+                  ),
+                  child: Text(
+                    '${tx.installments}x CUOTAS',
+                    style: const TextStyle(
+                      fontSize: 8,
+                      color: Colors.orange,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+              if (isFuture) ...[
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 1,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.cyan.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                  child: const Text(
+                    "PENDIENTE",
+                    style: TextStyle(fontSize: 8, color: Colors.cyanAccent),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          trailing: Text(
+            '\$${tx.amount.toStringAsFixed(0)}',
+            style: GoogleFonts.spaceMono(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: isExpense
+                  ? (isFuture ? Colors.orangeAccent : Colors.redAccent)
+                  : Colors.greenAccent,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

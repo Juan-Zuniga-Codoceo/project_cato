@@ -219,14 +219,11 @@ class ManageCategoriesScreen extends StatelessWidget {
                     onPressed: () {
                       final name = nameController.text.trim();
                       if (name.isNotEmpty) {
-                        final newCategory = CategoryModel(
-                          id: DateTime.now().toString(),
-                          name: name,
-                          iconCode: selectedIcon.codePoint,
-                          colorValue: selectedColor.value,
-                          isDefault: false,
+                        provider.addCategory(
+                          name,
+                          selectedColor.value,
+                          selectedIcon.codePoint,
                         );
-                        provider.addCategory(newCategory);
                         Navigator.pop(context);
                       }
                     },

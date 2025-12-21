@@ -84,7 +84,7 @@ class AcademicScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<int>(
-                    value: selectedScale,
+                    initialValue: selectedScale,
                     decoration: const InputDecoration(
                       labelText: 'Escala de Notas',
                       border: OutlineInputBorder(),
@@ -660,7 +660,7 @@ class _SubjectCard extends StatelessWidget {
               const SizedBox(height: 8),
               LinearProgressIndicator(
                 value: progress,
-                backgroundColor: theme.colorScheme.surfaceVariant,
+                backgroundColor: theme.colorScheme.surfaceContainerHighest,
                 valueColor: AlwaysStoppedAnimation<Color>(
                   isPassing ? Colors.green : Colors.red,
                 ),

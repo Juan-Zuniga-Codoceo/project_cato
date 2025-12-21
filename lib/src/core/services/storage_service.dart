@@ -17,6 +17,7 @@ import '../../features/habits/domain/models/habit_model.dart';
 import '../../features/habits/domain/models/user_stats_model.dart';
 import '../../features/gamification/domain/models/badge_model.dart';
 import '../../features/gamification/domain/models/reward_model.dart'; // [NUEVO]
+import '../../features/finance/domain/models/wallet_card.dart';
 
 class StorageService {
   // Box Names
@@ -38,6 +39,7 @@ class StorageService {
   static const String academicEventsBoxName = 'academic_events';
   static const String achievementsBoxName = 'achievements';
   static const String rewardsBoxName = 'rewards'; // [NUEVO]
+  static const String walletBoxName = 'wallet_cards';
 
   Future<void> init() async {
     await Hive.initFlutter();
@@ -64,6 +66,7 @@ class StorageService {
     Hive.registerAdapter(AcademicEventModelAdapter());
     Hive.registerAdapter(BadgeModelAdapter());
     Hive.registerAdapter(RewardModelAdapter()); // [NUEVO]
+    Hive.registerAdapter(WalletCardAdapter());
 
     // Open Boxes
     await Hive.openBox<Vehicle>(vehicleBoxName);
@@ -87,6 +90,7 @@ class StorageService {
     await Hive.openBox<AcademicEventModel>(academicEventsBoxName);
     await Hive.openBox<BadgeModel>(achievementsBoxName);
     await Hive.openBox<RewardModel>(rewardsBoxName); // [NUEVO]
+    await Hive.openBox<WalletCard>(walletBoxName);
   }
 
   // Getters
@@ -120,6 +124,7 @@ class StorageService {
       Hive.box<BadgeModel>(achievementsBoxName);
   Box<RewardModel> get rewardsBox =>
       Hive.box<RewardModel>(rewardsBoxName); // [NUEVO]
+  Box<WalletCard> get walletBox => Hive.box<WalletCard>(walletBoxName);
 
   Future<void> clearAllData() async {
     await vehicleBox.clear();
@@ -143,5 +148,6 @@ class StorageService {
     await academicEventsBox.clear();
     await achievementsBox.clear();
     await rewardsBox.clear(); // [NUEVO]
+    await walletBox.clear();
   }
 }

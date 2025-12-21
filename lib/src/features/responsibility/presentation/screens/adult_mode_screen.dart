@@ -6,6 +6,7 @@ import 'package:confetti/confetti.dart';
 import '../../providers/responsibility_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/models/monthly_task_model.dart';
+import '../../../../core/providers/finance_provider.dart';
 
 class AdultModeScreen extends StatefulWidget {
   const AdultModeScreen({super.key});
@@ -579,6 +580,127 @@ class _AdultModeScreenState extends State<AdultModeScreen> {
 
           const Divider(height: 1),
 
+          // --- FINANCIAL OBLIGATIONS SECTION ---
+          Consumer<FinanceProvider>(
+            builder: (context, finance, _) {
+              final cards = finance.getActivePaymentMethods();
+              if (cards.isEmpty) return const SizedBox.shrink();
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.credit_card,
+                          color: Colors.cyanAccent,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'OBLIGACIONES FINANCIERAS',
+                          style: GoogleFonts.spaceMono(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.cyanAccent,
+                            fontSize: 12,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    height: 140,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: cards.length,
+                      itemBuilder: (context, index) {
+                        final card = cards[index];
+                        final monthlyPay = finance.getMonthlyPaymentForCard(
+                          card,
+                        );
+                        final totalDebt = finance.getRemainingDebtForCard(card);
+
+                        return GestureDetector(
+                          onTap: () => _showCardDetails(context, finance, card),
+                          child: Container(
+                            width: 220,
+                            margin: const EdgeInsets.only(right: 12),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [Colors.grey.shade900, Colors.black],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Colors.white10),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Icon(
+                                      Icons.payment,
+                                      color: Colors.white70,
+                                    ),
+                                    Text(
+                                      'VISA',
+                                      style: GoogleFonts.blackOpsOne(
+                                        color: Colors.white24,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Text(
+                                  card.toUpperCase(),
+                                  style: GoogleFonts.spaceMono(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'CUOTA MES: \$${monthlyPay.toStringAsFixed(0)}',
+                                      style: GoogleFonts.spaceMono(
+                                        color: Colors.cyanAccent,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      'TOTAL DEUDA: \$${totalDebt.toStringAsFixed(0)}',
+                                      style: const TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const Divider(height: 32),
+                ],
+              );
+            },
+          ),
+
           // List
           Expanded(
             child: provider.tasks.isEmpty
@@ -820,6 +942,154 @@ class _AdultModeScreenState extends State<AdultModeScreen> {
                   ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showCardDetails(
+    BuildContext context,
+    FinanceProvider finance,
+    String cardName,
+  ) {
+    final debts = finance.getCreditDetails(cardName);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.black87,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (_, controller) => Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  color: Colors.grey,
+                  margin: const EdgeInsets.only(bottom: 20),
+                ),
+              ),
+              Text(
+                'DETALLE: $cardName',
+                style: GoogleFonts.spaceMono(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Expanded(
+                child: ListView.builder(
+                  controller: controller,
+                  itemCount: debts.length,
+                  itemBuilder: (context, index) {
+                    final debt = debts[index];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade900,
+                        borderRadius: BorderRadius.circular(12),
+                        border: const Border(
+                          left: BorderSide(color: Colors.cyanAccent, width: 4),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                debt['title'],
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.cyanAccent.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  '${debt['installmentsLeft']} Cuotas Restantes',
+                                  style: const TextStyle(
+                                    color: Colors.cyanAccent,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'PAGO MENSUAL',
+                                    style: TextStyle(
+                                      color: Colors.grey[500],
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                  Text(
+                                    '\$${debt['monthlyAmount'].toStringAsFixed(0)}',
+                                    style: GoogleFonts.spaceMono(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    'DEUDA TOTAL',
+                                    style: TextStyle(
+                                      color: Colors.grey[500],
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                  Text(
+                                    '\$${debt['totalRemaining'].toStringAsFixed(0)}',
+                                    style: GoogleFonts.spaceMono(
+                                      color: Colors.white70,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
