@@ -1,81 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../../core/services/auth_service.dart';
-import '../../../home/presentation/screens/home_screen.dart';
 
-class AuthScreen extends StatefulWidget {
-  const AuthScreen({super.key});
+class AuthScreen extends StatelessWidget {
+  final VoidCallback onAuthenticate;
+  final String statusMessage;
+  final bool isAuthenticating;
 
-  @override
-  State<AuthScreen> createState() => _AuthScreenState();
-}
-
-class _AuthScreenState extends State<AuthScreen> {
-  final AuthService _authService = AuthService();
-  bool _isAuthenticating = false;
-  String _statusMessage = 'Inicializando protocolos de seguridad...';
-
-  @override
-  void initState() {
-    super.initState();
-    // Retraso para asegurar que el contexto esté listo (como en commit 2392bc7)
-    Future.delayed(const Duration(seconds: 1), _authenticate);
-  }
-
-  /// Autenticar usando el servicio
-  Future<void> _authenticate() async {
-    if (!mounted) return;
-
-    setState(() {
-      _isAuthenticating = true;
-      _statusMessage = 'Escaneando biometría...';
-    });
-
-    final result = await _authService.authenticate(
-      localizedReason: 'Identifícate para acceder a CATO OS',
-      biometricOnly: true, // Restaurado a true como en versión anterior
-    );
-
-    if (!mounted) return;
-
-    setState(() {
-      _isAuthenticating = false;
-    });
-
-    if (result.success) {
-      setState(() => _statusMessage = 'ACCESO CONCEDIDO');
-      await Future.delayed(const Duration(milliseconds: 500));
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
-      }
-    } else {
-      // Manejar diferentes tipos de error
-      String errorMessage;
-      switch (result.errorCode) {
-        case AuthErrorCode.notSupported:
-          errorMessage = 'DISPOSITIVO NO COMPATIBLE';
-          break;
-        case AuthErrorCode.notEnrolled:
-          errorMessage = 'SIN BIOMETRÍA CONFIGURADA';
-          break;
-        case AuthErrorCode.lockedOut:
-          errorMessage = 'BIOMETRÍA BLOQUEADA';
-          break;
-        case AuthErrorCode.userCanceled:
-          errorMessage = 'AUTENTICACIÓN CANCELADA';
-          break;
-        case AuthErrorCode.authInProgress:
-          errorMessage = 'AUTENTICACIÓN EN CURSO';
-          break;
-        default:
-          errorMessage = 'ACCESO DENEGADO';
-      }
-
-      setState(() => _statusMessage = errorMessage);
-    }
-  }
+  const AuthScreen({
+    super.key,
+    required this.onAuthenticate,
+    required this.statusMessage,
+    required this.isAuthenticating,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -142,25 +78,27 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  _statusMessage,
+                  statusMessage,
                   textAlign: TextAlign.center,
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     color:
-                        _statusMessage.contains('DENEGADO') ||
-                            _statusMessage.contains('Error')
+                        statusMessage.contains('DENEGADO') ||
+                            statusMessage.contains('Error') ||
+                            statusMessage.contains('BLOQUEADA') ||
+                            statusMessage.contains('CANCELADA')
                         ? Colors.redAccent
-                        : (_statusMessage.contains('CONCEDIDO')
+                        : (statusMessage.contains('CONCEDIDO')
                               ? Colors.green
                               : Colors.grey),
                   ),
                 ),
                 const Spacer(),
-                if (!_isAuthenticating)
+                if (!isAuthenticating)
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
-                      onPressed: _authenticate,
+                      onPressed: onAuthenticate,
                       icon: const Icon(Icons.lock_open),
                       label: Text(
                         'AUTENTICAR MANUALMENTE',
@@ -176,6 +114,12 @@ class _AuthScreenState extends State<AuthScreen> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
+                    ),
+                  )
+                else
+                  const CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Color(0xFFFFC107),
                     ),
                   ),
                 const SizedBox(height: 16),

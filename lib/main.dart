@@ -20,14 +20,14 @@ import 'src/features/responsibility/providers/responsibility_provider.dart';
 import 'src/features/social/providers/social_provider.dart';
 import 'src/features/academic/providers/academic_provider.dart';
 import 'src/features/gamification/providers/achievement_provider.dart';
-import 'src/features/gamification/providers/reward_provider.dart'; // [NUEVO IMPORT]
+import 'src/features/gamification/providers/reward_provider.dart';
 import 'src/core/providers/subscription_provider.dart';
 import 'src/core/theme/app_theme.dart';
 
 // Screens
-// Screens
 import 'src/features/home/presentation/screens/home_screen.dart';
 import 'src/features/auth/presentation/screens/auth_screen.dart';
+import 'src/features/auth/presentation/widgets/biometric_auth_guard.dart'; // [NUEVO IMPORT]
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -154,7 +154,6 @@ class MyApp extends StatelessWidget {
           create: (_) =>
               AchievementProvider(storageService, notificationService),
         ),
-        // [NUEVO PROVIDER]
         ChangeNotifierProvider(create: (_) => RewardProvider(storageService)),
         ChangeNotifierProvider(create: (_) => SubscriptionProvider()),
       ],
@@ -168,8 +167,10 @@ class MyApp extends StatelessWidget {
                 : ThemeMode.light,
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
-            // Lógica de Inicio:
-            home: isBiometricEnabled ? const AuthScreen() : const HomeScreen(),
+            // Lógica de Inicio con BiometricAuthGuard:
+            home: isBiometricEnabled
+                ? const BiometricAuthGuard(child: HomeScreen())
+                : const HomeScreen(),
           );
         },
       ),

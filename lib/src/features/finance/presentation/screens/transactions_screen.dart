@@ -30,40 +30,76 @@ class _TransactionsScreenState extends State<TransactionsScreen>
     super.dispose();
   }
 
+  // --- SNACKBAR TÁCTICO SEGURO ---
+  void _showTacticalSnackBar(String message, {VoidCallback? onUndo}) {
+    if (!mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.clearSnackBars(); // Matar anteriores
+
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: GoogleFonts.spaceMono(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: const Color(0xFF1E1E1E),
+        behavior: SnackBarBehavior.floating,
+        elevation: 10,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        margin: const EdgeInsets.all(16),
+        duration: const Duration(milliseconds: 1500),
+        action: onUndo != null
+            ? SnackBarAction(
+                label: 'DESHACER',
+                textColor: Colors.cyanAccent,
+                onPressed: onUndo,
+              )
+            : null,
+      ),
+    );
+  }
+
   // --- MODAL DE AGREGAR TRANSACCIÓN ---
-  void _showAddTransactionDialog(BuildContext context) {
+  void _showAddTransactionDialog(BuildContext context) async {
     final finance = Provider.of<FinanceProvider>(context, listen: false);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Colores dinámicos
     final textColor = theme.colorScheme.onSurface;
     final hintColor = theme.hintColor;
     final inputFillColor = isDark ? Colors.black26 : Colors.grey.shade100;
     final cardColor = theme.cardColor;
 
-    // Datos
+    // 1. Asegurar categorías
+    if (finance.categories.isEmpty) {
+      await finance.addCategory(
+        "General",
+        Colors.grey.value,
+        Icons.category.codePoint,
+      );
+    }
+
+    // Datos iniciales
     final cards = finance.getAvailablePaymentMethods();
     final categories = finance.categories;
-
-    // Validación inicial
-    if (categories.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("⚠️ Primero debes crear una categoría.")),
-      );
-      return;
-    }
 
     // Controladores
     final titleController = TextEditingController();
     final amountController = TextEditingController();
 
     // Estado inicial
-    CategoryModel selectedCategory = categories.first;
+    String? selectedCategoryId =
+        categories.first.id; // Usamos ID para evitar errores de referencia
     String selectedCard = cards.isNotEmpty ? cards.first : 'Efectivo';
     bool isExpense = true;
     DateTime selectedDate = DateTime.now();
     int selectedInstallments = 1;
+
+    if (!mounted) return;
 
     showModalBottomSheet(
       context: context,
@@ -74,13 +110,33 @@ class _TransactionsScreenState extends State<TransactionsScreen>
       ),
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
-          // [FIX] Protección contra Dropdown Crash: Si la categoría seleccionada no existe en la lista, resetear.
-          if (!categories.contains(selectedCategory)) {
-            if (categories.isNotEmpty) selectedCategory = categories.first;
+          // [FIX CRÍTICO] Re-validación en cada renderizado del modal
+          // Si la categoría seleccionada (por ID) no está en la lista actual, resetear a la primera.
+          final categoryExists = categories.any(
+            (c) => c.id == selectedCategoryId,
+          );
+          if (!categoryExists && categories.isNotEmpty) {
+            selectedCategoryId = categories.first.id;
           }
 
-          // Verificar si es Crédito para mostrar slider de cuotas
+          // Lo mismo para la tarjeta
+          if (!cards.contains(selectedCard) && cards.isNotEmpty) {
+            selectedCard = cards.first;
+          }
+
+          // Lógica de cuotas
           bool isCreditSelected = finance.isCreditMethod(selectedCard);
+
+          String dateLabel = "Fecha";
+          if (isExpense && isCreditSelected && selectedInstallments > 1) {
+            dateLabel = "Fecha 1ª Cuota";
+          }
+
+          // Encontrar el objeto categoría real basado en el ID seleccionado
+          final activeCategoryObj = categories.firstWhere(
+            (c) => c.id == selectedCategoryId,
+            orElse: () => categories.first,
+          );
 
           return Padding(
             padding: EdgeInsets.fromLTRB(
@@ -129,7 +185,7 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                   ),
                   const SizedBox(height: 24),
 
-                  // Inputs de Texto
+                  // Inputs
                   _buildInput(
                     titleController,
                     'Concepto',
@@ -150,12 +206,12 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                   ),
                   const SizedBox(height: 16),
 
-                  // Selector de Categoría + Botón Crear
+                  // Selector Categoría (POR ID)
                   Row(
                     children: [
                       Expanded(
-                        child: DropdownButtonFormField<CategoryModel>(
-                          value: selectedCategory,
+                        child: DropdownButtonFormField<String>(
+                          value: selectedCategoryId, // Usamos el ID como valor
                           dropdownColor: cardColor,
                           style: TextStyle(color: textColor, fontSize: 16),
                           decoration: _inputDecoration(
@@ -167,7 +223,7 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                           items: categories
                               .map(
                                 (cat) => DropdownMenuItem(
-                                  value: cat,
+                                  value: cat.id, // El valor es el ID
                                   child: Row(
                                     children: [
                                       Icon(
@@ -176,9 +232,11 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                                         size: 18,
                                       ),
                                       const SizedBox(width: 8),
-                                      Text(
-                                        cat.name,
-                                        overflow: TextOverflow.ellipsis,
+                                      Expanded(
+                                        child: Text(
+                                          cat.name,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -187,7 +245,7 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                               .toList(),
                           onChanged: (val) {
                             if (val != null)
-                              setModalState(() => selectedCategory = val);
+                              setModalState(() => selectedCategoryId = val);
                           },
                         ),
                       ),
@@ -200,15 +258,11 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                         child: IconButton(
                           icon: const Icon(Icons.add, color: Colors.cyan),
                           onPressed: () {
-                            // Diálogo rápido para crear categoría
                             _showQuickAddCategoryDialog(context, finance, (
                               newCat,
                             ) {
                               setModalState(() {
-                                // Al volver, seleccionar la nueva
-                                if (finance.categories.contains(newCat)) {
-                                  selectedCategory = newCat;
-                                }
+                                selectedCategoryId = newCat.id;
                               });
                             });
                           },
@@ -234,12 +288,11 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                         .toList(),
                     onChanged: (val) => setModalState(() {
                       selectedCard = val!;
-                      selectedInstallments =
-                          1; // Resetear cuotas al cambiar tarjeta
+                      selectedInstallments = 1;
                     }),
                   ),
 
-                  // Slider de Cuotas (Solo si es Gasto + Tarjeta de Crédito)
+                  // Slider Cuotas
                   if (isExpense && isCreditSelected) ...[
                     const SizedBox(height: 20),
                     Container(
@@ -275,7 +328,7 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                           Slider(
                             value: selectedInstallments.toDouble(),
                             min: 1,
-                            max: 36, // Hasta 36 cuotas
+                            max: 36,
                             divisions: 35,
                             activeColor: Colors.cyan,
                             onChanged: (val) => setModalState(
@@ -288,11 +341,11 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                   ],
 
                   const SizedBox(height: 20),
-                  // Selector de Fecha
+                  // Selector Fecha
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     title: Text(
-                      "Fecha: ${DateFormat('dd/MM/yyyy').format(selectedDate)}",
+                      "$dateLabel: ${DateFormat('dd/MM/yyyy').format(selectedDate)}",
                       style: TextStyle(
                         color: textColor,
                         fontWeight: FontWeight.bold,
@@ -327,28 +380,28 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                           amountController.text.isEmpty)
                         return;
 
-                      // LÓGICA DE GUARDADO
+                      // Usamos el objeto categoría real encontrado arriba
+                      final categoryToSave = activeCategoryObj;
+
                       if (selectedInstallments > 1 &&
                           isCreditSelected &&
                           isExpense) {
-                        // Caso Cuotas: Usar el método especial que genera N transacciones
                         finance.addInstallmentTransaction(
                           title: titleController.text,
                           totalAmount: double.parse(amountController.text),
                           date: selectedDate,
-                          category: selectedCategory,
+                          category: categoryToSave,
                           paymentMethod: selectedCard,
                           installments: selectedInstallments,
                         );
                       } else {
-                        // Caso Normal (1 cuota o ingreso)
                         final newTx = Transaction(
                           id: DateTime.now().toString(),
                           title: titleController.text,
                           amount: double.parse(amountController.text),
                           date: selectedDate,
                           isExpense: isExpense,
-                          category: selectedCategory,
+                          category: categoryToSave,
                           paymentMethod: selectedCard,
                           installments: 1,
                         );
@@ -374,7 +427,7 @@ class _TransactionsScreenState extends State<TransactionsScreen>
     );
   }
 
-  // --- WIDGETS AUXILIARES DEL MODAL ---
+  // --- WIDGETS AUXILIARES ---
 
   void _showQuickAddCategoryDialog(
     BuildContext context,
@@ -399,7 +452,6 @@ class _TransactionsScreenState extends State<TransactionsScreen>
           ElevatedButton(
             onPressed: () {
               if (controller.text.isNotEmpty) {
-                // Crear categoría con color/icono por defecto por rapidez
                 finance
                     .addCategory(
                       controller.text,
@@ -407,9 +459,15 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                       Icons.label.codePoint,
                     )
                     .then((_) {
-                      // Buscar la categoría recién creada para seleccionarla
-                      final newCat = finance.categories.last;
-                      onCreated(newCat);
+                      try {
+                        // Buscar la nueva y devolverla
+                        final newCat = finance.categories.lastWhere(
+                          (c) => c.name == controller.text,
+                        );
+                        onCreated(newCat);
+                      } catch (e) {
+                        print("Error: $e");
+                      }
                       Navigator.pop(ctx);
                     });
               }
@@ -492,8 +550,6 @@ class _TransactionsScreenState extends State<TransactionsScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-
-    // Colores de alto contraste para Light Mode
     final bgColor = isDark
         ? theme.scaffoldBackgroundColor
         : const Color(0xFFF5F5F5);
@@ -533,7 +589,6 @@ class _TransactionsScreenState extends State<TransactionsScreen>
           if (transactions.isEmpty)
             return const Center(child: Text("Sin registros."));
 
-          // Separación de fechas
           final now = DateTime.now();
           final endOfToday = DateTime(now.year, now.month, now.day, 23, 59, 59);
 
@@ -550,12 +605,8 @@ class _TransactionsScreenState extends State<TransactionsScreen>
               .toList();
 
           // Ordenamiento
-          futureTxs.sort(
-            (a, b) => a.date.compareTo(b.date),
-          ); // Futuro: Ascendente (Próximo primero)
-          historyTxs.sort(
-            (a, b) => b.date.compareTo(a.date),
-          ); // Pasado: Descendente (Reciente primero)
+          futureTxs.sort((a, b) => a.date.compareTo(b.date));
+          historyTxs.sort((a, b) => b.date.compareTo(a.date));
 
           return TabBarView(
             controller: _tabController,
@@ -645,20 +696,10 @@ class _TransactionsScreenState extends State<TransactionsScreen>
         final deletedTx = tx;
         finance.deleteTransaction(tx.id);
 
-        // [FIX] Limpiar SnackBars acumulados para que el botón Deshacer sea visible
-        ScaffoldMessenger.of(context).clearSnackBars();
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("${tx.title} eliminado."),
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 3),
-            action: SnackBarAction(
-              label: 'DESHACER',
-              textColor: Colors.cyanAccent,
-              onPressed: () => finance.addTransaction(deletedTx),
-            ),
-          ),
+        // [FIX] Notificación segura
+        _showTacticalSnackBar(
+          "${tx.title} eliminado",
+          onUndo: () => finance.addTransaction(deletedTx),
         );
       },
       child: _TransactionCard(tx: tx, isFuture: isFuture),
@@ -677,7 +718,6 @@ class _TransactionCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Formato
     final dateStr = DateFormat(
       'EEE d MMM',
       'es_ES',
@@ -686,7 +726,6 @@ class _TransactionCard extends StatelessWidget {
 
     return Card(
       elevation: 0,
-      // Alto Contraste para Light Mode (Blanco) y Dark Mode (Oscuro con tinte)
       color: isFuture
           ? (isDark ? const Color(0xFF102027) : Colors.blue.shade50)
           : theme.cardColor,
@@ -727,7 +766,6 @@ class _TransactionCard extends StatelessWidget {
         ),
         subtitle: Row(
           children: [
-            // Badge Medio de Pago
             if (tx.paymentMethod != null)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -744,7 +782,6 @@ class _TransactionCard extends StatelessWidget {
                   ),
                 ),
               ),
-            // Badge Cuotas
             if (tx.installments > 1) ...[
               const SizedBox(width: 6),
               Container(
@@ -764,7 +801,6 @@ class _TransactionCard extends StatelessWidget {
                 ),
               ),
             ],
-            // Badge Pendiente
             if (isFuture) ...[
               const SizedBox(width: 6),
               Container(
