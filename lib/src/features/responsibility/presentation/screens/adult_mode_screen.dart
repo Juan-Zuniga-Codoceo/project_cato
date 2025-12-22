@@ -41,6 +41,8 @@ class _AdultModeScreenState extends State<AdultModeScreen> {
         barrierDismissible: false,
         builder: (context) => _buildCompletionDialog(provider),
       );
+      // Track Adult Mode completion for rating
+      provider.checkRatingForCompletion(context);
     }
   }
 
@@ -632,12 +634,26 @@ class _AdultModeScreenState extends State<AdultModeScreen> {
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
-                                colors: [Colors.grey.shade900, Colors.black],
+                                colors:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? [Colors.grey.shade900, Colors.black]
+                                    : [
+                                        Colors.grey.shade100,
+                                        Colors.grey.shade200,
+                                      ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
                               borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: Colors.white10),
+                              border: Border.all(
+                                color:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.white10
+                                    : Colors.grey.shade400,
+                                width: 1.5,
+                              ),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -647,14 +663,22 @@ class _AdultModeScreenState extends State<AdultModeScreen> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    const Icon(
+                                    Icon(
                                       Icons.payment,
-                                      color: Colors.white70,
+                                      color:
+                                          Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.white70
+                                          : Colors.grey.shade700,
                                     ),
                                     Text(
                                       'VISA',
                                       style: GoogleFonts.blackOpsOne(
-                                        color: Colors.white24,
+                                        color:
+                                            Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.white24
+                                            : Colors.grey.shade400,
                                         fontSize: 12,
                                       ),
                                     ),
@@ -663,7 +687,11 @@ class _AdultModeScreenState extends State<AdultModeScreen> {
                                 Text(
                                   card.toUpperCase(),
                                   style: GoogleFonts.spaceMono(
-                                    color: Colors.white,
+                                    color:
+                                        Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.white
+                                        : Colors.grey.shade900,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 12,
                                   ),
@@ -675,14 +703,22 @@ class _AdultModeScreenState extends State<AdultModeScreen> {
                                     Text(
                                       'CUOTA MES: \$${monthlyPay.toStringAsFixed(0)}',
                                       style: GoogleFonts.spaceMono(
-                                        color: Colors.cyanAccent,
+                                        color:
+                                            Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.cyanAccent
+                                            : Colors.cyan.shade800,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                     Text(
                                       'TOTAL DEUDA: \$${totalDebt.toStringAsFixed(0)}',
-                                      style: const TextStyle(
-                                        color: Colors.grey,
+                                      style: TextStyle(
+                                        color:
+                                            Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.grey
+                                            : Colors.grey.shade700,
                                         fontSize: 10,
                                       ),
                                     ),

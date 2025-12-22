@@ -60,6 +60,8 @@ class _HomeScreenState extends State<HomeScreen> {
       habitProvider.onLevelUp.listen((newLevel) {
         if (mounted) {
           LevelUpManager.showLevelUpDialog(context, newLevel);
+          // Track level up for rating
+          habitProvider.checkRatingForLevelUp(context, newLevel);
         }
       });
     });

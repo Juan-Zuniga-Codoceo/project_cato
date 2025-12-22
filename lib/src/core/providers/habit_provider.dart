@@ -4,6 +4,7 @@ import '../../features/habits/domain/models/habit_model.dart';
 import '../../features/habits/domain/models/user_stats_model.dart';
 import '../services/storage_service.dart';
 import '../services/notification_service.dart';
+import '../services/rating_service.dart';
 import 'package:flutter/material.dart';
 import '../services/home_widget_service.dart';
 
@@ -226,6 +227,28 @@ class HabitProvider extends ChangeNotifier {
         topTask:
             'Tu Mejor Versión', // Default or fetch from TaskProvider if possible
       );
+
+      // Track streak achievement (7+ days)
+      if (newStreak >= 7 && newStreak > habit.currentStreak) {
+        // Streak milestone reached, screen can show rating
+        _streakMilestoneReached = newStreak;
+      }
+    }
+  }
+
+  // Helper fields for rating triggers
+  int? _streakMilestoneReached;
+
+  /// Check and show rating prompt for level up (call from screen)
+  Future<void> checkRatingForLevelUp(BuildContext context, int newLevel) async {
+    await RatingService.trackLevelUp(context, newLevel);
+  }
+
+  /// Check and show rating prompt for streak (call from screen)
+  Future<void> checkRatingForStreak(BuildContext context) async {
+    if (_streakMilestoneReached != null && _streakMilestoneReached! >= 7) {
+      await RatingService.trackStreak(context, _streakMilestoneReached!);
+      _streakMilestoneReached = null; // Reset
     }
   }
 

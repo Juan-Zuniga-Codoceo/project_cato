@@ -6,6 +6,7 @@ import 'package:intl/date_symbol_data_local.dart';
 // Services
 import 'src/core/services/storage_service.dart';
 import 'src/core/services/notification_service.dart';
+import 'src/core/services/rating_service.dart';
 import 'src/core/utils/avatar_migration.dart';
 
 // Providers
@@ -48,6 +49,9 @@ void main() async {
     final notificationService = NotificationService();
     await notificationService.init();
     print("🔔 Notificaciones OK");
+
+    // Track app launch for rating system
+    await RatingService.trackAppLaunch();
 
     runApp(
       // Envolvemos la app en RestartWidget para permitir reinicio en caliente

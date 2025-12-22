@@ -336,9 +336,11 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                             max: 36, // Hasta 36 cuotas
                             divisions: 35,
                             activeColor: Colors.cyan,
-                            onChanged: (val) => setModalState(
-                              () => selectedInstallments = val.toInt(),
-                            ),
+                            onChanged: (val) {
+                              setModalState(() {
+                                selectedInstallments = val.toInt();
+                              });
+                            },
                           ),
                         ],
                       ),
@@ -350,7 +352,8 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     title: Text(
-                      "Fecha: ${DateFormat('dd/MM/yyyy').format(selectedDate)}",
+                      // Label dinámico: "Fecha 1ª Cuota" si es en cuotas, sino "Fecha"
+                      "${(isExpense && isCreditSelected && selectedInstallments > 1) ? "Fecha 1ª Cuota" : "Fecha"}: ${DateFormat('dd/MM/yyyy').format(selectedDate)}",
                       style: TextStyle(
                         color: textColor,
                         fontWeight: FontWeight.bold,

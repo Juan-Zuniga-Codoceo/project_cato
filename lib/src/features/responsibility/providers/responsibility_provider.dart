@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../../core/services/storage_service.dart';
+import '../../../core/services/rating_service.dart';
 import '../domain/models/monthly_task_model.dart';
 
 class ResponsibilityProvider extends ChangeNotifier {
@@ -78,6 +79,8 @@ class ResponsibilityProvider extends ChangeNotifier {
   Future<void> toggleTask(String id) async {
     final task = _box.get(id);
     if (task != null) {
+      final wasCompleted = isMonthCompleted;
+
       final updatedTask = MonthlyTaskModel(
         id: task.id,
         title: task.title,
@@ -86,6 +89,22 @@ class ResponsibilityProvider extends ChangeNotifier {
       );
       await _box.put(id, updatedTask);
       notifyListeners();
+
+      // Check if month just got completed
+      if (!wasCompleted && isMonthCompleted) {
+        _monthJustCompleted = true;
+      }
+    }
+  }
+
+  // Helper field for rating trigger
+  bool _monthJustCompleted = false;
+
+  /// Check and show rating for Adult Mode completion (call from screen)
+  Future<void> checkRatingForCompletion(BuildContext context) async {
+    if (_monthJustCompleted) {
+      await RatingService.trackAdultModeComplete(context);
+      _monthJustCompleted = false;
     }
   }
 
