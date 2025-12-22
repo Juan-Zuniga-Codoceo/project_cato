@@ -22,9 +22,11 @@ class _BiometricAuthGuardState extends State<BiometricAuthGuard>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // Iniciar autenticación post-frame para asegurar contexto listo
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _authenticate();
+    // Delay de 1 segundo para asegurar que la Activity esté lista (evita onSaveInstanceState error)
+    Future.delayed(const Duration(seconds: 1), () {
+      if (mounted) {
+        _authenticate();
+      }
     });
   }
 

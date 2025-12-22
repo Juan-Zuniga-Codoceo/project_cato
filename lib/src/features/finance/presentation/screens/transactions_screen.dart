@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/providers/finance_provider.dart';
 import '../../domain/models/transaction.dart';
 import '../../domain/models/category.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/services/storage_service.dart';
 
 class TransactionsScreen extends StatefulWidget {
   const TransactionsScreen({super.key});
@@ -30,76 +33,95 @@ class _TransactionsScreenState extends State<TransactionsScreen>
     super.dispose();
   }
 
-  // --- SNACKBAR TÁCTICO SEGURO ---
-  void _showTacticalSnackBar(String message, {VoidCallback? onUndo}) {
-    if (!mounted) return;
+  // --- LÓGICA DE VALORACIÓN (RATE APP) ---
+  void _checkReviewRequest(BuildContext context) {
+    final box = Hive.box(StorageService.settingsBoxName);
+    int opsCount = box.get('opsCount', defaultValue: 0) + 1;
+    box.put('opsCount', opsCount);
 
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.clearSnackBars(); // Matar anteriores
+    bool dontShow = box.get('dontShowReview', defaultValue: false);
 
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: GoogleFonts.spaceMono(
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
+    if (!dontShow && (opsCount == 5 || opsCount % 20 == 0)) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(
+            "¿Te sirve CATO?",
+            style: GoogleFonts.spaceMono(fontWeight: FontWeight.bold),
           ),
+          content: const Text(
+            "Si la aplicación te está ayudando a organizar tu vida, ¿nos regalarías 5 estrellas? Nos ayuda mucho a seguir mejorando.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                box.put('dontShowReview', true);
+                Navigator.pop(ctx);
+              },
+              child: const Text(
+                "No volver a mostrar",
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text("Más tarde"),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber,
+                foregroundColor: Colors.black,
+              ),
+              onPressed: () {
+                box.put('dontShowReview', true);
+                Navigator.pop(ctx);
+                final url = Uri.parse(
+                  "market://details?id=com.example.mens_lifestyle_app",
+                );
+                launchUrl(url, mode: LaunchMode.externalApplication);
+              },
+              child: const Text("CALIFICAR"),
+            ),
+          ],
         ),
-        backgroundColor: const Color(0xFF1E1E1E),
-        behavior: SnackBarBehavior.floating,
-        elevation: 10,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(milliseconds: 1500),
-        action: onUndo != null
-            ? SnackBarAction(
-                label: 'DESHACER',
-                textColor: Colors.cyanAccent,
-                onPressed: onUndo,
-              )
-            : null,
-      ),
-    );
+      );
+    }
   }
 
   // --- MODAL DE AGREGAR TRANSACCIÓN ---
-  void _showAddTransactionDialog(BuildContext context) async {
+  void _showAddTransactionDialog(BuildContext context) {
     final finance = Provider.of<FinanceProvider>(context, listen: false);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    // Colores dinámicos
     final textColor = theme.colorScheme.onSurface;
     final hintColor = theme.hintColor;
     final inputFillColor = isDark ? Colors.black26 : Colors.grey.shade100;
     final cardColor = theme.cardColor;
 
-    // 1. Asegurar categorías
-    if (finance.categories.isEmpty) {
-      await finance.addCategory(
-        "General",
-        Colors.grey.value,
-        Icons.category.codePoint,
-      );
-    }
-
-    // Datos iniciales
+    // Datos
     final cards = finance.getAvailablePaymentMethods();
     final categories = finance.categories;
+
+    // Validación inicial
+    if (categories.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("⚠️ Primero debes crear una categoría.")),
+      );
+      return;
+    }
 
     // Controladores
     final titleController = TextEditingController();
     final amountController = TextEditingController();
 
     // Estado inicial
-    String? selectedCategoryId =
-        categories.first.id; // Usamos ID para evitar errores de referencia
+    CategoryModel selectedCategory = categories.first;
     String selectedCard = cards.isNotEmpty ? cards.first : 'Efectivo';
     bool isExpense = true;
     DateTime selectedDate = DateTime.now();
     int selectedInstallments = 1;
-
-    if (!mounted) return;
 
     showModalBottomSheet(
       context: context,
@@ -110,33 +132,13 @@ class _TransactionsScreenState extends State<TransactionsScreen>
       ),
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
-          // [FIX CRÍTICO] Re-validación en cada renderizado del modal
-          // Si la categoría seleccionada (por ID) no está en la lista actual, resetear a la primera.
-          final categoryExists = categories.any(
-            (c) => c.id == selectedCategoryId,
-          );
-          if (!categoryExists && categories.isNotEmpty) {
-            selectedCategoryId = categories.first.id;
+          // [FIX] Protección contra Dropdown Crash: Si la categoría seleccionada no existe en la lista, resetear.
+          if (!categories.contains(selectedCategory)) {
+            if (categories.isNotEmpty) selectedCategory = categories.first;
           }
 
-          // Lo mismo para la tarjeta
-          if (!cards.contains(selectedCard) && cards.isNotEmpty) {
-            selectedCard = cards.first;
-          }
-
-          // Lógica de cuotas
+          // Verificar si es Crédito para mostrar slider de cuotas
           bool isCreditSelected = finance.isCreditMethod(selectedCard);
-
-          String dateLabel = "Fecha";
-          if (isExpense && isCreditSelected && selectedInstallments > 1) {
-            dateLabel = "Fecha 1ª Cuota";
-          }
-
-          // Encontrar el objeto categoría real basado en el ID seleccionado
-          final activeCategoryObj = categories.firstWhere(
-            (c) => c.id == selectedCategoryId,
-            orElse: () => categories.first,
-          );
 
           return Padding(
             padding: EdgeInsets.fromLTRB(
@@ -185,7 +187,7 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                   ),
                   const SizedBox(height: 24),
 
-                  // Inputs
+                  // Inputs de Texto
                   _buildInput(
                     titleController,
                     'Concepto',
@@ -206,12 +208,12 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                   ),
                   const SizedBox(height: 16),
 
-                  // Selector Categoría (POR ID)
+                  // Selector de Categoría + Botón Crear
                   Row(
                     children: [
                       Expanded(
-                        child: DropdownButtonFormField<String>(
-                          value: selectedCategoryId, // Usamos el ID como valor
+                        child: DropdownButtonFormField<CategoryModel>(
+                          value: selectedCategory,
                           dropdownColor: cardColor,
                           style: TextStyle(color: textColor, fontSize: 16),
                           decoration: _inputDecoration(
@@ -223,7 +225,7 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                           items: categories
                               .map(
                                 (cat) => DropdownMenuItem(
-                                  value: cat.id, // El valor es el ID
+                                  value: cat,
                                   child: Row(
                                     children: [
                                       Icon(
@@ -232,11 +234,9 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                                         size: 18,
                                       ),
                                       const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Text(
-                                          cat.name,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
+                                      Text(
+                                        cat.name,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ],
                                   ),
@@ -245,7 +245,7 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                               .toList(),
                           onChanged: (val) {
                             if (val != null)
-                              setModalState(() => selectedCategoryId = val);
+                              setModalState(() => selectedCategory = val);
                           },
                         ),
                       ),
@@ -258,11 +258,15 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                         child: IconButton(
                           icon: const Icon(Icons.add, color: Colors.cyan),
                           onPressed: () {
+                            // Diálogo rápido para crear categoría
                             _showQuickAddCategoryDialog(context, finance, (
                               newCat,
                             ) {
                               setModalState(() {
-                                selectedCategoryId = newCat.id;
+                                // Al volver, seleccionar la nueva
+                                if (finance.categories.contains(newCat)) {
+                                  selectedCategory = newCat;
+                                }
                               });
                             });
                           },
@@ -288,11 +292,12 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                         .toList(),
                     onChanged: (val) => setModalState(() {
                       selectedCard = val!;
-                      selectedInstallments = 1;
+                      selectedInstallments =
+                          1; // Resetear cuotas al cambiar tarjeta
                     }),
                   ),
 
-                  // Slider Cuotas
+                  // Slider de Cuotas (Solo si es Gasto + Tarjeta de Crédito)
                   if (isExpense && isCreditSelected) ...[
                     const SizedBox(height: 20),
                     Container(
@@ -328,7 +333,7 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                           Slider(
                             value: selectedInstallments.toDouble(),
                             min: 1,
-                            max: 36,
+                            max: 36, // Hasta 36 cuotas
                             divisions: 35,
                             activeColor: Colors.cyan,
                             onChanged: (val) => setModalState(
@@ -341,11 +346,11 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                   ],
 
                   const SizedBox(height: 20),
-                  // Selector Fecha
+                  // Selector de Fecha
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     title: Text(
-                      "$dateLabel: ${DateFormat('dd/MM/yyyy').format(selectedDate)}",
+                      "Fecha: ${DateFormat('dd/MM/yyyy').format(selectedDate)}",
                       style: TextStyle(
                         color: textColor,
                         fontWeight: FontWeight.bold,
@@ -380,28 +385,28 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                           amountController.text.isEmpty)
                         return;
 
-                      // Usamos el objeto categoría real encontrado arriba
-                      final categoryToSave = activeCategoryObj;
-
+                      // LÓGICA DE GUARDADO
                       if (selectedInstallments > 1 &&
                           isCreditSelected &&
                           isExpense) {
+                        // Caso Cuotas: Usar el método especial que genera N transacciones
                         finance.addInstallmentTransaction(
                           title: titleController.text,
                           totalAmount: double.parse(amountController.text),
                           date: selectedDate,
-                          category: categoryToSave,
+                          category: selectedCategory,
                           paymentMethod: selectedCard,
                           installments: selectedInstallments,
                         );
                       } else {
+                        // Caso Normal (1 cuota o ingreso)
                         final newTx = Transaction(
                           id: DateTime.now().toString(),
                           title: titleController.text,
                           amount: double.parse(amountController.text),
                           date: selectedDate,
                           isExpense: isExpense,
-                          category: categoryToSave,
+                          category: selectedCategory,
                           paymentMethod: selectedCard,
                           installments: 1,
                         );
@@ -409,6 +414,7 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                       }
 
                       Navigator.pop(context);
+                      _checkReviewRequest(context); // Pedir valoración
                     },
                     child: Text(
                       "GUARDAR",
@@ -427,7 +433,7 @@ class _TransactionsScreenState extends State<TransactionsScreen>
     );
   }
 
-  // --- WIDGETS AUXILIARES ---
+  // --- WIDGETS AUXILIARES DEL MODAL ---
 
   void _showQuickAddCategoryDialog(
     BuildContext context,
@@ -452,6 +458,7 @@ class _TransactionsScreenState extends State<TransactionsScreen>
           ElevatedButton(
             onPressed: () {
               if (controller.text.isNotEmpty) {
+                // Crear categoría con color/icono por defecto por rapidez
                 finance
                     .addCategory(
                       controller.text,
@@ -459,15 +466,9 @@ class _TransactionsScreenState extends State<TransactionsScreen>
                       Icons.label.codePoint,
                     )
                     .then((_) {
-                      try {
-                        // Buscar la nueva y devolverla
-                        final newCat = finance.categories.lastWhere(
-                          (c) => c.name == controller.text,
-                        );
-                        onCreated(newCat);
-                      } catch (e) {
-                        print("Error: $e");
-                      }
+                      // Buscar la categoría recién creada para seleccionarla
+                      final newCat = finance.categories.last;
+                      onCreated(newCat);
                       Navigator.pop(ctx);
                     });
               }
@@ -550,6 +551,8 @@ class _TransactionsScreenState extends State<TransactionsScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+
+    // Colores de alto contraste para Light Mode
     final bgColor = isDark
         ? theme.scaffoldBackgroundColor
         : const Color(0xFFF5F5F5);
@@ -589,6 +592,7 @@ class _TransactionsScreenState extends State<TransactionsScreen>
           if (transactions.isEmpty)
             return const Center(child: Text("Sin registros."));
 
+          // Separación de fechas
           final now = DateTime.now();
           final endOfToday = DateTime(now.year, now.month, now.day, 23, 59, 59);
 
@@ -605,8 +609,12 @@ class _TransactionsScreenState extends State<TransactionsScreen>
               .toList();
 
           // Ordenamiento
-          futureTxs.sort((a, b) => a.date.compareTo(b.date));
-          historyTxs.sort((a, b) => b.date.compareTo(a.date));
+          futureTxs.sort(
+            (a, b) => a.date.compareTo(b.date),
+          ); // Futuro: Ascendente (Próximo primero)
+          historyTxs.sort(
+            (a, b) => b.date.compareTo(a.date),
+          ); // Pasado: Descendente (Reciente primero)
 
           return TabBarView(
             controller: _tabController,
@@ -696,10 +704,20 @@ class _TransactionsScreenState extends State<TransactionsScreen>
         final deletedTx = tx;
         finance.deleteTransaction(tx.id);
 
-        // [FIX] Notificación segura
-        _showTacticalSnackBar(
-          "${tx.title} eliminado",
-          onUndo: () => finance.addTransaction(deletedTx),
+        // [FIX] Limpiar SnackBars acumulados para que el botón Deshacer sea visible
+        ScaffoldMessenger.of(context).clearSnackBars();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("${tx.title} eliminado."),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
+            action: SnackBarAction(
+              label: 'DESHACER',
+              textColor: Colors.cyanAccent,
+              onPressed: () => finance.addTransaction(deletedTx),
+            ),
+          ),
         );
       },
       child: _TransactionCard(tx: tx, isFuture: isFuture),
@@ -718,6 +736,7 @@ class _TransactionCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
+    // Formato
     final dateStr = DateFormat(
       'EEE d MMM',
       'es_ES',
@@ -726,6 +745,7 @@ class _TransactionCard extends StatelessWidget {
 
     return Card(
       elevation: 0,
+      // Alto Contraste para Light Mode (Blanco) y Dark Mode (Oscuro con tinte)
       color: isFuture
           ? (isDark ? const Color(0xFF102027) : Colors.blue.shade50)
           : theme.cardColor,
@@ -766,6 +786,7 @@ class _TransactionCard extends StatelessWidget {
         ),
         subtitle: Row(
           children: [
+            // Badge Medio de Pago
             if (tx.paymentMethod != null)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -782,6 +803,7 @@ class _TransactionCard extends StatelessWidget {
                   ),
                 ),
               ),
+            // Badge Cuotas
             if (tx.installments > 1) ...[
               const SizedBox(width: 6),
               Container(
@@ -801,6 +823,7 @@ class _TransactionCard extends StatelessWidget {
                 ),
               ),
             ],
+            // Badge Pendiente
             if (isFuture) ...[
               const SizedBox(width: 6),
               Container(
