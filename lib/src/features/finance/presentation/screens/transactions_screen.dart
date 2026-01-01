@@ -132,6 +132,10 @@ class _TransactionsScreenState extends State<TransactionsScreen>
       ),
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
+          // [FIX] Refetch data to ensure updates (e.g. new category) are reflected
+          final categories = finance.categories;
+          final cards = finance.getAvailablePaymentMethods();
+
           // [FIX] Protección contra Dropdown Crash: Si la categoría seleccionada no existe en la lista, resetear.
           if (!categories.contains(selectedCategory)) {
             if (categories.isNotEmpty) selectedCategory = categories.first;
@@ -444,41 +448,230 @@ class _TransactionsScreenState extends State<TransactionsScreen>
     Function(CategoryModel) onCreated,
   ) {
     final controller = TextEditingController();
-    showDialog(
+
+    // Predefined colors
+    final List<Color> colors = [
+      Colors.red,
+      Colors.pink,
+      Colors.purple,
+      Colors.deepPurple,
+      Colors.indigo,
+      Colors.blue,
+      Colors.lightBlue,
+      Colors.cyan,
+      Colors.teal,
+      Colors.green,
+      Colors.lightGreen,
+      Colors.lime,
+      Colors.yellow,
+      Colors.amber,
+      Colors.orange,
+      Colors.deepOrange,
+      Colors.brown,
+      Colors.grey,
+      Colors.blueGrey,
+      Colors.black,
+    ];
+
+    // Predefined icons
+    final List<IconData> icons = [
+      Icons.fastfood,
+      Icons.restaurant,
+      Icons.local_cafe,
+      Icons.local_bar,
+      Icons.directions_car,
+      Icons.directions_bus,
+      Icons.flight,
+      Icons.local_gas_station,
+      Icons.shopping_bag,
+      Icons.shopping_cart,
+      Icons.credit_card,
+      Icons.attach_money,
+      Icons.home,
+      Icons.build,
+      Icons.pets,
+      Icons.child_friendly,
+      Icons.fitness_center,
+      Icons.pool,
+      Icons.sports_soccer,
+      Icons.videogame_asset,
+      Icons.movie,
+      Icons.music_note,
+      Icons.book,
+      Icons.school,
+      Icons.work,
+      Icons.business,
+      Icons.computer,
+      Icons.phone_android,
+      Icons.medical_services,
+      Icons.local_hospital,
+      Icons.favorite,
+      Icons.spa,
+      Icons.lightbulb,
+      Icons.wifi,
+      Icons.security,
+      Icons.warning,
+    ];
+
+    Color selectedColor = colors[5]; // Default blue
+    IconData selectedIcon = icons[0]; // Default icon
+
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Nueva Categoría"),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(hintText: "Nombre"),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text("CANCELAR"),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (controller.text.isNotEmpty) {
-                // Crear categoría con color/icono por defecto por rapidez
-                finance
-                    .addCategory(
-                      controller.text,
-                      Colors.blue.value,
-                      Icons.label.codePoint,
-                    )
-                    .then((_) {
-                      // Buscar la categoría recién creada para seleccionarla
-                      final newCat = finance.categories.last;
-                      onCreated(newCat);
-                      Navigator.pop(ctx);
-                    });
-              }
-            },
-            child: const Text("CREAR"),
-          ),
-        ],
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+              left: 20,
+              right: 20,
+              top: 20,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    "Nueva Categoría",
+                    style: GoogleFonts.spaceMono(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: controller,
+                    decoration: const InputDecoration(
+                      labelText: "Nombre",
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.label),
+                    ),
+                    textCapitalization: TextCapitalization.sentences,
+                    autofocus: true,
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Color',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: colors.map((color) {
+                        return GestureDetector(
+                          onTap: () {
+                            setModalState(() {
+                              selectedColor = color;
+                            });
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.only(right: 10),
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: color,
+                              shape: BoxShape.circle,
+                              border: selectedColor == color
+                                  ? Border.all(color: Colors.black, width: 3)
+                                  : null,
+                            ),
+                            child: selectedColor == color
+                                ? const Icon(
+                                    Icons.check,
+                                    color: Colors.white,
+                                    size: 20,
+                                  )
+                                : null,
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Icono',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    height: 200,
+                    child: GridView.builder(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 6,
+                            crossAxisSpacing: 10,
+                            mainAxisSpacing: 10,
+                          ),
+                      itemCount: icons.length,
+                      itemBuilder: (context, index) {
+                        final icon = icons[index];
+                        return GestureDetector(
+                          onTap: () {
+                            setModalState(() {
+                              selectedIcon = icon;
+                            });
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: selectedIcon == icon
+                                  ? selectedColor.withOpacity(0.2)
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(10),
+                              border: selectedIcon == icon
+                                  ? Border.all(color: selectedColor, width: 2)
+                                  : Border.all(color: Colors.grey.shade300),
+                            ),
+                            child: Icon(
+                              icon,
+                              color: selectedIcon == icon
+                                  ? selectedColor
+                                  : Colors.grey,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (controller.text.isNotEmpty) {
+                        finance
+                            .addCategory(
+                              controller.text.trim(),
+                              selectedColor.value,
+                              selectedIcon.codePoint,
+                            )
+                            .then((_) {
+                              final newCat = finance.categories.last;
+                              onCreated(newCat);
+                              Navigator.pop(ctx);
+                            });
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: Colors.cyan,
+                      foregroundColor: Colors.black,
+                    ),
+                    child: Text(
+                      "CREAR CATEGORÍA",
+                      style: GoogleFonts.spaceMono(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
