@@ -57,7 +57,7 @@ class _WalletManagementScreenState extends State<WalletManagementScreen> {
 
                 // Banco
                 DropdownButtonFormField<String>(
-                  value: selectedBank,
+                  initialValue: selectedBank,
                   items: provider.chileanBanks
                       .map((b) => DropdownMenuItem(value: b, child: Text(b)))
                       .toList(),
@@ -168,7 +168,7 @@ class _WalletManagementScreenState extends State<WalletManagementScreen> {
                       if (isEditing) {
                         // Editar tarjeta existente
                         provider.editCard(
-                          cardToEdit!.id,
+                          cardToEdit.id,
                           nameController.text,
                           selectedBank,
                           limit,

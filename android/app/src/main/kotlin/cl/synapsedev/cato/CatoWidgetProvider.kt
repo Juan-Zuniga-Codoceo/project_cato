@@ -1,4 +1,4 @@
-package com.example.mens_lifestyle_app
+package cl.synapsedev.cato
 
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider

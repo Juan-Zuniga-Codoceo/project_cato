@@ -8,7 +8,6 @@ import '../../../../core/services/backup_service.dart';
 import '../../../../core/providers/theme_provider.dart';
 import '../../../../core/providers/habit_provider.dart';
 import '../../../../core/services/storage_service.dart';
-import '../../../academic/providers/academic_provider.dart';
 import '../../../../core/utils/data_seeder.dart';
 import '../../../../core/providers/finance_provider.dart';
 import 'manifest_screen.dart';
@@ -248,7 +247,7 @@ class SettingsScreen extends StatelessWidget {
                   secondary: const Icon(Icons.dark_mode_outlined),
                   title: const Text('Modo Oscuro'),
                   value: Provider.of<ThemeProvider>(context).isDarkMode,
-                  activeColor: theme.colorScheme.primary,
+                  activeThumbColor: theme.colorScheme.primary,
                   onChanged: (val) => Provider.of<ThemeProvider>(
                     context,
                     listen: false,
@@ -267,7 +266,7 @@ class SettingsScreen extends StatelessWidget {
                           'isBiometricEnabled',
                           defaultValue: false,
                         ),
-                        activeColor: Colors.green,
+                        activeThumbColor: Colors.green,
                         onChanged: (val) => box.put('isBiometricEnabled', val),
                       );
                     },

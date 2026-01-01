@@ -107,6 +107,8 @@ class TaskProvider extends ChangeNotifier {
               isExpense: !task.isIncome,
               date: DateTime.now(),
               category: category,
+              paymentMethod:
+                  task.paymentMethod, // [NUEVO] Usar método de pago de la tarea
             );
 
             // Add transaction and GET ID
@@ -297,6 +299,8 @@ class TaskProvider extends ChangeNotifier {
                   isExpense: !task.isIncome,
                   date: DateTime.now(),
                   category: category,
+                  paymentMethod: task
+                      .paymentMethod, // [NUEVO] Usar método de pago de la tarea
                 );
 
                 // Add transaction and GET ID
@@ -401,6 +405,8 @@ class TaskProvider extends ChangeNotifier {
             isExpense: !task.isIncome, // Use isIncome flag
             date: DateTime.now(),
             category: category,
+            paymentMethod:
+                task.paymentMethod, // [NUEVO] Usar método de pago de la tarea
           );
 
           // Add transaction and get ID

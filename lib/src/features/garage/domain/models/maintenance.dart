@@ -18,6 +18,8 @@ class Maintenance {
   final double cost;
   @HiveField(6)
   final String notes;
+  @HiveField(7, defaultValue: 'Efectivo') // [NUEVO] Método de pago
+  final String paymentMethod;
 
   Maintenance({
     required this.id,
@@ -27,5 +29,6 @@ class Maintenance {
     required this.mileage,
     required this.cost,
     required this.notes,
+    this.paymentMethod = 'Efectivo', // Valor por defecto
   });
 }

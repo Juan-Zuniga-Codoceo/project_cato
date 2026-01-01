@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/providers/finance_provider.dart';
-import '../../domain/models/category.dart';
 
 class ManageCategoriesScreen extends StatelessWidget {
   const ManageCategoriesScreen({super.key});
@@ -89,153 +88,157 @@ class ManageCategoriesScreen extends StatelessWidget {
                 right: 20,
                 top: 20,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'Nueva Categoría',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Nueva Categoría',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 20),
-                  TextField(
-                    controller: nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Nombre',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.label),
+                    const SizedBox(height: 20),
+                    TextField(
+                      controller: nameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Nombre',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.label),
+                      ),
+                      textCapitalization: TextCapitalization.sentences,
                     ),
-                    textCapitalization: TextCapitalization.sentences,
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'Color',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 10),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 2),
-                    child: Row(
-                      children: colors.map((color) {
-                        return GestureDetector(
-                          onTap: () {
-                            setModalState(() {
-                              selectedColor = color;
-                            });
-                          },
-                          child: Container(
-                            margin: const EdgeInsets.only(right: 10),
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: color,
-                              shape: BoxShape.circle,
-                              border: selectedColor == color
-                                  ? Border.all(color: Colors.black, width: 3)
-                                  : null,
-                            ),
-                          ),
-                        );
-                      }).toList(),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Color',
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'Icono',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    height: 200,
-                    child: GridView.builder(
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 6,
-                            crossAxisSpacing: 10,
-                            mainAxisSpacing: 10,
-                          ),
-                      itemCount: icons.length,
-                      itemBuilder: (context, index) {
-                        final icon = icons[index];
-                        return GestureDetector(
-                          onTap: () {
-                            setModalState(() {
-                              selectedIcon = icon;
-                            });
-                          },
-                          child: Stack(
-                            children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: selectedIcon == icon
-                                      ? Colors.indigo.withOpacity(0.1)
-                                      : Colors.transparent,
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: selectedIcon == icon
-                                      ? Border.all(
-                                          color: Colors.indigo,
-                                          width: 2,
-                                        )
-                                      : Border.all(color: Colors.grey.shade300),
-                                ),
-                                child: Center(
-                                  child: Icon(
-                                    icon,
-                                    color: selectedIcon == icon
-                                        ? Colors.indigo
-                                        : Colors.black54,
-                                  ),
-                                ),
+                    const SizedBox(height: 10),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      child: Row(
+                        children: colors.map((color) {
+                          return GestureDetector(
+                            onTap: () {
+                              setModalState(() {
+                                selectedColor = color;
+                              });
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.only(right: 10),
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: color,
+                                shape: BoxShape.circle,
+                                border: selectedColor == color
+                                    ? Border.all(color: Colors.black, width: 3)
+                                    : null,
                               ),
-                              if (selectedIcon == icon)
-                                Positioned(
-                                  top: 4,
-                                  right: 4,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(2),
-                                    decoration: const BoxDecoration(
-                                      color: Colors.indigo,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.check,
-                                      size: 12,
-                                      color: Colors.white,
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Icono',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: 200,
+                      child: GridView.builder(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 6,
+                              crossAxisSpacing: 10,
+                              mainAxisSpacing: 10,
+                            ),
+                        itemCount: icons.length,
+                        itemBuilder: (context, index) {
+                          final icon = icons[index];
+                          return GestureDetector(
+                            onTap: () {
+                              setModalState(() {
+                                selectedIcon = icon;
+                              });
+                            },
+                            child: Stack(
+                              children: [
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: selectedIcon == icon
+                                        ? Colors.indigo.withOpacity(0.1)
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: selectedIcon == icon
+                                        ? Border.all(
+                                            color: Colors.indigo,
+                                            width: 2,
+                                          )
+                                        : Border.all(
+                                            color: Colors.grey.shade300,
+                                          ),
+                                  ),
+                                  child: Center(
+                                    child: Icon(
+                                      icon,
+                                      color: selectedIcon == icon
+                                          ? Colors.indigo
+                                          : Colors.black54,
                                     ),
                                   ),
                                 ),
-                            ],
-                          ),
-                        );
+                                if (selectedIcon == icon)
+                                  Positioned(
+                                    top: 4,
+                                    right: 4,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(2),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.indigo,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.check,
+                                        size: 12,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () {
+                        final name = nameController.text.trim();
+                        if (name.isNotEmpty) {
+                          provider.addCategory(
+                            name,
+                            selectedColor.value,
+                            selectedIcon.codePoint,
+                          );
+                          Navigator.pop(context);
+                        }
                       },
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: Colors.indigo,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('Crear Categoría'),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      final name = nameController.text.trim();
-                      if (name.isNotEmpty) {
-                        provider.addCategory(
-                          name,
-                          selectedColor.value,
-                          selectedIcon.codePoint,
-                        );
-                        Navigator.pop(context);
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: Colors.indigo,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: const Text('Crear Categoría'),
-                  ),
-                  const SizedBox(height: 20),
-                ],
+                    const SizedBox(height: 20),
+                  ],
+                ),
               ),
             );
           },

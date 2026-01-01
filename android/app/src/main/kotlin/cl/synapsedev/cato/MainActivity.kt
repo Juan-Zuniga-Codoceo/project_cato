@@ -1,4 +1,4 @@
-package com.example.mens_lifestyle_app
+package cl.synapsedev.cato
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

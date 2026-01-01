@@ -111,7 +111,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: selectedGender,
+                initialValue: selectedGender,
                 decoration: const InputDecoration(
                   labelText: 'Identidad',
                   prefixIcon: Icon(Icons.wc),

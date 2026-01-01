@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/providers/garage_provider.dart';
 import '../../../../core/providers/finance_provider.dart';
+import '../../../../shared/widgets/payment_method_dropdown.dart';
 import '../../domain/models/vehicle.dart';
 import '../../domain/models/maintenance.dart';
 import '../../../finance/domain/models/transaction.dart';
@@ -67,140 +68,158 @@ class _GarageScreenState extends State<GarageScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            left: 20,
-            right: 20,
-            top: 20,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                vehicleToEdit != null ? 'Editar Vehículo' : 'Nuevo Vehículo',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Apodo (ej: La Bestia)',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.directions_car),
-                ),
-                textCapitalization: TextCapitalization.words,
-              ),
-              const SizedBox(height: 16),
-              Row(
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+              left: 20,
+              right: 20,
+              top: 20,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(
-                    child: TextField(
-                      controller: brandController,
-                      decoration: const InputDecoration(
-                        labelText: 'Marca',
-                        border: OutlineInputBorder(),
-                      ),
-                      textCapitalization: TextCapitalization.words,
+                  Text(
+                    vehicleToEdit != null
+                        ? 'Editar Vehículo'
+                        : 'Nuevo Vehículo',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
+                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextField(
-                      controller: modelController,
-                      decoration: const InputDecoration(
-                        labelText: 'Modelo',
-                        border: OutlineInputBorder(),
-                      ),
-                      textCapitalization: TextCapitalization.words,
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Apodo (ej: La Bestia)',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.directions_car),
                     ),
+                    textCapitalization: TextCapitalization.words,
                   ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: yearController,
-                      decoration: const InputDecoration(
-                        labelText: 'Año',
-                        border: OutlineInputBorder(),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: brandController,
+                          decoration: const InputDecoration(
+                            labelText: 'Marca',
+                            border: OutlineInputBorder(),
+                          ),
+                          textCapitalization: TextCapitalization.words,
+                        ),
                       ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextField(
-                      controller: plateController,
-                      decoration: const InputDecoration(
-                        labelText: 'Placa',
-                        border: OutlineInputBorder(),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: TextField(
+                          controller: modelController,
+                          decoration: const InputDecoration(
+                            labelText: 'Modelo',
+                            border: OutlineInputBorder(),
+                          ),
+                          textCapitalization: TextCapitalization.words,
+                        ),
                       ),
-                      textCapitalization: TextCapitalization.characters,
-                    ),
+                    ],
                   ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: mileageController,
-                decoration: const InputDecoration(
-                  labelText: 'Kilometraje Actual',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.speed),
-                ),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () {
-                  if (nameController.text.isNotEmpty &&
-                      brandController.text.isNotEmpty) {
-                    final vehicle = Vehicle(
-                      id: vehicleToEdit?.id ?? DateTime.now().toString(),
-                      name: nameController.text.trim(),
-                      brand: brandController.text.trim(),
-                      model: modelController.text.trim(),
-                      year: int.tryParse(yearController.text.trim()) ?? 2020,
-                      currentMileage:
-                          double.tryParse(mileageController.text.trim()) ?? 0,
-                      plate: plateController.text.trim(),
-                      imagePath: vehicleToEdit?.imagePath,
-                    );
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: yearController,
+                          decoration: const InputDecoration(
+                            labelText: 'Año',
+                            border: OutlineInputBorder(),
+                          ),
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: TextField(
+                          controller: plateController,
+                          decoration: const InputDecoration(
+                            labelText: 'Placa',
+                            border: OutlineInputBorder(),
+                          ),
+                          textCapitalization: TextCapitalization.characters,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: mileageController,
+                    decoration: const InputDecoration(
+                      labelText: 'Kilometraje Actual',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.speed),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () {
+                      try {
+                        if (nameController.text.isNotEmpty &&
+                            brandController.text.isNotEmpty) {
+                          final vehicle = Vehicle(
+                            id: vehicleToEdit?.id ?? DateTime.now().toString(),
+                            name: nameController.text.trim(),
+                            brand: brandController.text.trim(),
+                            model: modelController.text.trim(),
+                            year:
+                                int.tryParse(yearController.text.trim()) ??
+                                2020,
+                            currentMileage:
+                                double.tryParse(
+                                  mileageController.text.trim(),
+                                ) ??
+                                0,
+                            plate: plateController.text.trim(),
+                            imagePath: vehicleToEdit?.imagePath,
+                          );
 
-                    if (vehicleToEdit != null) {
-                      Provider.of<GarageProvider>(
-                        context,
-                        listen: false,
-                      ).updateVehicle(vehicle);
-                    } else {
-                      Provider.of<GarageProvider>(
-                        context,
-                        listen: false,
-                      ).addVehicle(vehicle);
-                    }
-                    Navigator.pop(context);
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                ),
-                child: Text(
-                  vehicleToEdit != null
-                      ? 'Guardar Cambios'
-                      : 'Guardar Vehículo',
-                ),
+                          if (vehicleToEdit != null) {
+                            Provider.of<GarageProvider>(
+                              context,
+                              listen: false,
+                            ).updateVehicle(vehicle);
+                          } else {
+                            Provider.of<GarageProvider>(
+                              context,
+                              listen: false,
+                            ).addVehicle(vehicle);
+                          }
+                          Navigator.pop(context);
+                        }
+                      } catch (e) {
+                        print('Error saving vehicle: $e');
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Error al guardar: $e')),
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                    child: Text(
+                      vehicleToEdit != null
+                          ? 'Guardar Cambios'
+                          : 'Guardar Vehículo',
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
               ),
-              const SizedBox(height: 20),
-            ],
+            ),
           ),
         );
       },
@@ -216,6 +235,7 @@ class _GarageScreenState extends State<GarageScreen> {
     );
     DateTime selectedDate = DateTime.now();
     bool addToFinance = true;
+    String selectedPaymentMethod = 'Efectivo'; // [NUEVO]
 
     showModalBottomSheet(
       context: context,
@@ -226,191 +246,228 @@ class _GarageScreenState extends State<GarageScreen> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-                left: 20,
-                right: 20,
-                top: 20,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'Nuevo Mantenimiento',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 20),
-                  TextField(
-                    controller: typeController,
-                    decoration: const InputDecoration(
-                      labelText: 'Tipo (ej: Cambio de Aceite)',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.build),
-                    ),
-                    textCapitalization: TextCapitalization.sentences,
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
+            return SafeArea(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                  left: 20,
+                  right: 20,
+                  top: 20,
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Expanded(
-                        child: TextField(
-                          controller: costController,
-                          decoration: const InputDecoration(
-                            labelText: 'Costo',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.attach_money),
-                          ),
-                          keyboardType: TextInputType.number,
+                      Text(
+                        'Nuevo Mantenimiento',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
                         ),
+                        textAlign: TextAlign.center,
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: InkWell(
-                          onTap: () async {
-                            final picked = await showDatePicker(
-                              context: context,
-                              initialDate: selectedDate,
-                              firstDate: DateTime(2020),
-                              lastDate: DateTime.now(),
-                            );
-                            if (picked != null) {
-                              setModalState(() {
-                                selectedDate = picked;
-                              });
-                            }
+                      const SizedBox(height: 20),
+                      TextField(
+                        controller: typeController,
+                        decoration: const InputDecoration(
+                          labelText: 'Tipo (ej: Cambio de Aceite)',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.build),
+                        ),
+                        textCapitalization: TextCapitalization.sentences,
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: costController,
+                              decoration: const InputDecoration(
+                                labelText: 'Costo',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.attach_money),
+                              ),
+                              keyboardType: TextInputType.number,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: InkWell(
+                              onTap: () async {
+                                final picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: selectedDate,
+                                  firstDate: DateTime(2020),
+                                  lastDate: DateTime.now(),
+                                );
+                                if (picked != null) {
+                                  setModalState(() {
+                                    selectedDate = picked;
+                                  });
+                                }
+                              },
+                              child: InputDecorator(
+                                decoration: const InputDecoration(
+                                  labelText: 'Fecha',
+                                  border: OutlineInputBorder(),
+                                  prefixIcon: Icon(Icons.calendar_today),
+                                ),
+                                child: Text(
+                                  DateFormat('dd/MM/yyyy').format(selectedDate),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: mileageController,
+                        decoration: const InputDecoration(
+                          labelText: 'Kilometraje',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.speed),
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: notesController,
+                        decoration: const InputDecoration(
+                          labelText: 'Notas (Opcional)',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.note),
+                        ),
+                        maxLines: 2,
+                      ),
+                      const SizedBox(height: 16),
+                      SwitchListTile(
+                        title: const Text('Registrar como Gasto'),
+                        subtitle: const Text('Agregar a Finanzas'),
+                        value: addToFinance,
+                        onChanged: (value) {
+                          setModalState(() {
+                            addToFinance = value;
+                          });
+                        },
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      if (addToFinance) ...[
+                        const SizedBox(height: 12),
+                        PaymentMethodDropdown(
+                          selectedMethod: selectedPaymentMethod,
+                          onChanged: (method) {
+                            setModalState(() {
+                              selectedPaymentMethod = method;
+                            });
                           },
-                          child: InputDecorator(
-                            decoration: const InputDecoration(
-                              labelText: 'Fecha',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.calendar_today),
-                            ),
-                            child: Text(
-                              DateFormat('dd/MM/yyyy').format(selectedDate),
-                            ),
-                          ),
                         ),
+                      ],
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: () {
+                          try {
+                            if (typeController.text.isNotEmpty) {
+                              final cost =
+                                  double.tryParse(costController.text.trim()) ??
+                                  0;
+                              final mileage =
+                                  double.tryParse(
+                                    mileageController.text.trim(),
+                                  ) ??
+                                  0;
+
+                              final maintenance = Maintenance(
+                                id: DateTime.now().toString(),
+                                vehicleId: vehicle.id,
+                                type: typeController.text.trim(),
+                                date: selectedDate,
+                                mileage: mileage,
+                                cost: cost,
+                                notes: notesController.text.trim(),
+                                paymentMethod: selectedPaymentMethod, // [NUEVO]
+                              );
+
+                              final garageProvider =
+                                  Provider.of<GarageProvider>(
+                                    context,
+                                    listen: false,
+                                  );
+                              garageProvider.addMaintenance(maintenance);
+
+                              if (mileage > vehicle.currentMileage) {
+                                garageProvider.updateVehicle(
+                                  vehicle.copyWith(currentMileage: mileage),
+                                );
+                              }
+
+                              if (addToFinance && cost > 0) {
+                                final financeProvider =
+                                    Provider.of<FinanceProvider>(
+                                      context,
+                                      listen: false,
+                                    );
+
+                                CategoryModel? transportCategory;
+                                try {
+                                  transportCategory = financeProvider.categories
+                                      .firstWhere(
+                                        (c) =>
+                                            c.name.toLowerCase().contains(
+                                              'transporte',
+                                            ) ||
+                                            c.name.toLowerCase().contains(
+                                              'auto',
+                                            ),
+                                      );
+                                } catch (e) {
+                                  if (financeProvider.categories.isNotEmpty) {
+                                    transportCategory =
+                                        financeProvider.categories.first;
+                                  }
+                                }
+
+                                if (transportCategory != null) {
+                                  financeProvider.addTransaction(
+                                    Transaction(
+                                      id: DateTime.now().toString(),
+                                      title:
+                                          '${typeController.text} (${vehicle.name})',
+                                      amount: cost,
+                                      date: selectedDate,
+                                      isExpense: true,
+                                      category: transportCategory,
+                                      paymentMethod:
+                                          selectedPaymentMethod, // [NUEVO]
+                                    ),
+                                  );
+                                }
+                              }
+
+                              Navigator.pop(context);
+                            }
+                          } catch (e) {
+                            print('Error saving maintenance: $e');
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Error al guardar: $e')),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
+                          foregroundColor: Theme.of(
+                            context,
+                          ).colorScheme.onPrimary,
+                        ),
+                        child: const Text('Guardar Mantenimiento'),
                       ),
+                      const SizedBox(height: 20),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: mileageController,
-                    decoration: const InputDecoration(
-                      labelText: 'Kilometraje',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.speed),
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: notesController,
-                    decoration: const InputDecoration(
-                      labelText: 'Notas (Opcional)',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.note),
-                    ),
-                    maxLines: 2,
-                  ),
-                  const SizedBox(height: 16),
-                  SwitchListTile(
-                    title: const Text('Registrar como Gasto'),
-                    subtitle: const Text('Agregar a Finanzas'),
-                    value: addToFinance,
-                    onChanged: (value) {
-                      setModalState(() {
-                        addToFinance = value;
-                      });
-                    },
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: () {
-                      if (typeController.text.isNotEmpty) {
-                        final cost =
-                            double.tryParse(costController.text.trim()) ?? 0;
-                        final mileage =
-                            double.tryParse(mileageController.text.trim()) ?? 0;
-
-                        final maintenance = Maintenance(
-                          id: DateTime.now().toString(),
-                          vehicleId: vehicle.id,
-                          type: typeController.text.trim(),
-                          date: selectedDate,
-                          mileage: mileage,
-                          cost: cost,
-                          notes: notesController.text.trim(),
-                        );
-
-                        final garageProvider = Provider.of<GarageProvider>(
-                          context,
-                          listen: false,
-                        );
-                        garageProvider.addMaintenance(maintenance);
-
-                        if (mileage > vehicle.currentMileage) {
-                          garageProvider.updateVehicle(
-                            vehicle.copyWith(currentMileage: mileage),
-                          );
-                        }
-
-                        if (addToFinance && cost > 0) {
-                          final financeProvider = Provider.of<FinanceProvider>(
-                            context,
-                            listen: false,
-                          );
-
-                          CategoryModel? transportCategory;
-                          try {
-                            transportCategory = financeProvider.categories
-                                .firstWhere(
-                                  (c) =>
-                                      c.name.toLowerCase().contains(
-                                        'transporte',
-                                      ) ||
-                                      c.name.toLowerCase().contains('auto'),
-                                );
-                          } catch (e) {
-                            if (financeProvider.categories.isNotEmpty) {
-                              transportCategory =
-                                  financeProvider.categories.first;
-                            }
-                          }
-
-                          if (transportCategory != null) {
-                            financeProvider.addTransaction(
-                              Transaction(
-                                id: DateTime.now().toString(),
-                                title:
-                                    '${typeController.text} (${vehicle.name})',
-                                amount: cost,
-                                date: selectedDate,
-                                isExpense: true,
-                                category: transportCategory,
-                              ),
-                            );
-                          }
-                        }
-
-                        Navigator.pop(context);
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                    ),
-                    child: const Text('Guardar Mantenimiento'),
-                  ),
-                  const SizedBox(height: 20),
-                ],
+                ),
               ),
             );
           },

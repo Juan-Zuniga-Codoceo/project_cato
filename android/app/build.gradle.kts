@@ -8,8 +8,9 @@ plugins {
 }
 
 android {
-    namespace = "com.example.mens_lifestyle_app"
-    compileSdk = flutter.compileSdkVersion
+    namespace = "cl.synapsedev.cato"
+    // Updated to Android 15 (API 36) for dependency compatibility
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -24,11 +25,12 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.mens_lifestyle_app"
+        applicationId = "cl.synapsedev.cato"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        // Updated to Android 14 (API 34) for Google Play compatibility
+        targetSdk = 34
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         multiDexEnabled = true

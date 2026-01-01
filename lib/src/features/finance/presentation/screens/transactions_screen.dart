@@ -560,73 +560,88 @@ class _TransactionsScreenState extends State<TransactionsScreen>
         ? theme.scaffoldBackgroundColor
         : const Color(0xFFF5F5F5);
 
-    return Scaffold(
-      backgroundColor: bgColor,
-      appBar: AppBar(
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) {
+        // Limpiar SnackBars al salir de la pantalla
+        if (didPop) {
+          ScaffoldMessenger.of(context).clearSnackBars();
+        }
+      },
+      child: Scaffold(
         backgroundColor: bgColor,
-        elevation: 0,
-        title: Text(
-          "REGISTRO TÁCTICO",
-          style: GoogleFonts.spaceMono(
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
+        appBar: AppBar(
+          backgroundColor: bgColor,
+          elevation: 0,
+          title: Text(
+            "REGISTRO TÁCTICO",
+            style: GoogleFonts.spaceMono(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
+          bottom: TabBar(
+            controller: _tabController,
+            indicatorColor: Colors.cyan,
+            labelColor: Colors.cyan,
+            unselectedLabelColor: Colors.grey,
+            labelStyle: GoogleFonts.spaceMono(fontWeight: FontWeight.bold),
+            tabs: const [
+              Tab(text: "EJECUTADO"),
+              Tab(text: "PROYECCIONES"),
+            ],
           ),
         ),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: Colors.cyan,
-          labelColor: Colors.cyan,
-          unselectedLabelColor: Colors.grey,
-          labelStyle: GoogleFonts.spaceMono(fontWeight: FontWeight.bold),
-          tabs: const [
-            Tab(text: "EJECUTADO"),
-            Tab(text: "PROYECCIONES"),
-          ],
+        floatingActionButton: FloatingActionButton(
+          backgroundColor: Colors.cyan,
+          child: const Icon(Icons.add, color: Colors.black),
+          onPressed: () => _showAddTransactionDialog(context),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.cyan,
-        child: const Icon(Icons.add, color: Colors.black),
-        onPressed: () => _showAddTransactionDialog(context),
-      ),
-      body: Consumer<FinanceProvider>(
-        builder: (context, finance, child) {
-          final transactions = finance.transactions;
-          if (transactions.isEmpty)
-            return const Center(child: Text("Sin registros."));
+        body: Consumer<FinanceProvider>(
+          builder: (context, finance, child) {
+            final transactions = finance.transactions;
+            if (transactions.isEmpty)
+              return const Center(child: Text("Sin registros."));
 
-          // Separación de fechas
-          final now = DateTime.now();
-          final endOfToday = DateTime(now.year, now.month, now.day, 23, 59, 59);
+            // Separación de fechas
+            final now = DateTime.now();
+            final endOfToday = DateTime(
+              now.year,
+              now.month,
+              now.day,
+              23,
+              59,
+              59,
+            );
 
-          // Filtros
-          final futureTxs = transactions
-              .where((tx) => tx.date.isAfter(endOfToday))
-              .toList();
-          final historyTxs = transactions
-              .where(
-                (tx) =>
-                    tx.date.isBefore(endOfToday) ||
-                    tx.date.isAtSameMomentAs(endOfToday),
-              )
-              .toList();
+            // Filtros
+            final futureTxs = transactions
+                .where((tx) => tx.date.isAfter(endOfToday))
+                .toList();
+            final historyTxs = transactions
+                .where(
+                  (tx) =>
+                      tx.date.isBefore(endOfToday) ||
+                      tx.date.isAtSameMomentAs(endOfToday),
+                )
+                .toList();
 
-          // Ordenamiento
-          futureTxs.sort(
-            (a, b) => a.date.compareTo(b.date),
-          ); // Futuro: Ascendente (Próximo primero)
-          historyTxs.sort(
-            (a, b) => b.date.compareTo(a.date),
-          ); // Pasado: Descendente (Reciente primero)
+            // Ordenamiento
+            futureTxs.sort(
+              (a, b) => a.date.compareTo(b.date),
+            ); // Futuro: Ascendente (Próximo primero)
+            historyTxs.sort(
+              (a, b) => b.date.compareTo(a.date),
+            ); // Pasado: Descendente (Reciente primero)
 
-          return TabBarView(
-            controller: _tabController,
-            children: [
-              _buildTransactionList(historyTxs, isFuture: false),
-              _buildTransactionList(futureTxs, isFuture: true),
-            ],
-          );
-        },
+            return TabBarView(
+              controller: _tabController,
+              children: [
+                _buildTransactionList(historyTxs, isFuture: false),
+                _buildTransactionList(futureTxs, isFuture: true),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

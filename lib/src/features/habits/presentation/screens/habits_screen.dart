@@ -397,7 +397,7 @@ class _AddHabitFormState extends State<_AddHabitForm> {
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              value: _selectedAttribute,
+              initialValue: _selectedAttribute,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.stars),
@@ -514,7 +514,7 @@ class _AddHabitFormState extends State<_AddHabitForm> {
                           )
                         : const Text('Recibe una notificación diaria'),
                     value: _hasReminder,
-                    activeColor: Colors.blue,
+                    activeThumbColor: Colors.blue,
                     onChanged: (value) {
                       setState(() {
                         _hasReminder = value;
@@ -1094,7 +1094,7 @@ class _EditHabitFormState extends State<_EditHabitForm> {
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              value: _selectedAttribute,
+              initialValue: _selectedAttribute,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.stars),
