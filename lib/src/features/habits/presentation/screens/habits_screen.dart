@@ -361,6 +361,9 @@ class _AddHabitFormState extends State<_AddHabitForm> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -432,7 +435,7 @@ class _AddHabitFormState extends State<_AddHabitForm> {
                         width: 50,
                         height: 50,
                         decoration: BoxDecoration(
-                          color: Colors.grey[800],
+                          color: isDark ? Colors.grey[800] : Colors.grey[200],
                           borderRadius: BorderRadius.circular(8),
                           border: isSelected
                               ? Border.all(color: Colors.blue, width: 3)
@@ -440,14 +443,18 @@ class _AddHabitFormState extends State<_AddHabitForm> {
                         ),
                         child: Icon(
                           entry.value,
-                          color: isSelected ? Colors.blue : Colors.white,
+                          color: isSelected
+                              ? Colors.blue
+                              : theme.colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         entry.key,
                         style: TextStyle(
-                          color: isSelected ? Colors.blue : Colors.grey[400],
+                          color: isSelected
+                              ? Colors.blue
+                              : theme.colorScheme.onSurfaceVariant,
                           fontSize: 11,
                           fontWeight: isSelected
                               ? FontWeight.bold
@@ -502,7 +509,7 @@ class _AddHabitFormState extends State<_AddHabitForm> {
 
             // Reminder Section
             Card(
-              color: Colors.grey[850],
+              // color: Colors.grey[850], // Removed to use default theme card color
               child: Column(
                 children: [
                   SwitchListTile(
@@ -510,7 +517,9 @@ class _AddHabitFormState extends State<_AddHabitForm> {
                     subtitle: _hasReminder && _reminderTime != null
                         ? Text(
                             'Notificación a las ${_reminderTime!.format(context)}',
-                            style: TextStyle(color: Colors.grey[400]),
+                            style: TextStyle(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                           )
                         : const Text('Recibe una notificación diaria'),
                     value: _hasReminder,

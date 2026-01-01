@@ -27,7 +27,7 @@ import 'src/core/theme/app_theme.dart';
 
 // Screens
 import 'src/features/home/presentation/screens/home_screen.dart';
-import 'src/features/auth/presentation/screens/auth_screen.dart';
+
 import 'src/features/auth/presentation/widgets/biometric_auth_guard.dart'; // [NUEVO IMPORT]
 
 void main() async {

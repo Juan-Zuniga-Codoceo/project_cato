@@ -7,7 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/providers/finance_provider.dart';
 import '../../domain/models/transaction.dart';
 import '../../domain/models/category.dart';
-import '../../../../core/theme/app_theme.dart';
+
 import '../../../../core/services/storage_service.dart';
 
 class TransactionsScreen extends StatefulWidget {
