@@ -166,13 +166,13 @@ class RatingService {
 
   /// Abre la Play Store para valorar
   static Future<void> _openPlayStore() async {
-    final url = Uri.parse("market://details?id=com.example.mens_lifestyle_app");
+    final url = Uri.parse("market://details?id=cl.synapsedev.cato");
     try {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     } catch (e) {
       // Fallback a navegador si Play Store no está disponible
       final webUrl = Uri.parse(
-        "https://play.google.com/store/apps/details?id=com.example.mens_lifestyle_app",
+        "https://play.google.com/store/apps/details?id=cl.synapsedev.cato",
       );
       await launchUrl(webUrl, mode: LaunchMode.externalApplication);
     }

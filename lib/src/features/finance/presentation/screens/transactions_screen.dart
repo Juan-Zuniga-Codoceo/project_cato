@@ -75,9 +75,7 @@ class _TransactionsScreenState extends State<TransactionsScreen>
               onPressed: () {
                 box.put('dontShowReview', true);
                 Navigator.pop(ctx);
-                final url = Uri.parse(
-                  "market://details?id=com.example.mens_lifestyle_app",
-                );
+                final url = Uri.parse("market://details?id=cl.synapsedev.cato");
                 launchUrl(url, mode: LaunchMode.externalApplication);
               },
               child: const Text("CALIFICAR"),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import '../../../../core/services/storage_service.dart';
 import '../../../../core/services/auth_service.dart';
 import '../screens/auth_screen.dart';
 
@@ -47,6 +49,19 @@ class _BiometricAuthGuardState extends State<BiometricAuthGuard>
   }
 
   Future<void> _authenticate() async {
+    // [FIX] Verificar si la biometría está habilitada en la configuración
+    final box = Hive.box(StorageService.settingsBoxName);
+    final isEnabled = box.get('isBiometricEnabled', defaultValue: false);
+
+    if (!isEnabled) {
+      if (mounted) {
+        setState(() {
+          _isAuthenticated = true;
+        });
+      }
+      return;
+    }
+
     if (!mounted || _isAuthenticated || _isAuthenticating) return;
 
     setState(() {
