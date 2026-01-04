@@ -128,8 +128,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     // [FIX] Leer configuración biométrica desde Hive
     final isBiometricEnabled = storageService.settingsBox.get(
-      'biometricAuth',
-      defaultValue: true, // Por defecto activado
+      'isBiometricEnabled',
+      defaultValue: false, // Por defecto desactivado
     );
 
     return MultiProvider(

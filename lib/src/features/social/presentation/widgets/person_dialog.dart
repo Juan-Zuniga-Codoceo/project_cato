@@ -22,6 +22,7 @@ class _PersonDialogState extends State<PersonDialog> {
   late int _frequency;
   File? _imageFile;
   late bool _isFavorite;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -175,33 +176,46 @@ class _PersonDialogState extends State<PersonDialog> {
           child: const Text('CANCELAR'),
         ),
         ElevatedButton(
-          onPressed: () {
-            if (_nameController.text.isNotEmpty &&
-                _relationshipController.text.isNotEmpty) {
-              if (isEditing) {
-                final updatedPerson = widget.person!.copyWith(
-                  name: _nameController.text,
-                  relationship: _relationshipController.text,
-                  contactFrequency: _frequency,
-                  photoPath: _imageFile?.path,
-                  isFavorite: _isFavorite,
-                  phoneNumber: _phoneController.text,
-                );
-                widget.provider.updatePerson(updatedPerson);
-              } else {
-                widget.provider.addPerson(
-                  name: _nameController.text,
-                  relationship: _relationshipController.text,
-                  contactFrequency: _frequency,
-                  photoPath: _imageFile?.path,
-                  isFavorite: _isFavorite,
-                  phoneNumber: _phoneController.text,
-                );
-              }
-              Navigator.pop(context);
-            }
-          },
-          child: Text(isEditing ? 'GUARDAR' : 'AGREGAR'),
+          onPressed: _isLoading
+              ? null
+              : () async {
+                  if (_nameController.text.isNotEmpty &&
+                      _relationshipController.text.isNotEmpty) {
+                    setState(() => _isLoading = true);
+                    try {
+                      if (isEditing) {
+                        final updatedPerson = widget.person!.copyWith(
+                          name: _nameController.text,
+                          relationship: _relationshipController.text,
+                          contactFrequency: _frequency,
+                          photoPath: _imageFile?.path,
+                          isFavorite: _isFavorite,
+                          phoneNumber: _phoneController.text,
+                        );
+                        await widget.provider.updatePerson(updatedPerson);
+                      } else {
+                        await widget.provider.addPerson(
+                          name: _nameController.text,
+                          relationship: _relationshipController.text,
+                          contactFrequency: _frequency,
+                          photoPath: _imageFile?.path,
+                          isFavorite: _isFavorite,
+                          phoneNumber: _phoneController.text,
+                        );
+                      }
+                      if (mounted) Navigator.pop(context);
+                    } finally {
+                      if (mounted) setState(() => _isLoading = false);
+                    }
+                  }
+                },
+          child: _isLoading
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Text(isEditing ? 'GUARDAR' : 'AGREGAR'),
         ),
       ],
     );

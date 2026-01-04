@@ -305,10 +305,12 @@ class AllyDetailScreen extends StatelessWidget {
             child: const Text('CANCELAR'),
           ),
           TextButton(
-            onPressed: () {
-              provider.deletePerson(person.id);
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Go back to list
+            onPressed: () async {
+              await provider.deletePerson(person.id);
+              if (context.mounted) {
+                Navigator.pop(context); // Close dialog
+                Navigator.pop(context); // Go back to list
+              }
             },
             child: const Text('ELIMINAR', style: TextStyle(color: Colors.red)),
           ),
