@@ -9,8 +9,8 @@ plugins {
 
 android {
     namespace = "cl.synapsedev.cato"
-    // Updated to Android 15 (API 36) for dependency compatibility
-    compileSdk = 36
+    // Updated to Android 14 (API 34) for stability and compatibility
+    compileSdk = 34
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -30,7 +30,7 @@ android {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         // Updated to Android 14 (API 34) for Google Play compatibility
-        targetSdk = 36
+        targetSdk = 34
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         multiDexEnabled = true

@@ -81,7 +81,11 @@ class AuthService {
     try {
       final bool authenticated = await _auth.authenticate(
         localizedReason: localizedReason,
-        biometricOnly: biometricOnly,
+        options: AuthenticationOptions(
+          biometricOnly: biometricOnly,
+          stickyAuth: true,
+          useErrorDialogs: true,
+        ),
       );
 
       if (authenticated) {
