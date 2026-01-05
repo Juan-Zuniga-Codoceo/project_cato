@@ -7,6 +7,7 @@ import '../../../social/presentation/screens/social_screen.dart';
 import '../../../academic/presentation/screens/academic_screen.dart';
 // [NUEVO IMPORT]
 import '../../../gamification/presentation/screens/marketplace_screen.dart';
+import '../../../pets/presentation/screens/pets_dashboard_screen.dart'; // [NUEVO]
 
 class AppsMenuScreen extends StatelessWidget {
   const AppsMenuScreen({super.key});
@@ -85,6 +86,17 @@ class AppsMenuScreen extends StatelessWidget {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const AcademicScreen()),
+            ),
+          ),
+          _AppCard(
+            title: 'MASCOTAS',
+            icon: Icons.pets,
+            color: Colors.orange,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const PetsDashboardScreen(),
+              ),
             ),
           ),
         ],

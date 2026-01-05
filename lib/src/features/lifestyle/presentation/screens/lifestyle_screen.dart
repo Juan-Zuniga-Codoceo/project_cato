@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'dart:math';
 import 'package:google_fonts/google_fonts.dart';
 import '../../providers/lifestyle_provider.dart';
+import '../../../pets/presentation/screens/pets_dashboard_screen.dart'; // [NUEVO]
 
 class LifestyleScreen extends StatelessWidget {
   const LifestyleScreen({super.key});
@@ -11,7 +12,7 @@ class LifestyleScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      length: 3, // [MODIFICADO]
       child: Scaffold(
         appBar: AppBar(
           title: Text(
@@ -24,10 +25,17 @@ class LifestyleScreen extends StatelessWidget {
             tabs: const [
               Tab(text: 'BIO-MONITOR', icon: Icon(Icons.monitor_heart)),
               Tab(text: 'EXTERIOR', icon: Icon(Icons.layers)),
+              Tab(text: 'PET COMMAND', icon: Icon(Icons.pets)), // [NUEVO]
             ],
           ),
         ),
-        body: const TabBarView(children: [_VitalityTab(), _ExteriorTab()]),
+        body: const TabBarView(
+          children: [
+            _VitalityTab(),
+            _ExteriorTab(),
+            PetsDashboardScreen(), // [NUEVO]
+          ],
+        ),
       ),
     );
   }

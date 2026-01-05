@@ -23,6 +23,7 @@ import 'src/features/academic/providers/academic_provider.dart';
 import 'src/features/gamification/providers/achievement_provider.dart';
 import 'src/features/gamification/providers/reward_provider.dart';
 import 'src/core/providers/subscription_provider.dart';
+import 'src/features/pets/providers/pet_provider.dart'; // [NUEVO]
 import 'src/core/theme/app_theme.dart';
 
 // Screens
@@ -160,6 +161,9 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(create: (_) => RewardProvider(storageService)),
         ChangeNotifierProvider(create: (_) => SubscriptionProvider()),
+        ChangeNotifierProvider(
+          create: (_) => PetProvider(storageService),
+        ), // [NUEVO]
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
